@@ -44,7 +44,7 @@ class RemitSpiderUSBank {
     public function __construct( string $chromePath,
                                  string $user,
                                  string $pass,
-                                 bool $debug = FALSE,
+                                 bool   $debug = FALSE,
                                  string $pathToScreenshots = '' ) {
         $this->chromePath        = $chromePath;
         $this->user              = $user;
@@ -65,7 +65,6 @@ class RemitSpiderUSBank {
 
         // creates a new page and navigate to an url
         $this->page = $this->browser->createPage();
-
 
 
 //        $this->jar = new \GuzzleHttp\Cookie\CookieJar();
@@ -100,11 +99,37 @@ class RemitSpiderUSBank {
         $this->page->evaluate( "document.querySelector('#pword').value = '" . $this->pass . "';" );
 
         // DEBUG
-        if($this->debug):
-            $this->page->screenshot()->saveToFile(time() . '_' . microtime() . '_filled_in_user_pass.jpg');
+        if ( $this->debug ):
+            $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_filled_in_user_pass.jpg' );
         endif;
 
-        return true;
+//        $this->page->mouse()
+//             ->move( 111, 454 )
+//             ->click();
+//$this->page->waitForReload();
+//        sleep(5);
+
+
+//        $evaluation = $this->page->evaluate( "document.querySelector('input[name='login']').submit();" );
+        //$evaluation = $this->page->evaluate( "document.querySelector(input[name='login']).value = 'poop';" );
+//        $evaluation = $this->page->evaluate( 'document.querySelector("body > div:nth-child(1) > div.span-19.align-left > div > div:nth-child(4) > form").submit();' );
+//        $evaluation->waitForPageReload();
+
+
+        $js = "document.querySelector('button[type=\"submit\"]').click();";
+
+
+        $evaluation = $this->page->evaluate( $js );
+        $evaluation->waitForPageReload();
+
+
+
+
+        if ( $this->debug ):
+            $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_something_was_clicked.jpg' );
+        endif;
+
+        return TRUE;
 
 
 //        $response = $this->guzzleClient->request( 'GET', self::URL_HOME, [
