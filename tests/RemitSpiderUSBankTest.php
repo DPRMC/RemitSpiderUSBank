@@ -28,8 +28,7 @@ class RemitSpiderUSBankTest extends TestCase {
     public function testHolder() {
 
         $loggedIn = self::$spider->login();
-
-        self::$spider->goTo();
+        self::$spider->goToTrustInvestorReporting();
         $this->assertTrue( $loggedIn );
     }
 

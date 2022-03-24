@@ -2,9 +2,8 @@
 
 namespace DPRMC\RemitSpiderUSBank;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Cookie\CookieJar;
 use HeadlessChromium\BrowserFactory;
+use HeadlessChromium\Clip;
 
 class RemitSpiderUSBank {
 
@@ -20,19 +19,29 @@ class RemitSpiderUSBank {
 
     const URL_LOGIN = 'https://usbtrustgateway.usbank.com/portal/login.do';
     // const URL_LOGIN = 'https://fims2.deerparkrd.com/test-us';
+    const URL_TEST = 'https://fims2.deerparkrd.com/test-us';
 
-//    const BASE_URI  = 'https://usbtrustgateway.usbank.com';
-//    const URL_HOME  = '/portal';
-//    const URL_LOGIN = '/portal/login.do';
-//    // Open application URL
-//    //'TIR-Ext','https://trustinvestorreporting.usbank.com/TIR/portal/','TrustInvestorReporting'
-//    // /portal/public/openApplication.do?appName="+applicationName+"&appUrl="+appUrl, aName, params);
-//    const URL_OPEN_APPLICATION = '/portal/public/openApplication.do?appName=TIR-Ext&appUrl=https://trustinvestorreporting.usbank.com/TIR/portal/';
-//    const URL_TIR_PORTFOLIOS = 'https://trustinvestorreporting.usbank.com/TIR/portal/';
+    const BROWSER_ENABLE_IMAGES    = TRUE;
+    const BROWSER_CONNECTION_DELAY = 0.8; // How long between browser actions. More human-like?
+//    const BROWSER_WINDOW_SIZE_WIDTH  = 500;
+//    const BROWSER_WINDOW_SIZE_HEIGHT = 440;
+
+    const BROWSER_WINDOW_SIZE_WIDTH  = 1000;
+    const BROWSER_WINDOW_SIZE_HEIGHT = 1000;
+
+//    const LOGIN_BUTTON_X = 40;
+//    const LOGIN_BUTTON_Y = 260;
+
+    const LOGIN_BUTTON_X = 80;
+    const LOGIN_BUTTON_Y = 260;
+
+    const NAV_APPLICATIONS_X = 50;
+    const NAV_APPLICATIONS_Y = 125;
 
 
-    protected Client    $guzzleClient;
-    protected CookieJar $jar;
+    const NAV_TRUST_INVESTOR_REPORTING_X = 150;
+    const NAV_TRUST_INVESTOR_REPORTING_Y = 165;
+
 
 
     public function __construct( string $chromePath,
@@ -51,33 +60,26 @@ class RemitSpiderUSBank {
         // starts headless chrome
         $this->browser = $browserFactory->createBrowser( [
                                                              'headless'        => TRUE,         // disable headless mode
-                                                             'connectionDelay' => 0.8,           // add 0.8 second of delay between each instruction sent to chrome,
+                                                             'connectionDelay' => self::BROWSER_CONNECTION_DELAY,           // add 0.8 second of delay between each instruction sent to chrome,
                                                              //'debugLogger'     => 'php://stdout', // will enable verbose mode
-                                                             'windowSize'      => [ 500, 440 ],
-                                                             'enableImages'    => FALSE,
+                                                             'windowSize'      => [ self::BROWSER_WINDOW_SIZE_WIDTH,
+                                                                                    self::BROWSER_WINDOW_SIZE_HEIGHT ],
+                                                             'enableImages'    => self::BROWSER_ENABLE_IMAGES,
                                                          ] );
 
         // creates a new page and navigate to an url
         $this->page = $this->browser->createPage();
-
-
-//        $this->jar = new \GuzzleHttp\Cookie\CookieJar();
-//
-//
-//        $config             = [
-//            // Base URI is used with relative requests
-//            'base_uri'   => self::BASE_URI,
-//            // You can set any number of default request options.
-//            'timeout'    => 60.0,
-//            'cookies'    => TRUE,
-//            'exceptions' => FALSE,
-//        ];
-//        $this->guzzleClient = new Client( $config );
     }
 
 
     public function login(): bool {
         $this->page->navigate( self::URL_LOGIN )->waitForNavigation();
+        ////die(self::URL_TEST);
+        //$this->page->navigate( self::URL_TEST )->waitForNavigation();
+        //$this->page->evaluate( "alert('foo');" );
+        //sleep(1);
+        //$this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_test_.jpg' );
+        //die('done');
 
         if ( $this->debug ):
             $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_first_page.jpg' );
@@ -86,43 +88,27 @@ class RemitSpiderUSBank {
 
         $this->page->evaluate( "document.querySelector('#uname').value = '" . $this->user . "';" );
         $this->page->evaluate( "document.querySelector('#pword').value = '" . $this->pass . "';" );
-        //$this->page->evaluate( "document.querySelector('#uname').value = '" . $this->user . "';" );
+
         // DEBUG
         if ( $this->debug ):
             $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_filled_in_user_pass.jpg' );
+            $x      = 0;
+            $y      = 0;
+            $width  = self::LOGIN_BUTTON_X;
+            $height = self::LOGIN_BUTTON_Y;
+            $clip   = new Clip( $x, $y, $width, $height );
+
+            // take the screenshot (in memory binaries)
+            $this->page->screenshot( [
+                                         'clip' => $clip,
+                                     ] )
+                       ->saveToFile( time() . '_' . microtime() . '_where_i_clicked_to_login.jpg' );
         endif;
 
-//        $this->page->mouse()
-//             ->move( 111, 454 )
-//             ->click();
-//$this->page->waitForReload();
-//        sleep(5);
-//        $evaluation = $this->page->evaluate( "document.querySelector('input[name='login']').submit();" );
-        //$evaluation = $this->page->evaluate( "document.querySelector(input[name='login']).value = 'poop';" );
-//        $evaluation = $this->page->evaluate( 'document.querySelector("body > div:nth-child(1) > div.span-19.align-left > div > div:nth-child(4) > form").submit();' );
-//        $evaluation->waitForPageReload();
 
-
-        //$js = "document.querySelector('button[type=\"submit\"]').click();";
-        // div.user-panel.main input[name='login']/
-
-
-        //$js = "document.querySelector('#fuckface').submit();";
-        //$js = "document.querySelector('form[" . '"name=submit"]' . "'" . ').submit();';
-
-//        $js = "document.querySelector('[name=" . '"login"' . "]').submit();";
-//        print ("\n\n\n\n");
-//        print($js);
-//
-//        try {
-//            $evaluation = $this->page->evaluate( $js );
-//            $evaluation->waitForPageReload();
-//        }catch (\Exception $exception){
-//            die($exception->getMessage());
-//        }
-
+        // Click the login button, and wait for the page to reload.
         $this->page->mouse()
-                   ->move( 111, 454 )
+                   ->move( self::LOGIN_BUTTON_X, self::LOGIN_BUTTON_Y )
                    ->click();
         $this->page->waitForReload();
 
@@ -132,72 +118,86 @@ class RemitSpiderUSBank {
         endif;
 
         return TRUE;
-
-
-//        $response = $this->guzzleClient->request( 'GET', self::URL_HOME, [
-//            'debug' => $this->debug,
-//        ] );
-//
-//        $response = $this->guzzleClient->request( 'GET', self::URL_LOGIN, [
-//            'debug' => $this->debug,
-//            'query' => [
-//                'userID'   => $this->user . '@usb',
-//                'userName' => $this->user,
-//                'password' => $this->pass,
-//                'method'   => 'Log In',
-//            ],
-//        ] );
-//
-//
-//        $text     = (string)$response->getBody();
-//        $response = NULL; // Free up memory
-//
-//        if ( $this->isLoggedIn( $text ) ):
-//            return TRUE;
-//        endif;
-//
-//        throw new \Exception( "Login failed." );
     }
 
-    public function goTo() {
-//        $response = $this->guzzleClient->request( 'GET', self::URL_OPEN_APPLICATION, [
-//            'debug' => $this->debug,
-//        ] );
-//        $text     = (string)$response->getBody();
-//        $response = NULL; // Free up memory
-//        var_dump( $text );
-//
-//        sleep( 2 );
-//
-//
-//        try {
-//            $response = $this->guzzleClient->request( 'GET', self::URL_TIR_PORTFOLIOS, [
-//                'debug' => $this->debug,
-//            ] );
-//            $text     = (string)$response->getBody();
-//            $response = NULL; // Free up memory
-//            var_dump( $text );
-//        } catch ( \GuzzleHttp\Exception\RequestException $e ) {
-//            /**
-//             * Here we actually catch the instance of GuzzleHttp\Psr7\Response
-//             * (find it in ./vendor/guzzlehttp/psr7/src/Response.php) with all
-//             * its own and its 'Message' trait's methods. See more explanations below.
-//             *
-//             * So you can have: HTTP status code, message, headers and body.
-//             * Just check the exception object has the response before.
-//             */
-//            if ( $e->hasResponse() ) {
-//                $response = $e->getResponse();
-//                var_dump( $response->getStatusCode() );                  // HTTP status code;
-//                var_dump( $response->getReasonPhrase() );                // Response message;
-//                var_dump( (string)$response->getBody() );                // Body, normally it is JSON;
-//                var_dump( json_decode( (string)$response->getBody() ) ); // Body as the decoded JSON;
-//                var_dump( $response->getHeaders() );                     // Headers array;
-//                var_dump( $response->hasHeader( 'Content-Type' ) );      // Is the header presented?
-//                var_dump( $response->getHeader( 'Content-Type' )[ 0 ] ); // Concrete header value;
-//            }
-//        }
 
+    public function goToTrustInvestorReporting() {
+
+        // This forces the sub-menu to be visible.
+        $this->page->evaluate( "document.querySelector('.sub_menu').style.visibility = 'visible';" );
+        if ( $this->debug ):
+            $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_test_menu_should_be_visible.jpg' );
+        endif;
+
+        // DEBUG
+//        if ( $this->debug ):
+//            $x      = 0;
+//            $y      = 0;
+//            $width  = self::NAV_APPLICATIONS_X;
+//            $height = self::NAV_APPLICATIONS_Y;
+//            $clip   = new Clip( $x, $y, $width, $height );
+//
+//            $this->page->screenshot( [
+//                                         'clip' => $clip,
+//                                     ] )
+//                       ->saveToFile( time() . '_' . microtime() . '_where_i_need_to_hover.jpg' );
+//        endif;
+
+//        $this->page->mouse()
+//                   ->move( self::NAV_APPLICATIONS_X, self::NAV_APPLICATIONS_Y );
+//
+//        sleep( 1 );
+
+        if ( $this->debug ):
+            $x      = 0;
+            $y      = 0;
+            $width  = self::NAV_TRUST_INVESTOR_REPORTING_X;
+            $height = self::NAV_TRUST_INVESTOR_REPORTING_Y;
+            $clip   = new Clip( $x, $y, $width, $height );
+
+            $this->page->screenshot( [
+                                         'clip' => $clip,
+                                     ] )
+                       ->saveToFile( time() . '_' . microtime() . '_where_i_need_to_click_tir.jpg' );
+        endif;
+
+
+        // MOVE MOUSE METHOD
+        $this->page->mouse()
+                   ->move( self::NAV_TRUST_INVESTOR_REPORTING_X,
+                           self::NAV_TRUST_INVESTOR_REPORTING_Y )
+                   ->click();
+        sleep(1);
+        $this->page->mouse()
+                   ->move( self::NAV_TRUST_INVESTOR_REPORTING_X,
+                           self::NAV_TRUST_INVESTOR_REPORTING_Y )
+                   ->click();
+        sleep(1);
+        $this->page->mouse()
+                   ->move( self::NAV_TRUST_INVESTOR_REPORTING_X,
+                           self::NAV_TRUST_INVESTOR_REPORTING_Y )
+                   ->click();
+        sleep(1);
+        $this->page->mouse()
+                   ->move( self::NAV_TRUST_INVESTOR_REPORTING_X,
+                           self::NAV_TRUST_INVESTOR_REPORTING_Y )
+                   ->click();
+        //$this->page->waitForReload();
+
+        echo "\n\nsleeping\n\n";
+        flush();
+        sleep(5);
+        echo "\n\nawake\n\n";
+        flush();
+
+        // By this point I should be able to see the TIR interface.
+        if ( $this->debug ):
+            $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_i_should_see_stuff.jpg' );
+        endif;
+    }
+
+
+    public function goTo() {
 
     }
 
