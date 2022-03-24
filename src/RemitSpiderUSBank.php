@@ -5,9 +5,6 @@ namespace DPRMC\RemitSpiderUSBank;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
 use HeadlessChromium\BrowserFactory;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\UriInterface;
 
 class RemitSpiderUSBank {
 
@@ -19,9 +16,10 @@ class RemitSpiderUSBank {
     protected bool                                          $debug;
     protected string                                        $pathToScreenshots;
 
-    protected $page;
+    protected \HeadlessChromium\Page $page;
 
     const URL_LOGIN = 'https://usbtrustgateway.usbank.com/portal/login.do';
+    // const URL_LOGIN = 'https://fims2.deerparkrd.com/test-us';
 
 //    const BASE_URI  = 'https://usbtrustgateway.usbank.com';
 //    const URL_HOME  = '/portal';
@@ -37,10 +35,6 @@ class RemitSpiderUSBank {
     protected CookieJar $jar;
 
 
-    /**
-     * @param string $user
-     * @param string $pass
-     */
     public function __construct( string $chromePath,
                                  string $user,
                                  string $pass,
@@ -82,11 +76,6 @@ class RemitSpiderUSBank {
     }
 
 
-    /**
-     * @return bool
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     * @throws \Exception
-     */
     public function login(): bool {
         $this->page->navigate( self::URL_LOGIN )->waitForNavigation();
 
@@ -97,7 +86,7 @@ class RemitSpiderUSBank {
 
         $this->page->evaluate( "document.querySelector('#uname').value = '" . $this->user . "';" );
         $this->page->evaluate( "document.querySelector('#pword').value = '" . $this->pass . "';" );
-
+        //$this->page->evaluate( "document.querySelector('#uname').value = '" . $this->user . "';" );
         // DEBUG
         if ( $this->debug ):
             $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_filled_in_user_pass.jpg' );
@@ -108,25 +97,38 @@ class RemitSpiderUSBank {
 //             ->click();
 //$this->page->waitForReload();
 //        sleep(5);
-
-
 //        $evaluation = $this->page->evaluate( "document.querySelector('input[name='login']').submit();" );
         //$evaluation = $this->page->evaluate( "document.querySelector(input[name='login']).value = 'poop';" );
 //        $evaluation = $this->page->evaluate( 'document.querySelector("body > div:nth-child(1) > div.span-19.align-left > div > div:nth-child(4) > form").submit();' );
 //        $evaluation->waitForPageReload();
 
 
-        $js = "document.querySelector('button[type=\"submit\"]').click();";
+        //$js = "document.querySelector('button[type=\"submit\"]').click();";
+        // div.user-panel.main input[name='login']/
 
 
-        $evaluation = $this->page->evaluate( $js );
-        $evaluation->waitForPageReload();
+        //$js = "document.querySelector('#fuckface').submit();";
+        //$js = "document.querySelector('form[" . '"name=submit"]' . "'" . ').submit();';
 
+//        $js = "document.querySelector('[name=" . '"login"' . "]').submit();";
+//        print ("\n\n\n\n");
+//        print($js);
+//
+//        try {
+//            $evaluation = $this->page->evaluate( $js );
+//            $evaluation->waitForPageReload();
+//        }catch (\Exception $exception){
+//            die($exception->getMessage());
+//        }
 
+        $this->page->mouse()
+                   ->move( 111, 454 )
+                   ->click();
+        $this->page->waitForReload();
 
 
         if ( $this->debug ):
-            $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_something_was_clicked.jpg' );
+            $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_am_i_logged_in.jpg' );
         endif;
 
         return TRUE;
