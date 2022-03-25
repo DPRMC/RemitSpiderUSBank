@@ -43,7 +43,6 @@ class RemitSpiderUSBank {
     const NAV_TRUST_INVESTOR_REPORTING_Y = 165;
 
 
-
     public function __construct( string $chromePath,
                                  string $user,
                                  string $pass,
@@ -162,33 +161,87 @@ class RemitSpiderUSBank {
         endif;
 
 
-        // MOVE MOUSE METHOD
-        $this->page->mouse()
-                   ->move( self::NAV_TRUST_INVESTOR_REPORTING_X,
-                           self::NAV_TRUST_INVESTOR_REPORTING_Y )
-                   ->click();
-        sleep(1);
-        $this->page->mouse()
-                   ->move( self::NAV_TRUST_INVESTOR_REPORTING_X,
-                           self::NAV_TRUST_INVESTOR_REPORTING_Y )
-                   ->click();
-        sleep(1);
-        $this->page->mouse()
-                   ->move( self::NAV_TRUST_INVESTOR_REPORTING_X,
-                           self::NAV_TRUST_INVESTOR_REPORTING_Y )
-                   ->click();
-        sleep(1);
-        $this->page->mouse()
-                   ->move( self::NAV_TRUST_INVESTOR_REPORTING_X,
-                           self::NAV_TRUST_INVESTOR_REPORTING_Y )
-                   ->click();
-        //$this->page->waitForReload();
+        $sel  = '#nav-main > ul > li > ul > li > a';
+        $rect = $this->page
+            ->evaluate( 'JSON.parse(JSON.stringify(document.querySelector("' . $sel . '").getBoundingClientRect()));' )
+            ->getReturnValue();
 
-        echo "\n\nsleeping\n\n";
+        var_dump( $rect );
         flush();
-        sleep(5);
-        echo "\n\nawake\n\n";
+
+
+        $redir = "/portal/public/openApplication.do?appName=TIR-Ext&appUrl=https://trustinvestorreporting.usbank.com/TIR/portal/";
+
+        $func = "openApplication('TIR-Ext','https://trustinvestorreporting.usbank.com/TIR/portal/','TrustInvestorReporting')";
+        $evaluation = $this->page->callFunction(
+            $func
+        );
+
+        //$value = $evaluation->getReturnValue();
+        //var_dump($value);
         flush();
+
+        sleep(4);
+
+        $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_.jpg' );
+
+        die('doooooooone');
+
+
+
+
+        /**
+         * ["x"]=>  int(25)
+         * ["y"]=>  int(113)
+         * ["width"]=>  float(107.078125)
+         * ["height"]=>  int(38)
+         * ["top"]=>  int(113)
+         * ["right"]=>  float(132.078125)
+         * ["bottom"]=>  int(151)
+         * ["left"]=>  int(25)
+         */
+
+        $x      = $rect[ 'x' ];
+        $y      = $rect[ 'y' ];
+        $width  = $rect[ 'width' ];
+        $height = $rect[ 'height' ];
+        $clip   = new Clip( $x, $y, $width, $height );
+
+        // take the screenshot (in memory binaries)
+        $this->page->screenshot( [
+                                     'clip' => $clip,
+                                 ] )
+                   ->saveToFile( time() . '_' . microtime() . '_this_should_be_the_exact_link_test.jpg' );
+//        die('that awas the recttle');
+
+
+
+
+
+        $this->page->mouse()->move( \ceil( $rect[ 'x' ] + 10 ), \ceil( $rect[ 'y' ] + 10 ) )->click();
+        $this->page->waitForReload();
+
+        $title = $this->page->evaluate( 'document.title' )->getReturnValue();
+
+        var_dump($title);
+        flush();
+
+//        var_dump( $title );
+//        flush();
+//        //die('that awas the title');
+//
+//        // MOVE MOUSE METHOD
+//        $this->page->mouse()
+//                   ->move( self::NAV_TRUST_INVESTOR_REPORTING_X,
+//                           self::NAV_TRUST_INVESTOR_REPORTING_Y )
+//                   ->click();
+//
+//
+//        echo "\n\nsleeping\n\n";
+//        flush();
+//        sleep( 5 );
+//        echo "\n\nawake\n\n";
+//        flush();
 
         // By this point I should be able to see the TIR interface.
         if ( $this->debug ):
