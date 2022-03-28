@@ -1,7 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-
+use \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 
 /**
  * To run tests call:
@@ -10,9 +10,9 @@ use PHPUnit\Framework\TestCase;
  */
 class RemitSpiderUSBankTest extends TestCase {
 
-    protected static \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank $spider;
+    protected static RemitSpiderUSBank $spider;
 
-    protected static bool $debug = true;
+    protected static bool $debug = FALSE;
 
     public static function setUpBeforeClass(): void {
         self::$spider = new DPRMC\RemitSpiderUSBank\RemitSpiderUSBank( $_ENV[ 'CHROME_PATH' ],
@@ -28,7 +28,7 @@ class RemitSpiderUSBankTest extends TestCase {
     public function testHolder() {
 
         $loggedIn = self::$spider->login();
-        self::$spider->goToTrustInvestorReporting();
+
         $this->assertTrue( $loggedIn );
     }
 

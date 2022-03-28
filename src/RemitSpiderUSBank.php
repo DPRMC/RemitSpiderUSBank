@@ -17,30 +17,17 @@ class RemitSpiderUSBank {
 
     protected \HeadlessChromium\Page $page;
 
-    const URL_LOGIN = 'https://usbtrustgateway.usbank.com/portal/login.do';
-    // const URL_LOGIN = 'https://fims2.deerparkrd.com/test-us';
-    const URL_TEST = 'https://fims2.deerparkrd.com/test-us';
+    const URL_LOGIN     = 'https://usbtrustgateway.usbank.com/portal/login.do';
+    const URL_INTERFACE = 'https://trustinvestorreporting.usbank.com/TIR/portfolios';
 
     const BROWSER_ENABLE_IMAGES    = TRUE;
     const BROWSER_CONNECTION_DELAY = 0.8; // How long between browser actions. More human-like?
-//    const BROWSER_WINDOW_SIZE_WIDTH  = 500;
-//    const BROWSER_WINDOW_SIZE_HEIGHT = 440;
 
     const BROWSER_WINDOW_SIZE_WIDTH  = 1000;
     const BROWSER_WINDOW_SIZE_HEIGHT = 1000;
 
-//    const LOGIN_BUTTON_X = 40;
-//    const LOGIN_BUTTON_Y = 260;
-
     const LOGIN_BUTTON_X = 80;
     const LOGIN_BUTTON_Y = 260;
-
-    const NAV_APPLICATIONS_X = 50;
-    const NAV_APPLICATIONS_Y = 125;
-
-
-    const NAV_TRUST_INVESTOR_REPORTING_X = 150;
-    const NAV_TRUST_INVESTOR_REPORTING_Y = 165;
 
 
     public function __construct( string $chromePath,
@@ -53,7 +40,6 @@ class RemitSpiderUSBank {
         $this->pass              = $pass;
         $this->debug             = $debug;
         $this->pathToScreenshots = $pathToScreenshots;
-
 
         $browserFactory = new BrowserFactory( $this->chromePath );
         // starts headless chrome
@@ -71,19 +57,24 @@ class RemitSpiderUSBank {
     }
 
 
+    /**
+     * @return bool
+     * @throws \HeadlessChromium\Exception\CommunicationException
+     * @throws \HeadlessChromium\Exception\CommunicationException\CannotReadResponse
+     * @throws \HeadlessChromium\Exception\CommunicationException\InvalidResponse
+     * @throws \HeadlessChromium\Exception\CommunicationException\ResponseHasError
+     * @throws \HeadlessChromium\Exception\FilesystemException
+     * @throws \HeadlessChromium\Exception\NavigationExpired
+     * @throws \HeadlessChromium\Exception\NoResponseAvailable
+     * @throws \HeadlessChromium\Exception\OperationTimedOut
+     * @throws \HeadlessChromium\Exception\ScreenshotFailed
+     */
     public function login(): bool {
         $this->page->navigate( self::URL_LOGIN )->waitForNavigation();
-        ////die(self::URL_TEST);
-        //$this->page->navigate( self::URL_TEST )->waitForNavigation();
-        //$this->page->evaluate( "alert('foo');" );
-        //sleep(1);
-        //$this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_test_.jpg' );
-        //die('done');
 
         if ( $this->debug ):
             $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_first_page.jpg' );
         endif;
-
 
         $this->page->evaluate( "document.querySelector('#uname').value = '" . $this->user . "';" );
         $this->page->evaluate( "document.querySelector('#pword').value = '" . $this->pass . "';" );
@@ -116,142 +107,13 @@ class RemitSpiderUSBank {
             $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_am_i_logged_in.jpg' );
         endif;
 
+        $this->page->navigate( self::URL_INTERFACE )->waitForNavigation();
+
+        if ( $this->debug ):
+            $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_should_be_the_main_interface_.jpg' );
+        endif;
+
         return TRUE;
-    }
-
-
-    public function goToTrustInvestorReporting() {
-
-        // This forces the sub-menu to be visible.
-        $this->page->evaluate( "document.querySelector('.sub_menu').style.visibility = 'visible';" );
-        if ( $this->debug ):
-            $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_test_menu_should_be_visible.jpg' );
-        endif;
-
-        // DEBUG
-//        if ( $this->debug ):
-//            $x      = 0;
-//            $y      = 0;
-//            $width  = self::NAV_APPLICATIONS_X;
-//            $height = self::NAV_APPLICATIONS_Y;
-//            $clip   = new Clip( $x, $y, $width, $height );
-//
-//            $this->page->screenshot( [
-//                                         'clip' => $clip,
-//                                     ] )
-//                       ->saveToFile( time() . '_' . microtime() . '_where_i_need_to_hover.jpg' );
-//        endif;
-
-//        $this->page->mouse()
-//                   ->move( self::NAV_APPLICATIONS_X, self::NAV_APPLICATIONS_Y );
-//
-//        sleep( 1 );
-
-        if ( $this->debug ):
-            $x      = 0;
-            $y      = 0;
-            $width  = self::NAV_TRUST_INVESTOR_REPORTING_X;
-            $height = self::NAV_TRUST_INVESTOR_REPORTING_Y;
-            $clip   = new Clip( $x, $y, $width, $height );
-
-            $this->page->screenshot( [
-                                         'clip' => $clip,
-                                     ] )
-                       ->saveToFile( time() . '_' . microtime() . '_where_i_need_to_click_tir.jpg' );
-        endif;
-
-
-        $sel  = '#nav-main > ul > li > ul > li > a';
-        $rect = $this->page
-            ->evaluate( 'JSON.parse(JSON.stringify(document.querySelector("' . $sel . '").getBoundingClientRect()));' )
-            ->getReturnValue();
-
-        var_dump( $rect );
-        flush();
-
-
-        $redir = "/portal/public/openApplication.do?appName=TIR-Ext&appUrl=https://trustinvestorreporting.usbank.com/TIR/portal/";
-
-        $func = "openApplication('TIR-Ext','https://trustinvestorreporting.usbank.com/TIR/portal/','TrustInvestorReporting')";
-        $evaluation = $this->page->callFunction(
-            $func
-        );
-
-        //$value = $evaluation->getReturnValue();
-        //var_dump($value);
-        flush();
-
-        sleep(4);
-
-        $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_.jpg' );
-
-        die('doooooooone');
-
-
-
-
-        /**
-         * ["x"]=>  int(25)
-         * ["y"]=>  int(113)
-         * ["width"]=>  float(107.078125)
-         * ["height"]=>  int(38)
-         * ["top"]=>  int(113)
-         * ["right"]=>  float(132.078125)
-         * ["bottom"]=>  int(151)
-         * ["left"]=>  int(25)
-         */
-
-        $x      = $rect[ 'x' ];
-        $y      = $rect[ 'y' ];
-        $width  = $rect[ 'width' ];
-        $height = $rect[ 'height' ];
-        $clip   = new Clip( $x, $y, $width, $height );
-
-        // take the screenshot (in memory binaries)
-        $this->page->screenshot( [
-                                     'clip' => $clip,
-                                 ] )
-                   ->saveToFile( time() . '_' . microtime() . '_this_should_be_the_exact_link_test.jpg' );
-//        die('that awas the recttle');
-
-
-
-
-
-        $this->page->mouse()->move( \ceil( $rect[ 'x' ] + 10 ), \ceil( $rect[ 'y' ] + 10 ) )->click();
-        $this->page->waitForReload();
-
-        $title = $this->page->evaluate( 'document.title' )->getReturnValue();
-
-        var_dump($title);
-        flush();
-
-//        var_dump( $title );
-//        flush();
-//        //die('that awas the title');
-//
-//        // MOVE MOUSE METHOD
-//        $this->page->mouse()
-//                   ->move( self::NAV_TRUST_INVESTOR_REPORTING_X,
-//                           self::NAV_TRUST_INVESTOR_REPORTING_Y )
-//                   ->click();
-//
-//
-//        echo "\n\nsleeping\n\n";
-//        flush();
-//        sleep( 5 );
-//        echo "\n\nawake\n\n";
-//        flush();
-
-        // By this point I should be able to see the TIR interface.
-        if ( $this->debug ):
-            $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_i_should_see_stuff.jpg' );
-        endif;
-    }
-
-
-    public function goTo() {
-
     }
 
 
@@ -267,6 +129,11 @@ class RemitSpiderUSBank {
         endif;
         return FALSE;
     }
+
+
+
+
+
 
 
 }
