@@ -21,6 +21,19 @@ class RemitSpiderUSBank {
     protected bool                                          $debug;
     protected string                                        $pathToScreenshots;
 
+    /**
+     * @var string It's a great idea cache Portfolio IDs, Deal IDs, etc. I will store them in flat files at this path.
+     */
+    protected string $pathToIds;
+    const PORTFOLIO_IDS_FILENAME = 'portfolio_ids.txt';
+    const DEAL_IDS_FILENAME      = 'deal_ids.txt';
+
+    protected string $pathToPortfolioIds;
+    protected string $pathToDealIds;
+
+    protected array $portfolioIds;
+    protected array $dealIds;
+
     protected \HeadlessChromium\Page $page;
 
     const USER_AGENT_STRING = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.83 Safari/537.36';
@@ -69,11 +82,13 @@ class RemitSpiderUSBank {
     public function __construct( string $chromePath,
                                  string $user,
                                  string $pass,
+                                 string $pathToIds,
                                  bool   $debug = FALSE,
                                  string $pathToScreenshots = '' ) {
         $this->chromePath        = $chromePath;
         $this->user              = $user;
         $this->pass              = $pass;
+        $this->pathToIds         = $pathToIds;
         $this->debug             = $debug;
         $this->pathToScreenshots = $pathToScreenshots;
 
@@ -91,9 +106,35 @@ class RemitSpiderUSBank {
                                                              'customFlags'     => [ '--disable-web-security' ],
                                                          ] );
 
+        $this->pathToPortfolioIds = $this->pathToIds . DIRECTORY_SEPARATOR . self::PORTFOLIO_IDS_FILENAME;
+        $this->pathToDealIds      = $this->pathToIds . DIRECTORY_SEPARATOR . self::DEAL_IDS_FILENAME;
+        $this->_loadIds();
+
         // creates a new page and navigate to an url
         $this->createPage();
     }
+
+
+    /**
+     *
+     */
+    private function _loadIds(){
+        if( file_exists($this->pathToPortfolioIds) ):
+            $this->portfolioIds = file($this->pathToPortfolioIds);
+        else:
+            file_put_contents($this->pathToPortfolioIds,null);
+        endif;
+
+        if( file_exists($this->pathToDealIds) ):
+            $this->dealIds = file($this->pathToDealIds);
+        else:
+            file_put_contents($this->pathToDealIds,null);
+        endif;
+    }
+
+
+
+
 
     /**
      * @return string
@@ -177,8 +218,16 @@ class RemitSpiderUSBank {
     public function getAllPortfolioIds(): array {
         $postLoginHTML            = $this->login();
         $this->usBankPortfolioIds = $this->_getUSBankPortfolioIds( $postLoginHTML );
+
+        $writeSuccess = file_put_contents($this->pathToPortfolioIds, implode("\n",$this->usBankPortfolioIds));
+        if( false === $writeSuccess):
+            throw new \Exception("Unable to write US Bank Portfolio IDs to cache file: " . $this->pathToPortfolioIds);
+        endif;
+
         return $this->usBankPortfolioIds;
     }
+
+
 
 
     /**
@@ -203,8 +252,15 @@ class RemitSpiderUSBank {
                                                                                     self::NETWORK_IDLE_MS_TO_WAIT );
             $htmlWithListOfLinksToDeals = $this->page->getHtml();
 
-            $this->_screenshot( 'link_portfolioid_' . $usBankPortfolioId );
-            return $this->_getDealIdsFromHTML( $htmlWithListOfLinksToDeals );
+            $this->_screenshot( 'all_deals_for_portfolioid_' . $usBankPortfolioId );
+            $this->_html('all_deals_for_portfolioid_' . $usBankPortfolioId);
+            $dealIds = $this->_getDealIdsFromHTML( $htmlWithListOfLinksToDeals );
+
+            $writeSuccess = file_put_contents($this->pathToDealIds, implode("\n",$dealIds));
+            if( false === $writeSuccess):
+                throw new \Exception("Unable to write US Bank Deal IDs to cache file: " . $this->pathToDealIds);
+            endif;
+
         } catch ( \Exception $exception ) {
             $this->_debug( "    EXCEPTION: " . $exception->getMessage() );
             $this->usBankPortfolioIdsMissingDealLinks[] = $usBankPortfolioId;
@@ -222,7 +278,7 @@ class RemitSpiderUSBank {
      * @throws \Exception
      */
     protected function _getDealIdsFromHTML( string $htmlWithListOfLinksToDeals ): array {
-        $securityIds = [];
+        $listOfSecurityIds = [];
         $pattern     = '/\/detail\/(\d*)\//';
         $dom         = new \DOMDocument();
         @$dom->loadHTML( $htmlWithListOfLinksToDeals );
@@ -233,16 +289,17 @@ class RemitSpiderUSBank {
             // This is the one we want!
             if ( 'draggable-report-1' == $id ):
                 $href = $element->getAttribute( 'href' );
+                $securityIds = null;
                 preg_match( $pattern, $href, $securityIds );
 
                 if ( 2 != count( $securityIds ) ):
                     throw new \Exception( "Unable to find link to deal in this string: " . $href );
                 endif;
 
-                $securityIds[] = $securityIds[ 1 ];
+                $listOfSecurityIds[] = $securityIds[ 1 ];
             endif;
         endforeach;
-        return $securityIds;
+        return $listOfSecurityIds;
     }
 
 
@@ -522,7 +579,7 @@ class RemitSpiderUSBank {
     /**
      * This is just a little helper function to clean up some of the debug code.
      *
-     * @param string                      $suffix
+     * @param string $suffix
      * @param \HeadlessChromium\Clip|NULL $clip
      *
      * @return void

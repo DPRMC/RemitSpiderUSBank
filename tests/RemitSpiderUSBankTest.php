@@ -18,7 +18,12 @@ class RemitSpiderUSBankTest extends TestCase {
         self::$spider = new DPRMC\RemitSpiderUSBank\RemitSpiderUSBank( $_ENV[ 'CHROME_PATH' ],
                                                                        $_ENV[ 'USBANK_USER' ],
                                                                        $_ENV[ 'USBANK_PASS' ],
+                                                                       $_ENV[ 'PATH_TO_IDS' ],
                                                                        self::$debug );
+    }
+
+    public static function tearDownAfterClass(): void {
+        self::$spider->logout();
     }
 
 
@@ -29,6 +34,17 @@ class RemitSpiderUSBankTest extends TestCase {
     public function testGetAllPortfolioIdsShouldReturnAnArray(){
         $portfolioIds = self::$spider->getAllPortfolioIds();
         $this->assertGreaterThan(0,count($portfolioIds));
+    }
+
+
+    /**
+     * @test
+     * @group g
+     */
+    public function testGetAllDealIdsForPortfolioId(){
+        $dealIds = self::$spider->getAllDealIdsForPortfolioId($_ENV[ 'PORTFOLIO_ID' ]);
+        print_r($dealIds); flush(); die();
+        $this->assertGreaterThan(0,count($dealIds));
     }
 
 
