@@ -4,7 +4,13 @@ namespace DPRMC\RemitSpiderUSBank;
 
 use HeadlessChromium\BrowserFactory;
 use HeadlessChromium\Clip;
+use HeadlessChromium\Cookies\CookiesCollection;
+use HeadlessChromium\Page;
 
+
+/**
+ *
+ */
 class RemitSpiderUSBank {
 
 
@@ -17,11 +23,16 @@ class RemitSpiderUSBank {
 
     protected \HeadlessChromium\Page $page;
 
-    const URL_LOGIN     = 'https://usbtrustgateway.usbank.com/portal/login.do';
-    const URL_INTERFACE = 'https://trustinvestorreporting.usbank.com/TIR/portfolios';
+    const USER_AGENT_STRING = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.83 Safari/537.36';
+
+    const URL_LOGIN         = 'https://usbtrustgateway.usbank.com/portal/login.do';
+    const BASE_URL          = 'https://trustinvestorreporting.usbank.com';
+    const URL_INTERFACE     = self::BASE_URL . '/TIR/portfolios';
+    const URL_LIST_OF_DEALS = self::BASE_URL . '/TIR/portfolios/getPortfolioDeals/';
+    const URL_LOGOUT        = self::BASE_URL . '/TIR/logout';
 
     const BROWSER_ENABLE_IMAGES    = TRUE;
-    const BROWSER_CONNECTION_DELAY = 0.8; // How long between browser actions. More human-like?
+    const BROWSER_CONNECTION_DELAY = 1; // How long between browser actions. More human-like?
 
     const BROWSER_WINDOW_SIZE_WIDTH  = 1000;
     const BROWSER_WINDOW_SIZE_HEIGHT = 1000;
@@ -29,6 +40,31 @@ class RemitSpiderUSBank {
     const LOGIN_BUTTON_X = 80;
     const LOGIN_BUTTON_Y = 260;
 
+    const NETWORK_IDLE_MS_TO_WAIT = 4000;
+
+
+    protected string $csrf;
+    protected array  $usBankPortfolioIds = [];
+
+    // There must have been some navigation error that prevented the deals page from loading.
+    // Slap the portfolio ID into this array, and I can try to pull them down later.
+    protected array $usBankPortfolioIdsMissingDealLinks = [];
+
+
+    protected array $historyLinksBySecurityId       = [];
+    protected array $securityIdsMissingHistoryLinks = [];
+
+
+    /**
+     * TESTING, not sure if this will work.
+     *
+     * @var CookiesCollection Saving the cookies post login. When the connection dies for no reason, I can restart the session.
+     */
+    public CookiesCollection $cookies;
+
+
+    // https://trustinvestorreporting.usbank.com/TIR/public/deals/detail/1710/abn-amro-2003-4
+    protected array $linksToDealsBySecurityId = [];
 
     public function __construct( string $chromePath,
                                  string $user,
@@ -41,6 +77,8 @@ class RemitSpiderUSBank {
         $this->debug             = $debug;
         $this->pathToScreenshots = $pathToScreenshots;
 
+        $this->cookies = new CookiesCollection();
+
         $browserFactory = new BrowserFactory( $this->chromePath );
         // starts headless chrome
         $this->browser = $browserFactory->createBrowser( [
@@ -50,10 +88,54 @@ class RemitSpiderUSBank {
                                                              'windowSize'      => [ self::BROWSER_WINDOW_SIZE_WIDTH,
                                                                                     self::BROWSER_WINDOW_SIZE_HEIGHT ],
                                                              'enableImages'    => self::BROWSER_ENABLE_IMAGES,
+                                                             'customFlags'     => [ '--disable-web-security' ],
                                                          ] );
 
         // creates a new page and navigate to an url
-        $this->page = $this->browser->createPage();
+        $this->createPage();
+    }
+
+    /**
+     * @return string
+     * @throws \HeadlessChromium\Exception\CommunicationException
+     * @throws \HeadlessChromium\Exception\CommunicationException\CannotReadResponse
+     * @throws \HeadlessChromium\Exception\CommunicationException\InvalidResponse
+     * @throws \HeadlessChromium\Exception\CommunicationException\ResponseHasError
+     * @throws \HeadlessChromium\Exception\FilesystemException
+     * @throws \HeadlessChromium\Exception\NavigationExpired
+     * @throws \HeadlessChromium\Exception\NoResponseAvailable
+     * @throws \HeadlessChromium\Exception\OperationTimedOut
+     * @throws \HeadlessChromium\Exception\ScreenshotFailed
+     */
+    public function login(): string {
+        $this->page->navigate( self::URL_LOGIN )->waitForNavigation();
+
+        $this->_screenshot( 'first_page' );
+
+        $this->page->evaluate( "document.querySelector('#uname').value = '" . $this->user . "';" );
+        $this->page->evaluate( "document.querySelector('#pword').value = '" . $this->pass . "';" );
+
+        // DEBUG
+        $this->_screenshot( 'filled_in_user_pass' );
+        $this->_screenshot( 'where_i_clicked_to_login', new Clip( 0, 0, self::LOGIN_BUTTON_X, self::LOGIN_BUTTON_Y ) );
+
+
+        // Click the login button, and wait for the page to reload.
+        $this->page->mouse()
+                   ->move( self::LOGIN_BUTTON_X, self::LOGIN_BUTTON_Y )
+                   ->click();
+        $this->page->waitForReload();
+
+        $this->_screenshot( 'am_i_logged_in' );
+
+        $this->page->navigate( self::URL_INTERFACE )->waitForNavigation( Page::NETWORK_IDLE, 5000 );
+
+        $this->_screenshot( 'should_be_the_main_interface' );
+
+        $this->cookies = $this->page->getAllCookies();
+        $postLoginHTML = $this->page->getHtml();
+        $this->csrf    = $this->getCSRF( $postLoginHTML );
+        return $postLoginHTML;
     }
 
 
@@ -69,71 +151,412 @@ class RemitSpiderUSBank {
      * @throws \HeadlessChromium\Exception\OperationTimedOut
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
      */
-    public function login(): bool {
-        $this->page->navigate( self::URL_LOGIN )->waitForNavigation();
-
-        if ( $this->debug ):
-            $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_first_page.jpg' );
-        endif;
-
-        $this->page->evaluate( "document.querySelector('#uname').value = '" . $this->user . "';" );
-        $this->page->evaluate( "document.querySelector('#pword').value = '" . $this->pass . "';" );
-
-        // DEBUG
-        if ( $this->debug ):
-            $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_filled_in_user_pass.jpg' );
-            $x      = 0;
-            $y      = 0;
-            $width  = self::LOGIN_BUTTON_X;
-            $height = self::LOGIN_BUTTON_Y;
-            $clip   = new Clip( $x, $y, $width, $height );
-
-            // take the screenshot (in memory binaries)
-            $this->page->screenshot( [
-                                         'clip' => $clip,
-                                     ] )
-                       ->saveToFile( time() . '_' . microtime() . '_where_i_clicked_to_login.jpg' );
-        endif;
-
-
-        // Click the login button, and wait for the page to reload.
-        $this->page->mouse()
-                   ->move( self::LOGIN_BUTTON_X, self::LOGIN_BUTTON_Y )
-                   ->click();
-        $this->page->waitForReload();
-
-
-        if ( $this->debug ):
-            $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_am_i_logged_in.jpg' );
-        endif;
-
-        $this->page->navigate( self::URL_INTERFACE )->waitForNavigation();
-
-        if ( $this->debug ):
-            $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_should_be_the_main_interface_.jpg' );
-        endif;
-
+    public function logout(): bool {
+        $this->page->navigate( self::URL_LOGOUT )->waitForNavigation();
+        $this->_screenshot( 'loggedout' );
         return TRUE;
     }
 
 
     /**
-     * @param string $text
+     * This method will return an array of US Bank Portfolio IDs.
+     * Each of these Portfolio IDs will get passed to another method, that
+     * will gather all the US Bank Deal IDs.
      *
-     * @return bool
+     * @return array
+     * @throws \HeadlessChromium\Exception\CommunicationException
+     * @throws \HeadlessChromium\Exception\CommunicationException\CannotReadResponse
+     * @throws \HeadlessChromium\Exception\CommunicationException\InvalidResponse
+     * @throws \HeadlessChromium\Exception\CommunicationException\ResponseHasError
+     * @throws \HeadlessChromium\Exception\FilesystemException
+     * @throws \HeadlessChromium\Exception\NavigationExpired
+     * @throws \HeadlessChromium\Exception\NoResponseAvailable
+     * @throws \HeadlessChromium\Exception\OperationTimedOut
+     * @throws \HeadlessChromium\Exception\ScreenshotFailed
      */
-    protected function isLoggedIn( string $text ): bool {
-        $testString = 'Welcome,';
-        if ( TRUE === str_contains( $text, $testString ) ):
-            return TRUE;
+    public function getAllPortfolioIds(): array {
+        $postLoginHTML            = $this->login();
+        $this->usBankPortfolioIds = $this->_getUSBankPortfolioIds( $postLoginHTML );
+        return $this->usBankPortfolioIds;
+    }
+
+
+    /**
+     * @param string $usBankPortfolioId
+     *
+     * @return array|void
+     * @throws \HeadlessChromium\Exception\CommunicationException
+     * @throws \HeadlessChromium\Exception\CommunicationException\CannotReadResponse
+     * @throws \HeadlessChromium\Exception\CommunicationException\InvalidResponse
+     * @throws \HeadlessChromium\Exception\CommunicationException\ResponseHasError
+     * @throws \HeadlessChromium\Exception\FilesystemException
+     * @throws \HeadlessChromium\Exception\NavigationExpired
+     * @throws \HeadlessChromium\Exception\NoResponseAvailable
+     * @throws \HeadlessChromium\Exception\OperationTimedOut
+     * @throws \HeadlessChromium\Exception\ScreenshotFailed
+     */
+    public function getAllDealIdsForPortfolioId( string $usBankPortfolioId ) {
+        $postLoginHTML             = $this->login();
+        $linkToAllDealsInPortfolio = self::URL_LIST_OF_DEALS . $usBankPortfolioId . '/0?OWASP_CSRFTOKEN=' . $this->csrf;
+        try {
+            $this->page->navigate( $linkToAllDealsInPortfolio )->waitForNavigation( Page::NETWORK_IDLE,
+                                                                                    self::NETWORK_IDLE_MS_TO_WAIT );
+            $htmlWithListOfLinksToDeals = $this->page->getHtml();
+
+            $this->_screenshot( 'link_portfolioid_' . $usBankPortfolioId );
+            return $this->_getDealIdsFromHTML( $htmlWithListOfLinksToDeals );
+        } catch ( \Exception $exception ) {
+            $this->_debug( "    EXCEPTION: " . $exception->getMessage() );
+            $this->usBankPortfolioIdsMissingDealLinks[] = $usBankPortfolioId;
+        }
+    }
+
+
+    /**
+     * A Parser method that accepts HTML that should contain a list of Deals.
+     * This method will parse that HTML and return an array of US Bank Deal IDs.
+     *
+     * @param string $htmlWithListOfLinksToDeals
+     *
+     * @return array
+     * @throws \Exception
+     */
+    protected function _getDealIdsFromHTML( string $htmlWithListOfLinksToDeals ): array {
+        $securityIds = [];
+        $pattern     = '/\/detail\/(\d*)\//';
+        $dom         = new \DOMDocument();
+        @$dom->loadHTML( $htmlWithListOfLinksToDeals );
+        $elements = $dom->getElementsByTagName( 'a' );
+        foreach ( $elements as $element ):
+            $id = $element->getAttribute( 'id' );
+
+            // This is the one we want!
+            if ( 'draggable-report-1' == $id ):
+                $href = $element->getAttribute( 'href' );
+                preg_match( $pattern, $href, $securityIds );
+
+                if ( 2 != count( $securityIds ) ):
+                    throw new \Exception( "Unable to find link to deal in this string: " . $href );
+                endif;
+
+                $securityIds[] = $securityIds[ 1 ];
+            endif;
+        endforeach;
+        return $securityIds;
+    }
+
+
+    /**
+     * @param string $postLoginHTML This is the HTML of the page immediately following a successful login.
+     *
+     * @return array
+     * @throws \Exception
+     */
+    public function getAllDealLinks( string $postLoginHTML ): array {
+
+        $this->csrf               = $this->getCSRF( $postLoginHTML );
+        $this->usBankPortfolioIds = $this->_getUSBankPortfolioIds( $postLoginHTML );
+
+        $portfolioLinks = [];
+
+        foreach ( $this->usBankPortfolioIds as $usBankPortfolioId ):
+            $portfolioLinks[ $usBankPortfolioId ] = self::URL_LIST_OF_DEALS . $usBankPortfolioId . '/0?OWASP_CSRFTOKEN=' . $this->csrf;
+        endforeach;
+
+
+        // Example $link
+        // https://trustinvestorreporting.usbank.com/TIR/portfolios/getPortfolioDeals/193549/0?OWASP_CSRFTOKEN=X2AE-TKJT-RB71-2E9Y-YNTW-XQGW-WZ52-LNP
+        foreach ( $portfolioLinks as $usBankPortfolioId => $portfolioLink ):
+//            echo $portfolioLink; flush(); die($portfolioLink);
+            try {
+                $this->page->navigate( $portfolioLink )->waitForNavigation( Page::NETWORK_IDLE,
+                                                                            self::NETWORK_IDLE_MS_TO_WAIT );
+                $htmlWithListOfLinksToDeals = $this->page->getHtml();
+
+                $this->_screenshot( 'link_portfolioid_' . $usBankPortfolioId );
+                $this->setLinksToDealsBySecurityId( $htmlWithListOfLinksToDeals );
+            } catch ( \Exception $exception ) {
+                $this->_debug( "    EXCEPTION: " . $exception->getMessage() );
+                $this->usBankPortfolioIdsMissingDealLinks[] = $usBankPortfolioId;
+            }
+        endforeach;
+
+        if ( count( $this->linksToDealsBySecurityId ) < 1 ):
+            throw new \Exception( "No deals were found. Perhaps a login problem" );
         endif;
-        return FALSE;
+
+        return $this->linksToDealsBySecurityId;
+    }
+
+
+
+
+//    public function getRecentDocs() {
+//        $this->login();
+//        $links = $this->getAllDealLinks();
+//        foreach ( $links as $securityId => $link ):
+//
+//        endforeach;
+//    }
+
+
+    // This will click on the history links to get all the files.
+    public function getAllDocs() {
+        $this->_debug( "Attempting to login to US Bank..." );
+        $this->login();
+        $this->_debug( "Logged in!" );
+
+        $this->_debug( "Getting all deal links" );
+        $html      = $this->page->getHtml();
+        $dealLinks = $this->getAllDealLinks( $html ); // This works.
+        $this->_debug( "I found " . count( $dealLinks ) . " deal links." );
+
+
+        foreach ( $dealLinks as $securityId => $dealLink ):
+            try {
+                $this->_debug( "Navigating to: " . $dealLink );
+
+                $this->page->navigate( $dealLink . '?OWASP_CSRFTOKEN=' . $this->csrf )
+                           ->waitForNavigation( Page::NETWORK_IDLE,
+                                                self::NETWORK_IDLE_MS_TO_WAIT );
+                $html = $this->page->getHtml();
+                $this->_debug( "I have the HTML code" );
+
+                $this->_screenshot( $securityId . '_main' );
+                $this->_html( $securityId . '_main' );
+
+                $this->historyLinksBySecurityId[ $securityId ] = $this->getHistoryLinks( $html );
+            } catch ( \Exception $exception ) {
+                $this->_debug( "    EXCEPTION: " . $exception->getMessage() );
+                $this->securityIdsMissingHistoryLinks[] = $securityId;
+            }
+
+        endforeach;
+
+
+        print_r( $this->historyLinksBySecurityId );
+        print_r( $this->securityIdsMissingHistoryLinks );
+        flush();
+        die();
+
+//        $this->_debug("I found " . count( $historyLinks ) . " history links.");
+//
+//
+//        foreach ( $historyLinks as $historyLink ):
+//            $downloadLinks = $this->getDownloadLinksFromHistoryLink( $historyLink, $securityId );
+//            sleep( 1 );
+//        endforeach;
+//
+//
+//        print_r( $downloadLinks );
+//        flush();
+//        die();
+    }
+
+
+    /**
+     * This appears to work
+     *
+     * @param string $html
+     *
+     * @return array
+     */
+    private function getHistoryLinks( string $html ): array {
+        $historyLinks = [];
+        $dom          = new \DOMDocument();
+        @$dom->loadHTML( $html );
+        $elements = $dom->getElementsByTagName( 'a' );
+        foreach ( $elements as $element ):
+            $class = $element->getAttribute( 'class' );
+
+            // This is the one we want!
+            if ( 'periodic_report_2' == $class ):
+                $historyLinks[] = self::BASE_URL . $element->getAttribute( 'href' );
+            endif;
+        endforeach;
+        return $historyLinks;
+    }
+
+    private function getDownloadLinksFromHistoryLink( string $historyLink, int $securityId ): array {
+        $downloadLinks = [];
+
+        echo "Navigating to nhisoty link: " . $historyLink . "\n\n";
+        flush();
+
+        try {
+            $this->page->navigate( $historyLink . '&OWASP_CSRFTOKEN=' . $this->csrf )
+                       ->waitForNavigation( Page::NETWORK_IDLE,
+                                            self::NETWORK_IDLE_MS_TO_WAIT );
+            $html = $this->page->getHtml();
+            echo "Done navigating to history link\n";
+            flush();
+
+            $this->_screenshot( $securityId . '_history' );
+            $this->_html( $securityId . '_history' );
+
+            $downloadLinks = [];
+            $dom           = new \DOMDocument();
+            @$dom->loadHTML( $html );
+            $elements = $dom->getElementsByTagName( 'a' );
+
+            foreach ( $elements as $element ):
+                $href            = $element->getAttribute( 'href' );
+                $downloadLinks[] = $href;
+            endforeach;
+            echo "\nDone getting download links.\n";
+        } catch ( \Exception $exception ) {
+            echo "\n\nEXCEPTION: \n\n";
+            echo $exception->getMessage();
+            echo "\n\n\n";
+            flush();
+
+
+        }
+
+
+        return $downloadLinks;
     }
 
 
 
 
 
+    // Get all deal links
+    // https://trustinvestorreporting.usbank.com/TIR/portfolios?layout=layout&OWASP_CSRFTOKEN=SY9X-M73H-KUQB-B4FZ-770V-WW55-LXFT-N05E#
+
+
+    private function getPortfolioIdFromLink( string $portfolioLink ): string {
+
+    }
+
+
+    /**
+     * @param string $html
+     *
+     * @return string
+     * @throws \Exception
+     */
+    protected function getCSRF( string $html ): string {
+        $dom = new \DOMDocument();
+        @$dom->loadHTML( $html );
+        $inputs = $dom->getElementsByTagName( 'input' );
+        foreach ( $inputs as $input ):
+            $id = $input->getAttribute( 'id' );
+
+            // This is the one we want!
+            if ( 'OWASP_CSRFTOKEN' == $id ):
+                return $input->getAttribute( 'value' );
+            endif;
+        endforeach;
+        throw new \Exception( "Unable to find the CSRF value in the HTML." );
+    }
+
+
+    /**
+     * @param string $postLoginHTML
+     *
+     * @return array
+     */
+    protected function _getUSBankPortfolioIds( string $postLoginHTML ): array {
+        $usBankPortfolioIds = [];
+        $dom                = new \DOMDocument();
+        @$dom->loadHTML( $postLoginHTML );
+        $elements = $dom->getElementsByTagName( 'a' );
+        foreach ( $elements as $element ):
+            $class = $element->getAttribute( 'class' );
+
+            // This is the one we want!
+            if ( 'lnk_portfoliotab' == $class ):
+                $usBankPortfolioIds[] = $element->getAttribute( 'id' );
+            endif;
+        endforeach;
+        return $usBankPortfolioIds;
+    }
+
+
+    /**
+     * Links look like this:
+     * Ex: /TIR/public/deals/detail/5155/surf-2006-bc3
+     *
+     * @param string $html
+     *
+     * @return void
+     * @throws \Exception
+     */
+    protected function setLinksToDealsBySecurityId( string $html ) {
+        $pattern = '/\/detail\/(\d*)\//';
+        $dom     = new \DOMDocument();
+        @$dom->loadHTML( $html );
+        $elements = $dom->getElementsByTagName( 'a' );
+        foreach ( $elements as $element ):
+            $securityIds = [];
+            $id          = $element->getAttribute( 'id' );
+
+            // This is the one we want!
+            if ( 'draggable-report-1' == $id ):
+                $href = $element->getAttribute( 'href' );
+                preg_match( $pattern, $href, $securityIds );
+
+                if ( 2 != count( $securityIds ) ):
+                    throw new \Exception( "Unable to find link to deal in this string: " . $href );
+                endif;
+
+                $securityId                                    = $securityIds[ 1 ];
+                $this->linksToDealsBySecurityId[ $securityId ] = self::BASE_URL . $href;
+            endif;
+        endforeach;
+    }
+
+    private function createPage() {
+        $this->page = $this->browser->createPage();
+        $this->page->setUserAgent( self::USER_AGENT_STRING );
+        $this->page->setCookies( $this->cookies );
+    }
+
+
+    public function reloadCookies() {
+        $this->page->setCookies( $this->cookies );
+    }
+
+
+    /**
+     * This is just a little helper function to clean up some of the debug code.
+     *
+     * @param string                      $suffix
+     * @param \HeadlessChromium\Clip|NULL $clip
+     *
+     * @return void
+     * @throws \HeadlessChromium\Exception\CommunicationException
+     * @throws \HeadlessChromium\Exception\FilesystemException
+     * @throws \HeadlessChromium\Exception\ScreenshotFailed
+     */
+    private function _screenshot( string $suffix, Clip $clip = NULL ) {
+        if ( $this->debug ):
+            if ( $clip ):
+                $this->page->screenshot( [ 'clip' => $clip ] )->saveToFile( time() . '_' . microtime() . '_' . $suffix . '.jpg' );
+            else:
+                $this->page->screenshot()->saveToFile( time() . '_' . microtime() . '_' . $suffix . '.jpg' );
+            endif;
+        endif;
+    }
+
+
+    private function _html( string $filename ) {
+        if ( $this->debug ):
+            $html = $this->page->getHtml();
+            file_put_contents( $this->pathToScreenshots . time() . '_' . microtime() . '_' . $filename . '.html', $html );
+        endif;
+    }
+
+    private function _debug( string $message, bool $die = FALSE ) {
+        if ( $this->debug ):
+            echo "\n" . $message . "\n";
+            flush();
+            if ( $die ):
+                die();
+            endif;
+        endif;
+    }
 
 
 }

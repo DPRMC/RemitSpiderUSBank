@@ -12,7 +12,7 @@ class RemitSpiderUSBankTest extends TestCase {
 
     protected static RemitSpiderUSBank $spider;
 
-    protected static bool $debug = FALSE;
+    protected static bool $debug = TRUE;
 
     public static function setUpBeforeClass(): void {
         self::$spider = new DPRMC\RemitSpiderUSBank\RemitSpiderUSBank( $_ENV[ 'CHROME_PATH' ],
@@ -24,13 +24,51 @@ class RemitSpiderUSBankTest extends TestCase {
 
     /**
      * @test
+     * @group globals
+     */
+    public function testGetAllPortfolioIdsShouldReturnAnArray(){
+        $portfolioIds = self::$spider->getAllPortfolioIds();
+        $this->assertGreaterThan(0,count($portfolioIds));
+    }
+
+
+
+
+
+
+    /**
+     * @test
      */
     public function testHolder() {
 
-        $loggedIn = self::$spider->login();
+//        $loggedIn = self::$spider->login();
+//        $this->assertTrue( $loggedIn );
+//        $links = self::$spider->getAllDealLinks();
+//        print_r($links);
 
-        $this->assertTrue( $loggedIn );
+        self::$spider->getAllDocs();
     }
+
+
+    /**
+     * @test
+     * @group page
+     */
+//    public function testCreatePage(){
+//
+//            self::$spider->login();
+////        print_r(self::$spider->cookies);
+////        flush();
+////        self::$spider->createPage();
+////
+//            print_r(self::$spider->cookies);
+//            flush();
+//
+//            self::$spider->reloadCookies();
+//            die();
+//    }
+
+
 
 
 }
