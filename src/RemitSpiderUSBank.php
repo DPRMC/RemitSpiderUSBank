@@ -223,7 +223,7 @@ class RemitSpiderUSBank {
         if( false === $writeSuccess):
             throw new \Exception("Unable to write US Bank Portfolio IDs to cache file: " . $this->pathToPortfolioIds);
         endif;
-
+        $this->logout();
         return $this->usBankPortfolioIds;
     }
 
@@ -233,7 +233,7 @@ class RemitSpiderUSBank {
     /**
      * @param string $usBankPortfolioId
      *
-     * @return array|void
+     * @return array
      * @throws \HeadlessChromium\Exception\CommunicationException
      * @throws \HeadlessChromium\Exception\CommunicationException\CannotReadResponse
      * @throws \HeadlessChromium\Exception\CommunicationException\InvalidResponse
@@ -244,7 +244,7 @@ class RemitSpiderUSBank {
      * @throws \HeadlessChromium\Exception\OperationTimedOut
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
      */
-    public function getAllDealIdsForPortfolioId( string $usBankPortfolioId ) {
+    public function getAllDealIdsForPortfolioId( string $usBankPortfolioId ): array {
         $postLoginHTML             = $this->login();
         $linkToAllDealsInPortfolio = self::URL_LIST_OF_DEALS . $usBankPortfolioId . '/0?OWASP_CSRFTOKEN=' . $this->csrf;
         try {
@@ -261,11 +261,24 @@ class RemitSpiderUSBank {
                 throw new \Exception("Unable to write US Bank Deal IDs to cache file: " . $this->pathToDealIds);
             endif;
 
+            $this->logout();
+            return $dealIds;
         } catch ( \Exception $exception ) {
             $this->_debug( "    EXCEPTION: " . $exception->getMessage() );
             $this->usBankPortfolioIdsMissingDealLinks[] = $usBankPortfolioId;
+            throw $exception;
         }
     }
+
+
+
+
+
+
+
+
+
+
 
 
     /**
