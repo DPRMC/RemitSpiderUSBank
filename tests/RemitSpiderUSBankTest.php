@@ -27,13 +27,31 @@ class RemitSpiderUSBankTest extends TestCase {
     }
 
 
+
+
+    public function aTestTest() {
+        $chromePath        = '';
+        $user              = '';
+        $pass              = '';
+        $pathToIds         = '';
+        $debug             = FALSE;
+        $pathToScreenshots = '';
+        $remitSpiderUSBank = new DPRMC\RemitSpiderUSBank\RemitSpiderUSBank( $chromePath,
+                                                                            $user,
+                                                                            $pass,
+                                                                            $pathToIds,
+                                                                            $debug,
+                                                                            $pathToScreenshots );
+    }
+
+
     /**
      * @test
      * @group globals
      */
-    public function testGetAllPortfolioIdsShouldReturnAnArray(){
+    public function testGetAllPortfolioIdsShouldReturnAnArray() {
         $portfolioIds = self::$spider->getAllPortfolioIds();
-        $this->assertGreaterThan(0,count($portfolioIds));
+        $this->assertGreaterThan( 0, count( $portfolioIds ) );
     }
 
 
@@ -41,15 +59,13 @@ class RemitSpiderUSBankTest extends TestCase {
      * @test
      * @group g
      */
-    public function testGetAllDealIdsForPortfolioId(){
-        $dealIds = self::$spider->getAllDealIdsForPortfolioId($_ENV[ 'PORTFOLIO_ID' ]);
-        print_r($dealIds); flush(); die();
-        $this->assertGreaterThan(0,count($dealIds));
+    public function testGetAllDealIdsForPortfolioId() {
+        $dealIds = self::$spider->getAllDealLinkSuffixesForPortfolioId( $_ENV[ 'PORTFOLIO_ID' ] );
+        print_r( $dealIds );
+        flush();
+        die();
+        $this->assertGreaterThan( 0, count( $dealIds ) );
     }
-
-
-
-
 
 
     /**
@@ -83,8 +99,6 @@ class RemitSpiderUSBankTest extends TestCase {
 //            self::$spider->reloadCookies();
 //            die();
 //    }
-
-
 
 
 }

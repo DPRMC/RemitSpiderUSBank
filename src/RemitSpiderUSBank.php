@@ -2,6 +2,10 @@
 
 namespace DPRMC\RemitSpiderUSBank;
 
+use DPRMC\RemitSpiderUSBank\Helpers\USBankBrowser;
+use DPRMC\RemitSpiderUSBank\Helpers\Debug;
+use DPRMC\RemitSpiderUSBank\Helpers\HistoryLinks;
+use DPRMC\RemitSpiderUSBank\Helpers\Login;
 use HeadlessChromium\BrowserFactory;
 use HeadlessChromium\Clip;
 use HeadlessChromium\Cookies\CookiesCollection;
@@ -12,6 +16,12 @@ use HeadlessChromium\Page;
  *
  */
 class RemitSpiderUSBank {
+
+
+    public USBankBrowser $USBankBrowser;
+    public Debug         $Debug;
+    public Login         $Login;
+    public HistoryLinks  $HistoryLinks;
 
 
     protected string                                        $chromePath;
@@ -79,61 +89,81 @@ class RemitSpiderUSBank {
     // https://trustinvestorreporting.usbank.com/TIR/public/deals/detail/1710/abn-amro-2003-4
     protected array $linksToDealsBySecurityId = [];
 
+
     public function __construct( string $chromePath,
                                  string $user,
                                  string $pass,
                                  string $pathToIds,
                                  bool   $debug = FALSE,
                                  string $pathToScreenshots = '' ) {
-        $this->chromePath        = $chromePath;
-        $this->user              = $user;
-        $this->pass              = $pass;
-        $this->pathToIds         = $pathToIds;
-        $this->debug             = $debug;
-        $this->pathToScreenshots = $pathToScreenshots;
 
-        $this->cookies = new CookiesCollection();
+        $this->USBankBrowser = new USBankBrowser( $chromePath );
+        $this->Debug         = new Debug( $this->USBankBrowser->page,
+                                          $pathToScreenshots,
+                                          $debug );
+        $this->Login         = new Login( $this->USBankBrowser->page,
+                                          $this->Debug,
+                                          $user,
+                                          $pass );
 
-        $browserFactory = new BrowserFactory( $this->chromePath );
-        // starts headless chrome
-        $this->browser = $browserFactory->createBrowser( [
-                                                             'headless'        => TRUE,         // disable headless mode
-                                                             'connectionDelay' => self::BROWSER_CONNECTION_DELAY,           // add 0.8 second of delay between each instruction sent to chrome,
-                                                             //'debugLogger'     => 'php://stdout', // will enable verbose mode
-                                                             'windowSize'      => [ self::BROWSER_WINDOW_SIZE_WIDTH,
-                                                                                    self::BROWSER_WINDOW_SIZE_HEIGHT ],
-                                                             'enableImages'    => self::BROWSER_ENABLE_IMAGES,
-                                                             'customFlags'     => [ '--disable-web-security' ],
-                                                         ] );
-
-        $this->pathToPortfolioIds = $this->pathToIds . DIRECTORY_SEPARATOR . self::PORTFOLIO_IDS_FILENAME;
-        $this->pathToDealIds      = $this->pathToIds . DIRECTORY_SEPARATOR . self::DEAL_IDS_FILENAME;
-        $this->_loadIds();
-
-        // creates a new page and navigate to an url
-        $this->createPage();
+        $this->HistoryLinks = new HistoryLinks( $this->USBankBrowser->page );
     }
+
+
+
+
+//    public function __construct( string $chromePath,
+//                                 string $user,
+//                                 string $pass,
+//                                 string $pathToIds,
+//                                 bool   $debug = FALSE,
+//                                 string $pathToScreenshots = '' ) {
+//        $this->chromePath        = $chromePath;
+//        $this->user              = $user;
+//        $this->pass              = $pass;
+//        $this->pathToIds         = $pathToIds;
+//        $this->debug             = $debug;
+//        $this->pathToScreenshots = $pathToScreenshots;
+//
+//        $this->cookies = new CookiesCollection();
+//
+//        $browserFactory = new BrowserFactory( $this->chromePath );
+//        // starts headless chrome
+//        $this->browser = $browserFactory->createBrowser( [
+//                                                             'headless'        => TRUE,         // disable headless mode
+//                                                             'connectionDelay' => self::BROWSER_CONNECTION_DELAY,           // add 0.8 second of delay between each instruction sent to chrome,
+//                                                             //'debugLogger'     => 'php://stdout', // will enable verbose mode
+//                                                             'windowSize'      => [ self::BROWSER_WINDOW_SIZE_WIDTH,
+//                                                                                    self::BROWSER_WINDOW_SIZE_HEIGHT ],
+//                                                             'enableImages'    => self::BROWSER_ENABLE_IMAGES,
+//                                                             'customFlags'     => [ '--disable-web-security' ],
+//                                                         ] );
+//
+//        $this->pathToPortfolioIds = $this->pathToIds . DIRECTORY_SEPARATOR . self::PORTFOLIO_IDS_FILENAME;
+//        $this->pathToDealIds      = $this->pathToIds . DIRECTORY_SEPARATOR . self::DEAL_IDS_FILENAME;
+//        $this->_loadIds();
+//
+//        // creates a new page and navigate to an url
+//        $this->createPage();
+//    }
 
 
     /**
      *
      */
-    private function _loadIds(){
-        if( file_exists($this->pathToPortfolioIds) ):
-            $this->portfolioIds = file($this->pathToPortfolioIds);
+    private function _loadIds() {
+        if ( file_exists( $this->pathToPortfolioIds ) ):
+            $this->portfolioIds = file( $this->pathToPortfolioIds );
         else:
-            file_put_contents($this->pathToPortfolioIds,null);
+            file_put_contents( $this->pathToPortfolioIds, NULL );
         endif;
 
-        if( file_exists($this->pathToDealIds) ):
-            $this->dealIds = file($this->pathToDealIds);
+        if ( file_exists( $this->pathToDealIds ) ):
+            $this->dealIds = file( $this->pathToDealIds );
         else:
-            file_put_contents($this->pathToDealIds,null);
+            file_put_contents( $this->pathToDealIds, NULL );
         endif;
     }
-
-
-
 
 
     /**
@@ -219,15 +249,13 @@ class RemitSpiderUSBank {
         $postLoginHTML            = $this->login();
         $this->usBankPortfolioIds = $this->_getUSBankPortfolioIds( $postLoginHTML );
 
-        $writeSuccess = file_put_contents($this->pathToPortfolioIds, implode("\n",$this->usBankPortfolioIds));
-        if( false === $writeSuccess):
-            throw new \Exception("Unable to write US Bank Portfolio IDs to cache file: " . $this->pathToPortfolioIds);
+        $writeSuccess = file_put_contents( $this->pathToPortfolioIds, implode( "\n", $this->usBankPortfolioIds ) );
+        if ( FALSE === $writeSuccess ):
+            throw new \Exception( "Unable to write US Bank Portfolio IDs to cache file: " . $this->pathToPortfolioIds );
         endif;
         $this->logout();
         return $this->usBankPortfolioIds;
     }
-
-
 
 
     /**
@@ -244,7 +272,7 @@ class RemitSpiderUSBank {
      * @throws \HeadlessChromium\Exception\OperationTimedOut
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
      */
-    public function getAllDealIdsForPortfolioId( string $usBankPortfolioId ): array {
+    public function getAllDealLinkSuffixesForPortfolioId( string $usBankPortfolioId ): array {
         $postLoginHTML             = $this->login();
         $linkToAllDealsInPortfolio = self::URL_LIST_OF_DEALS . $usBankPortfolioId . '/0?OWASP_CSRFTOKEN=' . $this->csrf;
         try {
@@ -253,12 +281,12 @@ class RemitSpiderUSBank {
             $htmlWithListOfLinksToDeals = $this->page->getHtml();
 
             $this->_screenshot( 'all_deals_for_portfolioid_' . $usBankPortfolioId );
-            $this->_html('all_deals_for_portfolioid_' . $usBankPortfolioId);
-            $dealIds = $this->_getDealIdsFromHTML( $htmlWithListOfLinksToDeals );
+            $this->_html( 'all_deals_for_portfolioid_' . $usBankPortfolioId );
+            $dealIds = $this->_getDealLinkSuffixesFromHTML( $htmlWithListOfLinksToDeals );
 
-            $writeSuccess = file_put_contents($this->pathToDealIds, implode("\n",$dealIds));
-            if( false === $writeSuccess):
-                throw new \Exception("Unable to write US Bank Deal IDs to cache file: " . $this->pathToDealIds);
+            $writeSuccess = file_put_contents( $this->pathToDealIds, implode( "\n", $dealIds ) );
+            if ( FALSE === $writeSuccess ):
+                throw new \Exception( "Unable to write US Bank Deal IDs to cache file: " . $this->pathToDealIds );
             endif;
 
             $this->logout();
@@ -271,17 +299,34 @@ class RemitSpiderUSBank {
     }
 
 
+    public function getHistoryLinksFromDealPage( string $dealLinkSuffix ): array {
+        // Navigate to page
 
+        // Snag HTML
 
-
-
-
-
-
+        // Parse history links from HTML
+    }
 
 
 
     /**
+     * This method REQUIRES that the User has already logged into the system.
+     *
+     * @param string $dealLinkSuffix
+     *
+     * @return array
+     */
+//    public function getFirstPageOfHistoryLinksFromDealLinkSuffix_WITHOUT_LOGIN(string $dealLinkSuffix): array {
+//        $linkToAllDealsInPortfolio = self::BASE_URL . $usBankPortfolioId . '/0?OWASP_CSRFTOKEN=' . $this->csrf;
+//        try {
+//            $this->page->navigate( $linkToAllDealsInPortfolio )->waitForNavigation( Page::NETWORK_IDLE,
+//                                                                                    self::NETWORK_IDLE_MS_TO_WAIT );
+//    }
+
+
+    /**
+     * href example:
+     * https://trustinvestorreporting.usbank.com/TIR/public/deals/detail/1710/abn-amro-2003-4
      * A Parser method that accepts HTML that should contain a list of Deals.
      * This method will parse that HTML and return an array of US Bank Deal IDs.
      *
@@ -290,10 +335,11 @@ class RemitSpiderUSBank {
      * @return array
      * @throws \Exception
      */
-    protected function _getDealIdsFromHTML( string $htmlWithListOfLinksToDeals ): array {
+    protected function _getDealLinkSuffixesFromHTML( string $htmlWithListOfLinksToDeals ): array {
         $listOfSecurityIds = [];
-        $pattern     = '/\/detail\/(\d*)\//';
-        $dom         = new \DOMDocument();
+        //$pattern     = '/\/detail\/(\d*)\//'; // This will grab the ID and Deal Name
+        $pattern = '/\/detail\/(\d*\/.*)/';
+        $dom     = new \DOMDocument();
         @$dom->loadHTML( $htmlWithListOfLinksToDeals );
         $elements = $dom->getElementsByTagName( 'a' );
         foreach ( $elements as $element ):
@@ -301,8 +347,8 @@ class RemitSpiderUSBank {
 
             // This is the one we want!
             if ( 'draggable-report-1' == $id ):
-                $href = $element->getAttribute( 'href' );
-                $securityIds = null;
+                $href        = $element->getAttribute( 'href' );
+                $securityIds = NULL;
                 preg_match( $pattern, $href, $securityIds );
 
                 if ( 2 != count( $securityIds ) ):
@@ -335,7 +381,7 @@ class RemitSpiderUSBank {
 
 
         // Example $link
-        // https://trustinvestorreporting.usbank.com/TIR/portfolios/getPortfolioDeals/193549/0?OWASP_CSRFTOKEN=X2AE-TKJT-RB71-2E9Y-YNTW-XQGW-WZ52-LNP
+        // https://trustinvestorreporting.usbank.com/TIR/portfolios/getPortfolioDeals/123456/0?OWASP_CSRFTOKEN=1111-2222-3333-4444-5555-6666-7777-8888
         foreach ( $portfolioLinks as $usBankPortfolioId => $portfolioLink ):
 //            echo $portfolioLink; flush(); die($portfolioLink);
             try {
@@ -492,7 +538,7 @@ class RemitSpiderUSBank {
 
 
     // Get all deal links
-    // https://trustinvestorreporting.usbank.com/TIR/portfolios?layout=layout&OWASP_CSRFTOKEN=SY9X-M73H-KUQB-B4FZ-770V-WW55-LXFT-N05E#
+    // https://trustinvestorreporting.usbank.com/TIR/portfolios?layout=layout&OWASP_CSRFTOKEN=1111-2222-3333-4444-5555-6666-7777-8888#
 
 
     private function getPortfolioIdFromLink( string $portfolioLink ): string {
@@ -592,7 +638,7 @@ class RemitSpiderUSBank {
     /**
      * This is just a little helper function to clean up some of the debug code.
      *
-     * @param string $suffix
+     * @param string                      $suffix
      * @param \HeadlessChromium\Clip|NULL $clip
      *
      * @return void
@@ -600,7 +646,7 @@ class RemitSpiderUSBank {
      * @throws \HeadlessChromium\Exception\FilesystemException
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
      */
-    private function _screenshot( string $suffix, Clip $clip = NULL ) {
+    public function _screenshot( string $suffix, Clip $clip = NULL ) {
         if ( $this->debug ):
             if ( $clip ):
                 $this->page->screenshot( [ 'clip' => $clip ] )->saveToFile( time() . '_' . microtime() . '_' . $suffix . '.jpg' );
