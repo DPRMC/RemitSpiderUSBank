@@ -3,7 +3,7 @@
 namespace DPRMC\RemitSpiderUSBank\Helpers;
 
 
-use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
+use DPRMC\RemitSpiderUSBank\RemitSpiderUSBankBAK;
 use HeadlessChromium\Clip;
 use HeadlessChromium\Cookies\CookiesCollection;
 use HeadlessChromium\Page;
@@ -14,18 +14,18 @@ use HeadlessChromium\Page;
 class Login {
 
     const URL_LOGIN  = 'https://usbtrustgateway.usbank.com/portal/login.do';
-    const URL_LOGOUT = RemitSpiderUSBank::BASE_URL . '/TIR/logout';
+    const URL_LOGOUT = RemitSpiderUSBankBAK::BASE_URL . '/TIR/logout';
 
     const LOGIN_BUTTON_X = 80;
     const LOGIN_BUTTON_Y = 260;
-    const URL_INTERFACE  = RemitSpiderUSBank::BASE_URL . '/TIR/portfolios';
+    const URL_INTERFACE  = RemitSpiderUSBankBAK::BASE_URL . '/TIR/portfolios';
 
     protected Page   $Page;
     protected Debug  $Debug;
     protected string $user;
     protected string $pass;
 
-    public string $csrf;
+    public ?string           $csrf = null;
     public CookiesCollection $cookies;
 
 
@@ -42,6 +42,7 @@ class Login {
         $this->pass  = $pass;
     }
 
+
     /**
      * @return string
      * @throws \HeadlessChromium\Exception\CommunicationException
@@ -55,10 +56,11 @@ class Login {
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
      */
     public function login(): string {
+        $this->Debug->_debug("Navigating to login screen.");
         $this->Page->navigate( self::URL_LOGIN )->waitForNavigation();
 
         $this->Debug->_screenshot( 'first_page' );
-
+        $this->Debug->_debug("Filling out user and pass.");
         $this->Page->evaluate( "document.querySelector('#uname').value = '" . $this->user . "';" );
         $this->Page->evaluate( "document.querySelector('#pword').value = '" . $this->pass . "';" );
 
@@ -68,6 +70,7 @@ class Login {
 
 
         // Click the login button, and wait for the page to reload.
+        $this->Debug->_debug("Clicking the login button.");
         $this->Page->mouse()
                    ->move( self::LOGIN_BUTTON_X, self::LOGIN_BUTTON_Y )
                    ->click();
@@ -82,6 +85,8 @@ class Login {
         $this->cookies = $this->Page->getAllCookies();
         $postLoginHTML       = $this->Page->getHtml();
         $this->csrf          = $this->getCSRF( $postLoginHTML );
+        $this->Debug->_html("post_login");
+        $this->Debug->_debug("CSRF saved to Login object.");
         return $postLoginHTML;
     }
 

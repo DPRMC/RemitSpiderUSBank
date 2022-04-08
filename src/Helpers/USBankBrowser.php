@@ -2,8 +2,6 @@
 
 namespace DPRMC\RemitSpiderUSBank\Helpers;
 
-
-use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Browser\ProcessAwareBrowser;
 use HeadlessChromium\BrowserFactory;
 use HeadlessChromium\Cookies\CookiesCollection;
@@ -19,7 +17,7 @@ class USBankBrowser {
     protected ProcessAwareBrowser $browser;
 
     public Page $page;
-
+    const NETWORK_IDLE_MS_TO_WAIT = 4000;
     const BROWSER_WINDOW_SIZE_WIDTH  = 1000;
     const BROWSER_WINDOW_SIZE_HEIGHT = 1000;
     const BROWSER_ENABLE_IMAGES      = TRUE;

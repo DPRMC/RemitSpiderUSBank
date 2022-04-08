@@ -3,7 +3,7 @@
 namespace DPRMC\RemitSpiderUSBank\Helpers;
 
 
-use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
+use DPRMC\RemitSpiderUSBank\RemitSpiderUSBankBAK;
 use HeadlessChromium\Page;
 
 /**
@@ -15,7 +15,7 @@ class HistoryLinks {
     protected Page   $page;
     protected string $dealLinkPrefix;
 
-    const BASE_DEAL_URL = RemitSpiderUSBank::BASE_URL . '/TIR/public/deals/detail/';
+    const BASE_DEAL_URL = RemitSpiderUSBankBAK::BASE_URL . '/TIR/public/deals/detail/';
 
     public function __construct( Page &$page, ) {
         $this->page = $page;

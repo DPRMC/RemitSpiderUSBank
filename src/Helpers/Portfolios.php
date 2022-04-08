@@ -3,9 +3,7 @@
 namespace DPRMC\RemitSpiderUSBank\Helpers;
 
 
-use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
-use HeadlessChromium\Clip;
-use HeadlessChromium\Cookies\CookiesCollection;
+use DPRMC\RemitSpiderUSBank\RemitSpiderUSBankBAK;
 use HeadlessChromium\Page;
 
 /**
@@ -13,54 +11,47 @@ use HeadlessChromium\Page;
  */
 class Portfolios {
 
-    protected Page  $Page;
-    protected string $csrf;
-
-    protected array $portfolioIds;
-
+    protected Page   $Page;
+    protected Debug  $Debug;
+    protected array  $portfolioIds;
     protected string $pathToPortfolioIds;
 
 
     /**
      *
      */
-    const URL_BASE_PORTFOLIOS = RemitSpiderUSBank::BASE_URL . '/TIR/portfolios?layout=layout&OWASP_CSRFTOKEN=';
+    const URL_BASE_PORTFOLIOS = RemitSpiderUSBankBAK::BASE_URL . '/TIR/portfolios?layout=layout&OWASP_CSRFTOKEN=';
 
 
     /**
      * @param \HeadlessChromium\Page $Page
      * @param string                 $pathToPortfolioIds
      */
-    public function __construct( Page &$Page, string $csrf, string $pathToPortfolioIds = '' ) {
+    public function __construct( Page   &$Page,
+                                 Debug  &$Debug,
+                                 string $pathToPortfolioIds = '' ) {
         $this->Page               = $Page;
-        $this->csrf              = $csrf;
+        $this->Debug              = $Debug;
         $this->pathToPortfolioIds = $pathToPortfolioIds;
     }
 
 
-    /**
-     * @return array
-     * @throws \HeadlessChromium\Exception\CommunicationException
-     * @throws \HeadlessChromium\Exception\CommunicationException\CannotReadResponse
-     * @throws \HeadlessChromium\Exception\CommunicationException\InvalidResponse
-     * @throws \HeadlessChromium\Exception\CommunicationException\ResponseHasError
-     * @throws \HeadlessChromium\Exception\NavigationExpired
-     * @throws \HeadlessChromium\Exception\NoResponseAvailable
-     * @throws \HeadlessChromium\Exception\OperationTimedOut
-     */
-    public function getAllPortfolioIds(): array {
-
+    public function getAllPortfolioIds( string $csrf ): array {
+        $this->Debug->_debug("Getting all Portfolio IDs.");
         // Example:
         // https://trustinvestorreporting.usbank.com/TIR/portfolios?layout=layout&OWASP_CSRFTOKEN=1111-2222-3333-4444-5555-6666-7777-8888
-        $this->Page->navigate( self::URL_BASE_PORTFOLIOS . $this->csrf )
-                   ->waitForNavigation( Page::NETWORK_IDLE, 5000 );
+        $this->Page->navigate( self::URL_BASE_PORTFOLIOS . $csrf )
+                   ->waitForNavigation( Page::NETWORK_IDLE,
+                                        USBankBrowser::NETWORK_IDLE_MS_TO_WAIT );
 
         $portfolioHTML = $this->Page->getHtml();
+        Errors::is404(self::URL_BASE_PORTFOLIOS . $csrf, $portfolioHTML);
 
+        $this->Debug->_debug("Received the HTML containing the Portfolio IDs.");
         $this->portfolioIds = $this->_parseOutUSBankPortfolioIds( $portfolioHTML );
-
+        $this->Debug->_debug("I found " . count($this->portfolioIds) . " Portfolio IDs.");
         $this->_cachePortfolioIds();
-
+        $this->Debug->_debug("Writing the Portfolio IDs to cache.");
         return $this->portfolioIds;
     }
 
@@ -92,7 +83,8 @@ class Portfolios {
      * @throws \Exception
      */
     protected function _cachePortfolioIds(): void {
-        $writeSuccess = file_put_contents( $this->pathToPortfolioIds, implode( "\n", $this->portfolioIds ) );
+        $writeSuccess = file_put_contents( $this->pathToPortfolioIds,
+                                           implode( "\n", $this->portfolioIds ) );
         if ( FALSE === $writeSuccess ):
             throw new \Exception( "Unable to write US Bank Portfolio IDs to cache file: " . $this->pathToPortfolioIds );
         endif;

@@ -2,12 +2,7 @@
 
 namespace DPRMC\RemitSpiderUSBank\Helpers;
 
-
-use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
-use HeadlessChromium\Browser\ProcessAwareBrowser;
-use HeadlessChromium\BrowserFactory;
 use HeadlessChromium\Clip;
-use HeadlessChromium\Cookies\CookiesCollection;
 use HeadlessChromium\Page;
 
 /**
