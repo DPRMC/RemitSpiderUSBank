@@ -24,5 +24,6 @@
         <env name="PATH_TO_IDS" value="/path/to/ids"/>
         <env name="CHROME_PATH" value="/path/to/chromium"/>
         <env name="PORTFOLIO_ID" value="1"/>
+        <env name="DEAL_SUFFIX" value="1/a"/>
     </php>
 </phpunit>

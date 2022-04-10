@@ -87,7 +87,8 @@ class RemitSpiderUSBank {
                                   $this->Debug,
                                   $this->pathToDealLinkSuffixes );
 
-        $this->HistoryLinks = new HistoryLinks( $this->USBankBrowser->page );
+        $this->HistoryLinks = new HistoryLinks( $this->USBankBrowser->page,
+                                                $this->Debug );
     }
 
 

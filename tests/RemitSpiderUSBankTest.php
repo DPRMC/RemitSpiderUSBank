@@ -37,61 +37,6 @@ class RemitSpiderUSBankTest extends TestCase {
 
     /**
      * @test
-     * @group t
-     */
-    public function testTest() {
-        $spider = $this->_getSpider();
-
-        $spider->USBankBrowser->page->addScriptTag( [
-                                                        'url' => 'https://code.jquery.com/jquery-3.6.0.min.js',
-                                                    ] )
-                                    ->waitForResponse();
-
-        $spider->USBankBrowser->page->navigate( 'http://michaeldrennen.com/' )
-                                    ->waitForNavigation();
-
-        $spider->USBankBrowser->page->addScriptTag( [
-                                                        'url' => 'https://code.jquery.com/jquery-3.6.0.min.js',
-                                                    ] )
-                                    ->waitForResponse();
-
-        $html = $spider->USBankBrowser->page->getHtml();
-
-
-        $js = '$(document).find("header > div > h1").text();';
-
-        $evaluation = $spider->USBankBrowser->page
-            ->evaluate( $js );
-
-        $returnType = $evaluation->getReturnType();
-
-        $anchors = $evaluation->getReturnValue();
-
-        var_dump( $anchors );
-        flush();
-        die();
-
-        $anchors = $evaluation->getReturnValue();
-        var_dump( $evaluation );
-        flush();
-        die();
-        $anchors = $evaluation->getReturnValue();
-        var_dump( $anchors );
-        flush();
-        die();
-        foreach ( $anchors as $anchor ):
-            var_dump( $anchor->href );
-            flush();
-        endforeach;
-        die();
-        //var_dump( $evaluation->getReturnValue() );
-        flush();
-        die();
-    }
-
-
-    /**
-     * @test
      */
     public function testConstructor() {
         $spider = $this->_getSpider();
@@ -142,89 +87,22 @@ class RemitSpiderUSBankTest extends TestCase {
      * @group deals
      */
     public function testGetDealLinkSuffixes() {
-
         $spider = $this->_getSpider();
         $spider->Login->login();
-
-//        $cookiesCollection = $spider->USBankBrowser->page->getCookies();
-//        $cookieRows        = [];
-//        /**
-//         * @var \HeadlessChromium\Cookies\Cookie $cookie
-//         */
-//        foreach ( $cookiesCollection as $cookie ):
-//            $cookieRows[ $cookie->getName() ] = $cookie->getName() . '=' . $cookie->getValue();
-//        endforeach;
-//        $cookieString = implode( '; ', $cookieRows );
-
-        $cookieString = '';
-        $dealLinkSuffixes = $spider->Deals->getAllDealLinkSuffixesForPortfolioId( $spider->Login->csrf,
-                                                                                  $cookieString,
-                                                                                  \DPRMC\RemitSpiderUSBank\Helpers\USBankBrowser::USER_AGENT_STRING,
-                                                                                  $_ENV[ 'PORTFOLIO_ID' ] );
-
-        var_dump( "These are deal link suffixes" );
-        print_r( $dealLinkSuffixes );
-        flush();
-        die();
+        $dealLinkSuffixes = $spider->Deals->getAllDealLinkSuffixesForPortfolioId( $_ENV[ 'PORTFOLIO_ID' ] );
+        $this->assertNotEmpty( $dealLinkSuffixes );
     }
 
 
-//
-//
-//    /**
-//     * @test
-//     * @group globals
-//     */
-//    public function testGetAllPortfolioIdsShouldReturnAnArray() {
-//        $portfolioIds = self::$spider->getAllPortfolioIds();
-//        $this->assertGreaterThan( 0, count( $portfolioIds ) );
-//    }
-//
-//
-//    /**
-//     * @test
-//     * @group g
-//     */
-//    public function testGetAllDealIdsForPortfolioId() {
-//        $dealIds = self::$spider->getAllDealLinkSuffixesForPortfolioId( $_ENV[ 'PORTFOLIO_ID' ] );
-//        print_r( $dealIds );
-//        flush();
-//        die();
-//        $this->assertGreaterThan( 0, count( $dealIds ) );
-//    }
-//
-//
-//    /**
-//     * @test
-//     */
-//    public function testHolder() {
-//
-////        $loggedIn = self::$spider->login();
-////        $this->assertTrue( $loggedIn );
-////        $links = self::$spider->getAllDealLinks();
-////        print_r($links);
-//
-//        self::$spider->getAllDocs();
-//    }
-//
-//
-//    /**
-//     * @test
-//     * @group page
-//     */
-////    public function testCreatePage(){
-////
-////            self::$spider->login();
-//////        print_r(self::$spider->cookies);
-//////        flush();
-//////        self::$spider->createPage();
-//////
-////            print_r(self::$spider->cookies);
-////            flush();
-////
-////            self::$spider->reloadCookies();
-////            die();
-////    }
-
+    /**
+     * @test
+     * @group history
+     */
+    public function getGetHistoryLinks() {
+        $spider = $this->_getSpider();
+        $spider->Login->login();
+        $historyLinks = $spider->HistoryLinks->get( $_ENV[ 'DEAL_SUFFIX' ] );
+        $this->assertNotEmpty( $historyLinks );
+    }
 
 }
