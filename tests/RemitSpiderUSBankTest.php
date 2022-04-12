@@ -98,11 +98,27 @@ class RemitSpiderUSBankTest extends TestCase {
      * @test
      * @group history
      */
-    public function getGetHistoryLinks() {
+    public function testGetGetHistoryLinks() {
         $spider = $this->_getSpider();
         $spider->Login->login();
         $historyLinks = $spider->HistoryLinks->get( $_ENV[ 'DEAL_SUFFIX' ] );
+
+        print_r($historyLinks); flush(); die();
+
         $this->assertNotEmpty( $historyLinks );
+    }
+
+
+    /**
+     * @test
+     * @group file
+     */
+    public function testGetFileIndexForDealShouldAddToIndex(){
+        $spider = $this->_getSpider();
+        $spider->Login->login();
+
+        $fileIndex = $spider->FileIndex->get($_ENV[ 'HISTORY_LINK' ]);
+        print_r($fileIndex); flush(); die();
     }
 
 }

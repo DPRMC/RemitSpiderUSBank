@@ -3,13 +3,14 @@
 namespace DPRMC\RemitSpiderUSBank;
 
 use DPRMC\RemitSpiderUSBank\Helpers\Deals;
+use DPRMC\RemitSpiderUSBank\Helpers\FileIndex;
 use DPRMC\RemitSpiderUSBank\Helpers\Portfolios;
 use DPRMC\RemitSpiderUSBank\Helpers\USBankBrowser;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\Helpers\HistoryLinks;
 use DPRMC\RemitSpiderUSBank\Helpers\Login;
 use HeadlessChromium\Cookies\CookiesCollection;
-
+use PHPUnit\TextUI\XmlConfiguration\File;
 
 
 /**
@@ -24,6 +25,7 @@ class RemitSpiderUSBank {
     public Portfolios    $Portfolios;
     public Deals         $Deals;
     public HistoryLinks  $HistoryLinks;
+    public FileIndex     $FileIndex;
 
 
     protected bool   $debug;
@@ -31,6 +33,8 @@ class RemitSpiderUSBank {
 
     protected string $pathToPortfolioIds;
     protected string $pathToDealLinkSuffixes;
+    protected string $pathToHistoryLinks;
+    protected string $pathToFileIndex;
 
     protected array $portfolioIds;
     protected array $dealIds;
@@ -41,6 +45,8 @@ class RemitSpiderUSBank {
     const BASE_URL                    = 'https://trustinvestorreporting.usbank.com';
     const PORTFOLIO_IDS_FILENAME      = '_portfolio_ids.txt';
     const DEAL_LINK_SUFFIXES_FILENAME = '_deal_link_suffixes.txt';
+    const HISTORY_LINKS_FILENAME      = '_history_links.json';
+    const FILE_INDEX_FILENAME         = '_file_index.json';
 
     /**
      * TESTING, not sure if this will work.
@@ -60,24 +66,28 @@ class RemitSpiderUSBank {
                                  bool   $debug = FALSE,
                                  string $pathToScreenshots = '',
                                  string $pathToPortfolioIds = '',
-                                 string $pathToDealLinkSuffixes = ''
+                                 string $pathToDealLinkSuffixes = '',
+                                 string $pathToHistoryLinks = '',
+                                 string $pathToFileIndex = ''
     ) {
 
         $this->debug                  = $debug;
         $this->pathToScreenshots      = $pathToScreenshots;
         $this->pathToPortfolioIds     = $pathToPortfolioIds . self::PORTFOLIO_IDS_FILENAME;
         $this->pathToDealLinkSuffixes = $pathToDealLinkSuffixes . self::DEAL_LINK_SUFFIXES_FILENAME;
+        $this->pathToHistoryLinks     = $pathToHistoryLinks . self::HISTORY_LINKS_FILENAME;
+        $this->pathToFileIndex        = $pathToFileIndex . self::FILE_INDEX_FILENAME;
 
         $this->USBankBrowser = new USBankBrowser( $chromePath );
 
-        $this->Debug         = new Debug( $this->USBankBrowser->page,
-                                          $pathToScreenshots,
-                                          $debug );
+        $this->Debug = new Debug( $this->USBankBrowser->page,
+                                  $pathToScreenshots,
+                                  $debug );
 
-        $this->Login         = new Login( $this->USBankBrowser->page,
-                                          $this->Debug,
-                                          $user,
-                                          $pass );
+        $this->Login = new Login( $this->USBankBrowser->page,
+                                  $this->Debug,
+                                  $user,
+                                  $pass );
 
         $this->Portfolios = new Portfolios( $this->USBankBrowser->page,
                                             $this->Debug,
@@ -88,10 +98,13 @@ class RemitSpiderUSBank {
                                   $this->pathToDealLinkSuffixes );
 
         $this->HistoryLinks = new HistoryLinks( $this->USBankBrowser->page,
-                                                $this->Debug );
+                                                $this->Debug,
+                                                $this->pathToHistoryLinks );
+
+        $this->FileIndex = new FileIndex( $this->USBankBrowser->page,
+                                          $this->Debug,
+                                          $this->pathToFileIndex );
     }
-
-
 
 
     /**

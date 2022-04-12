@@ -118,14 +118,14 @@ class Deals {
             // This is the one we want!
             if ( 'draggable-report-1' == $id ):
                 $href            = $element->getAttribute( 'href' );
-                $dealLinkSuffixe = NULL;
-                preg_match( $pattern, $href, $dealLinkSuffixe );
+                $dealLinkSuffix = NULL;
+                preg_match( $pattern, $href, $dealLinkSuffix );
 
-                if ( 2 != count( $dealLinkSuffixe ) ):
+                if ( 2 != count( $dealLinkSuffix ) ):
                     throw new \Exception( "Unable to find link to deal in this string: " . $href );
                 endif;
 
-                $dealLinkSuffixes[] = $dealLinkSuffixe[ 1 ];
+                $dealLinkSuffixes[] = $dealLinkSuffix[ 1 ];
             endif;
         endforeach;
         return $dealLinkSuffixes;
