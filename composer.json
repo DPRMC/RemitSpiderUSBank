@@ -17,7 +17,8 @@
   "require": {
     "guzzlehttp/guzzle": "^7",
     "chrome-php/chrome": "^1",
-    "ext-dom": "*"
+    "ext-dom": "*",
+    "nesbot/carbon": "^2.57"
   },
   "autoload": {
     "classmap": [
