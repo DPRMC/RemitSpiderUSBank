@@ -54,7 +54,7 @@ class Debug {
 
     public function _debug( string $message, bool $die = FALSE ) {
         if ( $this->debug ):
-            echo "\n" . $message . "\n";
+            echo "\n" . $message;
             flush();
             if ( $die ):
                 die();

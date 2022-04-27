@@ -18,6 +18,12 @@ class FileIndex {
     protected string $pathToFileIndex;
     protected string $dealId;
 
+    // These are the indexes of the file index data.
+    const TYPE = 'type';
+    const DATE = 'date';
+    const NAME = 'name';
+    const HREF = 'href';
+
 
 //    /**
 //     * Ex: https://trustinvestorreporting.usbank.com/TIR/public/deals/periodicReportHistory/1234/2/5678?extension=CSV
@@ -92,18 +98,24 @@ class FileIndex {
         foreach ( $anchors as $anchor ):
 
             $href = $anchor->getAttribute( 'href' );
+            $this->Debug->_debug("href: " . $href);
+
             if ( $this->_isFileLink( $href ) ):
 
                 $fileTypeNode = $anchor->parentNode;
                 $fileType     = trim( $fileTypeNode->nodeValue );
-
+                $this->Debug->_debug("fileType: " . $fileType);
 
                 /**
                  * @var \DOMText $reportDateNode
                  */
-                $reportDateNode = $fileTypeNode->previousSibling;
-                $reportDate     = Carbon::parse( trim( $reportDateNode->nodeValue ) );
+                $garbageNode = $fileTypeNode->previousSibling; // Skip a node
+                $reportDateNode = $garbageNode->previousSibling;
+                //$this->Debug->_debug("reportDateNode is a : " . get_class($reportDateNode));
+                //echo $reportDateNode->nodeValue;
 
+                $reportDate     = Carbon::parse( trim( (string)$reportDateNode->nodeValue ), 'America/New_York' );
+                $this->Debug->_debug("reportDate carbon : " . $reportDate->toDateString());
 
                 /**
                  * @var \DOMElement $garbageNode
@@ -111,74 +123,22 @@ class FileIndex {
                 $garbageNode = $reportDateNode->previousSibling;
 
 
-                /**
-                 * @var \DOMElement $garbageNode
-                 */
-                $garbageNode = $garbageNode->previousSibling;
+                $reportNameNode = $garbageNode->previousSibling;
+                $reportName  = trim( $reportNameNode->nodeValue );
+                $this->Debug->_debug("reportName: " . $reportName);
 
+                $uniqueId = $this->_getMyUniqueId( $href );
 
-                /**
-                 * @var \DOMElement $garbageNode
-                 */
-                $garbageNode = $garbageNode->previousSibling;
-                $reportName  = trim( $garbageNode->nodeValue );
-
-
-                /**
-                 * @var \DOMElement $garbageNode
-                 */
-//                $garbageNode = $garbageNode->previousSibling;
-//                var_dump(get_class($garbageNode)); flush();
-//                var_dump(trim($garbageNode->nodeValue)); flush();
-
-                var_dump( $fileType, $reportDate->toDateString(), $reportName );
-                flush();
-
-                die();
-
-                print('$reportNameNode class: ');
-                var_dump( get_class( $reportNameNode ) );
-                flush();
-                $reportName = trim( $reportNameNode->nodeValue );
-                $tagName    = trim( $reportNameNode->tagName );
-                print('tagname: ');
-                var_dump( $tagName );
-                print('$reportName value: ');
-                var_dump( $reportName );
-
-                $reportXNode = $reportNameNode->previousSibling;
-                $reportX     = trim( $reportXNode->nodeValue );
-                $tagName     = trim( $reportXNode->tagName );
-                print('tagname');
-                var_dump( $tagName );
-                print('$reportX value');
-                var_dump( $reportX );
-
-
-                $reportXNode = $reportXNode->previousSibling;
-                $reportX     = trim( $reportXNode->nodeValue );
-                $tagName     = trim( $reportXNode->tagName );
-                print('tagname');
-                var_dump( $tagName );
-                print('$reportX value');
-                var_dump( $reportX );
-
-
-                $reportXNode = $reportXNode->previousSibling;
-                $reportX     = trim( $reportXNode->nodeValue );
-                $tagName     = trim( $reportXNode->tagName );
-                print('tagname');
-                var_dump( $tagName );
-                print('$reportX value');
-                var_dump( $reportX );
-
-
-                flush();
-                die();
-
-                $fileLinks[] = $href;
+                $fileLinks[$uniqueId] = [
+                    self::TYPE => $fileType,
+                    self::DATE => $reportDate->toDateString(),
+                    self::NAME => $reportName,
+                    self::HREF => $href
+                ];
             endif;
         endforeach;
+
+        $this->_cacheHistoryLinks($fileLinks);
 
         return $fileLinks;
     }
@@ -207,17 +167,17 @@ class FileIndex {
         endif;
 
         // Write all the new history links to the array.
-        foreach ( $newHistoryLinks as $historyLink ):
-            $myKey                                = $this->_getMyUniqueId( $historyLink );
-            $fileLinks[ $this->dealId ][ $myKey ] = $historyLink;
+        foreach ( $newFileLinks as $newFileLinkData ):
+            $myKey                                = $this->_getMyUniqueId( $newFileLinkData[self::HREF] );
+            $fileLinks[ $this->dealId ][ $myKey ] = $newFileLinkData;
         endforeach;
 
 
         // Encode and save the array to the json file.
-        $writeSuccess = file_put_contents( $this->pathToHistoryLinks,
+        $writeSuccess = file_put_contents( $this->pathToFileIndex,
                                            json_encode( $fileLinks ) );
         if ( FALSE === $writeSuccess ):
-            throw new \Exception( "Unable to write US Bank Deal History Links to cache file: " . $this->pathToHistoryLinks );
+            throw new \Exception( "Unable to write US Bank Deal File Links to cache file: " . $this->pathToFileIndex );
         endif;
     }
 
@@ -240,11 +200,21 @@ class FileIndex {
      * @return bool
      */
     protected function _isFileLink( string $href ): bool {
-        $prefix = '/TIR/public/deals/populateReportDocument/';
+        $prefix = '/TIR/public/deals/';
         if ( FALSE === stripos( $href, $prefix ) ):
             return FALSE;
         endif;
 
         return TRUE;
+    }
+
+
+    /**
+     * @param string $suffix
+     *
+     * @return string
+     */
+    public static function getLink(string $suffix): string {
+
     }
 }

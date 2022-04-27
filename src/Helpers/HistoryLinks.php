@@ -116,12 +116,9 @@ class HistoryLinks {
 
             // This is the one we want!
             if ( 'periodic_report_2' == $class ):
-                $fullSuffix     = $element->getAttribute( 'href' );
-
-                var_dump($fullSuffix); flush();
-                var_dump(self::HISTORY_LINK_PREFIX); flush();
-
-
+                $fullSuffix = $element->getAttribute( 'href' );
+//                var_dump($fullSuffix); flush();
+//                var_dump(self::HISTORY_LINK_PREFIX); flush();
                 $minSuffix      = str_replace( self::HISTORY_LINK_PREFIX, '', $fullSuffix );
                 $historyLinks[] = $minSuffix;
             endif;
@@ -180,5 +177,33 @@ class HistoryLinks {
      */
     protected function _getMyUniqueId( string $historyLink ): string {
         return md5( $historyLink );
+    }
+
+
+    /**
+     * Simple getter.
+     *
+     * @return string
+     */
+    public function getDealId(): string {
+        return $this->dealId;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getDealName(): string {
+        return $this->dealName;
+    }
+
+
+    /**
+     * @param string $linkSuffix
+     *
+     * @return string
+     */
+    public static function getAbsoluteLink( string $linkSuffix ): string {
+        return self::HISTORY_LINK . $linkSuffix;
     }
 }

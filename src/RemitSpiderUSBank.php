@@ -110,8 +110,7 @@ class RemitSpiderUSBank {
     /**
      *
      */
-    private
-    function _loadIds() {
+    private function _loadIds() {
         if ( file_exists( $this->pathToPortfolioIds ) ):
             $this->portfolioIds = file( $this->pathToPortfolioIds );
         else:
