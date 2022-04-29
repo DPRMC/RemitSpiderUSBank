@@ -10,27 +10,10 @@ use HeadlessChromium\Page;
 /**
  *
  */
-class Portfolios {
+class Portfolios extends BaseData {
 
-    protected Page  $Page;
-    protected Debug $Debug;
-
-    protected string $pathToPortfolioIds;
-    protected string $timezone;
-
-    protected Carbon $startTime;
-    protected Carbon $stopTime;
-
-
-    // CACHE
     protected array  $portfolioIds;
-    protected string $lastRunStatus;
 
-    const META            = 'meta';
-    const DATA            = 'data';
-    const START_TIME      = 'startTime';
-    const STOP_TIME       = 'stopTime';
-    const LAST_RUN_STATUS = 'lastRunStatus';
 
     /**
      *
@@ -44,23 +27,11 @@ class Portfolios {
                                  string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE ) {
         $this->Page               = $Page;
         $this->Debug              = $Debug;
-        $this->pathToPortfolioIds = $pathToPortfolioIds;
+        $this->pathToCache = $pathToPortfolioIds;
         $this->timezone           = $timezone;
     }
 
 
-    /**
-     * @return void
-     */
-    public function loadFromCache() {
-        $stringCache = file_get_contents( $this->pathToPortfolioIds );
-        $arrayCache  = json_decode( $stringCache, TRUE );
-
-        $this->portfolioIds  = $arrayCache[ 'data' ];
-        $this->startTime     = unserialize( $arrayCache[ 'meta' ][ self::START_TIME ] );
-        $this->stopTime      = unserialize( $arrayCache[ 'meta' ][ self::STOP_TIME ] );
-        $this->lastRunStatus = $arrayCache[ 'meta' ][ self::LAST_RUN_STATUS ];
-    }
 
 
     /**
@@ -93,7 +64,7 @@ class Portfolios {
             $this->portfolioIds = $this->_parseOutUSBankPortfolioIds( $portfolioHTML );
             $this->Debug->_debug( "I found " . count( $this->portfolioIds ) . " Portfolio IDs." );
             $this->stopTime = Carbon::now( $this->timezone );
-            $this->_cachePortfolioIds();
+            $this->_cacheData($this->portfolioIds);
             $this->Debug->_debug( "Writing the Portfolio IDs to cache." );
             return $this->portfolioIds;
         } catch ( \Exception $exception ) {
@@ -127,49 +98,9 @@ class Portfolios {
 
     /**
      * @return void
-     * @throws \Exception
      */
-    protected function _cachePortfolioIds(): void {
-        $dataToWrite = [
-            self::META => [
-                self::START_TIME      => serialize( $this->startTime ),
-                self::STOP_TIME       => serialize( $this->stopTime ),
-                self::LAST_RUN_STATUS => 'ok',
-            ],
-            self::DATA => [
-                $this->portfolioIds,
-            ],
-        ];
-
-        $writeSuccess = file_put_contents( $this->pathToPortfolioIds, json_encode( $dataToWrite ) );
-        if ( FALSE === $writeSuccess ):
-            throw new \Exception( "Unable to write US Bank Portfolio IDs to cache file: " . $this->pathToPortfolioIds );
-        endif;
-    }
-
-
-    /**
-     * When you catch an exception during the run of this class, record the failure in cache.
-     *
-     * @param \Exception $exception
-     *
-     * @return void
-     * @throws \Exception
-     */
-    protected function _cacheFailure( \Exception $exception ): void {
-
-        $stringCache = file_get_contents( $this->pathToPortfolioIds );
-        $arrayCache  = json_decode( $stringCache, TRUE );
-
-        $arrayCache[ self::META ] = [
-            self::START_TIME      => serialize( $this->startTime ),
-            self::STOP_TIME       => serialize( $this->stopTime ),
-            self::LAST_RUN_STATUS => $exception->getMessage(),
-        ];
-
-        $writeSuccess = file_put_contents( $this->pathToPortfolioIds, json_encode( $arrayCache ) );
-        if ( FALSE === $writeSuccess ):
-            throw new \Exception( "Unable to write US Bank Portfolio IDs to cache file: " . $this->pathToPortfolioIds );
-        endif;
+    public function loadFromCache() {
+        parent::loadFromCache();
+        $this->portfolioIds = $this->data;
     }
 }

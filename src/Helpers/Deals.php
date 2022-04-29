@@ -59,44 +59,49 @@ class Deals {
      */
     public function getAllDealLinkSuffixesForPortfolioId( string $usBankPortfolioId ): array {
 
-        // Start on Portfolios page
-        $this->Page->navigate( Portfolios::URL_BASE_PORTFOLIOS )
-                   ->waitForNavigation( Page::NETWORK_IDLE,
-                                        USBankBrowser::NETWORK_IDLE_MS_TO_WAIT );
+        try{
+            // Start on Portfolios page
+            $this->Page->navigate( Portfolios::URL_BASE_PORTFOLIOS )
+                       ->waitForNavigation( Page::NETWORK_IDLE,
+                                            USBankBrowser::NETWORK_IDLE_MS_TO_WAIT );
 
-        $this->Debug->_screenshot( 'portfolios_page' . $usBankPortfolioId );
-        $this->Debug->_html( 'portfolios_page_' . $usBankPortfolioId );
+            $this->Debug->_screenshot( 'portfolios_page' . $usBankPortfolioId );
+            $this->Debug->_html( 'portfolios_page_' . $usBankPortfolioId );
 
-        // Ex:
-        // https://trustinvestorreporting.usbank.com/TIR/portfolios/getPortfolioDeals/123456/0
-        $linkToAllDealsInPortfolio = self::URL_LIST_OF_DEALS . $usBankPortfolioId . '/0';
+            // Ex:
+            // https://trustinvestorreporting.usbank.com/TIR/portfolios/getPortfolioDeals/123456/0
+            $linkToAllDealsInPortfolio = self::URL_LIST_OF_DEALS . $usBankPortfolioId . '/0';
 
-        $this->Debug->_debug( "Navigating to Deal Links page at: " . $linkToAllDealsInPortfolio );
+            $this->Debug->_debug( "Navigating to Deal Links page at: " . $linkToAllDealsInPortfolio );
 
-        $clip = new Clip( 0, 0, self::X_ALL, self::Y_ALL );
-        $this->Debug->_screenshot( 'test', $clip );
+            $clip = new Clip( 0, 0, self::X_ALL, self::Y_ALL );
+            $this->Debug->_screenshot( 'test', $clip );
 
-        $this->Page->mouse()->move( self::X_ALL, self::Y_ALL )->click();
+            $this->Page->mouse()->move( self::X_ALL, self::Y_ALL )->click();
 
-        sleep( 2 );
+            sleep( 2 );
 
-        $this->Debug->_debug( "We should be on the path with all Deals now." );
+            $this->Debug->_debug( "We should be on the path with all Deals now." );
 
-        $htmlWithListOfLinksToDeals = $this->Page->getHtml();
-        Errors::is404( self::URL_LIST_OF_DEALS . $usBankPortfolioId . '/0', $htmlWithListOfLinksToDeals );
-        $this->Debug->_debug( "Got the HTML that should contain deal links." );
+            $htmlWithListOfLinksToDeals = $this->Page->getHtml();
+            Errors::is404( self::URL_LIST_OF_DEALS . $usBankPortfolioId . '/0', $htmlWithListOfLinksToDeals );
+            $this->Debug->_debug( "Got the HTML that should contain deal links." );
 
-        $this->Debug->_screenshot( 'all_deals_for_portfolioid_' . $usBankPortfolioId );
-        $this->Debug->_html( 'all_deals_for_portfolioid_' . $usBankPortfolioId );
-        $this->dealLinkSuffixes = $this->_parseDealLinkSuffixesFromHTML( $htmlWithListOfLinksToDeals );
+            $this->Debug->_screenshot( 'all_deals_for_portfolioid_' . $usBankPortfolioId );
+            $this->Debug->_html( 'all_deals_for_portfolioid_' . $usBankPortfolioId );
+            $this->dealLinkSuffixes = $this->_parseDealLinkSuffixesFromHTML( $htmlWithListOfLinksToDeals );
 
-        $this->Debug->_debug( "I found " . count( $this->dealLinkSuffixes ) . " Deal Link Suffixes." );
+            $this->Debug->_debug( "I found " . count( $this->dealLinkSuffixes ) . " Deal Link Suffixes." );
 
-        $this->_cacheDealLinkSuffixes();
+            $this->_cacheDealLinkSuffixes();
 
-        $this->Debug->_debug( "Writing the Deal Link Suffixes to cache." );
+            $this->Debug->_debug( "Writing the Deal Link Suffixes to cache." );
 
-        return $this->dealLinkSuffixes;
+            return $this->dealLinkSuffixes;
+        } catch (\Exception $exception) {
+
+        }
+
     }
 
 
@@ -141,6 +146,32 @@ class Deals {
                                            implode( "\n", $this->dealLinkSuffixes ) );
         if ( FALSE === $writeSuccess ):
             throw new \Exception( "Unable to write US Bank Deal link suffixes to cache file: " . $this->pathToDealLinkSuffixes );
+        endif;
+    }
+
+
+    /**
+     * When you catch an exception during the run of this class, record the failure in cache.
+     *
+     * @param \Exception $exception
+     *
+     * @return void
+     * @throws \Exception
+     */
+    protected function _cacheFailure( \Exception $exception ): void {
+
+        $stringCache = file_get_contents( $this->pathToPortfolioIds );
+        $arrayCache  = json_decode( $stringCache, TRUE );
+
+        $arrayCache[ self::META ] = [
+            self::START_TIME      => serialize( $this->startTime ),
+            self::STOP_TIME       => serialize( $this->stopTime ),
+            self::LAST_RUN_STATUS => $exception->getMessage(),
+        ];
+
+        $writeSuccess = file_put_contents( $this->pathToPortfolioIds, json_encode( $arrayCache ) );
+        if ( FALSE === $writeSuccess ):
+            throw new \Exception( "Unable to write US Bank Portfolio IDs to cache file: " . $this->pathToPortfolioIds );
         endif;
     }
 }
