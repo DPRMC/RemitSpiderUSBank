@@ -35,6 +35,7 @@ class RemitSpiderUSBank {
     protected string $pathToDealLinkSuffixes;
     protected string $pathToHistoryLinks;
     protected string $pathToFileIndex;
+    protected string $timezone;
 
     protected array $portfolioIds;
     protected array $dealIds;
@@ -47,6 +48,8 @@ class RemitSpiderUSBank {
     const DEAL_LINK_SUFFIXES_FILENAME = '_deal_link_suffixes.txt';
     const HISTORY_LINKS_FILENAME      = '_history_links.json';
     const FILE_INDEX_FILENAME         = '_file_index.json';
+
+    const DEFAULT_TIMEZONE = 'America/New_York';
 
     /**
      * TESTING, not sure if this will work.
@@ -68,7 +71,8 @@ class RemitSpiderUSBank {
                                  string $pathToPortfolioIds = '',
                                  string $pathToDealLinkSuffixes = '',
                                  string $pathToHistoryLinks = '',
-                                 string $pathToFileIndex = ''
+                                 string $pathToFileIndex = '',
+                                 string $timezone = self::DEFAULT_TIMEZONE
     ) {
 
         $this->debug                  = $debug;
@@ -77,33 +81,40 @@ class RemitSpiderUSBank {
         $this->pathToDealLinkSuffixes = $pathToDealLinkSuffixes . self::DEAL_LINK_SUFFIXES_FILENAME;
         $this->pathToHistoryLinks     = $pathToHistoryLinks . self::HISTORY_LINKS_FILENAME;
         $this->pathToFileIndex        = $pathToFileIndex . self::FILE_INDEX_FILENAME;
+        $this->timezone               = $timezone;
 
         $this->USBankBrowser = new USBankBrowser( $chromePath );
 
         $this->Debug = new Debug( $this->USBankBrowser->page,
                                   $pathToScreenshots,
-                                  $debug );
+                                  $debug,
+                                  $this->timezone );
 
         $this->Login = new Login( $this->USBankBrowser->page,
                                   $this->Debug,
                                   $user,
-                                  $pass );
+                                  $pass,
+                                  $this->timezone );
 
         $this->Portfolios = new Portfolios( $this->USBankBrowser->page,
                                             $this->Debug,
-                                            $this->pathToPortfolioIds );
+                                            $this->pathToPortfolioIds,
+                                            $this->timezone );
 
         $this->Deals = new Deals( $this->USBankBrowser->page,
                                   $this->Debug,
-                                  $this->pathToDealLinkSuffixes );
+                                  $this->pathToDealLinkSuffixes,
+                                  $this->timezone );
 
         $this->HistoryLinks = new HistoryLinks( $this->USBankBrowser->page,
                                                 $this->Debug,
-                                                $this->pathToHistoryLinks );
+                                                $this->pathToHistoryLinks,
+                                                $this->timezone );
 
         $this->FileIndex = new FileIndex( $this->USBankBrowser->page,
                                           $this->Debug,
-                                          $this->pathToFileIndex );
+                                          $this->pathToFileIndex,
+                                          $this->timezone );
     }
 
 

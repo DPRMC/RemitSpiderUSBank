@@ -3,6 +3,7 @@
 namespace DPRMC\RemitSpiderUSBank\Helpers;
 
 
+use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBankBAK;
 use HeadlessChromium\Clip;
 use HeadlessChromium\Cookies\CookiesCollection;
@@ -24,8 +25,9 @@ class Login {
     protected Debug  $Debug;
     protected string $user;
     protected string $pass;
+    protected string $timezone;
 
-    public ?string           $csrf = null;
+    public ?string           $csrf = NULL;
     public CookiesCollection $cookies;
 
 
@@ -35,11 +37,16 @@ class Login {
      * @param string                                 $user
      * @param string                                 $pass
      */
-    public function __construct( Page &$Page, Debug &$Debug, string $user, string $pass ) {
-        $this->Page  = $Page;
-        $this->Debug = $Debug;
-        $this->user  = $user;
-        $this->pass  = $pass;
+    public function __construct( Page   &$Page,
+                                 Debug  &$Debug,
+                                 string $user,
+                                 string $pass,
+                                 string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE ) {
+        $this->Page     = $Page;
+        $this->Debug    = $Debug;
+        $this->user     = $user;
+        $this->pass     = $pass;
+        $this->timezone = $timezone;
     }
 
 
@@ -56,11 +63,11 @@ class Login {
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
      */
     public function login(): string {
-        $this->Debug->_debug("Navigating to login screen.");
+        $this->Debug->_debug( "Navigating to login screen." );
         $this->Page->navigate( self::URL_LOGIN )->waitForNavigation();
 
         $this->Debug->_screenshot( 'first_page' );
-        $this->Debug->_debug("Filling out user and pass.");
+        $this->Debug->_debug( "Filling out user and pass." );
         $this->Page->evaluate( "document.querySelector('#uname').value = '" . $this->user . "';" );
         $this->Page->evaluate( "document.querySelector('#pword').value = '" . $this->pass . "';" );
 
@@ -70,7 +77,7 @@ class Login {
 
 
         // Click the login button, and wait for the page to reload.
-        $this->Debug->_debug("Clicking the login button.");
+        $this->Debug->_debug( "Clicking the login button." );
         $this->Page->mouse()
                    ->move( self::LOGIN_BUTTON_X, self::LOGIN_BUTTON_Y )
                    ->click();
@@ -83,10 +90,10 @@ class Login {
         $this->Debug->_screenshot( 'should_be_the_main_interface' );
 
         $this->cookies = $this->Page->getAllCookies();
-        $postLoginHTML       = $this->Page->getHtml();
-        $this->csrf          = $this->getCSRF( $postLoginHTML );
-        $this->Debug->_html("post_login");
-        $this->Debug->_debug("CSRF saved to Login object.");
+        $postLoginHTML = $this->Page->getHtml();
+        $this->csrf    = $this->getCSRF( $postLoginHTML );
+        $this->Debug->_html( "post_login" );
+        $this->Debug->_debug( "CSRF saved to Login object." );
         return $postLoginHTML;
     }
 
