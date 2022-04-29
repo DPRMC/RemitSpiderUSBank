@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Page;
 
+
 /**
  *
  */
@@ -103,6 +104,7 @@ class Portfolios extends BaseData {
 
 
     /**
+     * The parent method does the heavy lifting, I just denormalize the data for clarity.
      * @return void
      */
     public function loadFromCache() {
