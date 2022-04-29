@@ -2,7 +2,6 @@
 
 namespace DPRMC\RemitSpiderUSBank\Helpers;
 
-
 use Carbon\Carbon;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Page;
@@ -12,6 +11,9 @@ use HeadlessChromium\Page;
  */
 class Portfolios extends BaseData {
 
+    /**
+     * @var array Exists in this->data, but when loading from Cache I load it here for clarity.
+     */
     protected array  $portfolioIds;
 
 
@@ -21,6 +23,12 @@ class Portfolios extends BaseData {
     const URL_BASE_PORTFOLIOS = RemitSpiderUSBank::BASE_URL . '/TIR/portfolios?layout=layout&OWASP_CSRFTOKEN=';
 
 
+    /**
+     * @param \HeadlessChromium\Page                 $Page
+     * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
+     * @param string                                 $pathToPortfolioIds
+     * @param string                                 $timezone
+     */
     public function __construct( Page   &$Page,
                                  Debug  &$Debug,
                                  string $pathToPortfolioIds = '',
@@ -30,8 +38,6 @@ class Portfolios extends BaseData {
         $this->pathToCache = $pathToPortfolioIds;
         $this->timezone           = $timezone;
     }
-
-
 
 
     /**
