@@ -4,7 +4,6 @@ namespace DPRMC\RemitSpiderUSBank\Helpers;
 
 
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
-use DPRMC\RemitSpiderUSBank\RemitSpiderUSBankBAK;
 use HeadlessChromium\Clip;
 use HeadlessChromium\Cookies\CookiesCollection;
 use HeadlessChromium\Page;
@@ -15,11 +14,11 @@ use HeadlessChromium\Page;
 class Login {
 
     const URL_LOGIN  = 'https://usbtrustgateway.usbank.com/portal/login.do';
-    const URL_LOGOUT = RemitSpiderUSBankBAK::BASE_URL . '/TIR/logout';
+    const URL_LOGOUT = RemitSpiderUSBank::BASE_URL . '/TIR/logout';
 
     const LOGIN_BUTTON_X = 80;
     const LOGIN_BUTTON_Y = 260;
-    const URL_INTERFACE  = RemitSpiderUSBankBAK::BASE_URL . '/TIR/portfolios';
+    const URL_INTERFACE  = RemitSpiderUSBank::BASE_URL . '/TIR/portfolios';
 
     protected Page   $Page;
     protected Debug  $Debug;
