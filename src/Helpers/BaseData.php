@@ -48,7 +48,7 @@ abstract class BaseData {
      * @return void
      * @throws \Exception
      */
-    protected function _cacheData(array $data){
+    protected function _cacheData( array $data ) {
         $dataToWrite = [
             self::META => [
                 self::START_TIME      => serialize( $this->startTime ),
