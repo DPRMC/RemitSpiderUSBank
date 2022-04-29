@@ -56,9 +56,10 @@ class Portfolios {
         $stringCache = file_get_contents( $this->pathToPortfolioIds );
         $arrayCache  = json_decode( $stringCache, TRUE );
 
-        $this->portfolioIds = $arrayCache[ 'data' ];
-        $this->startTime    = unserialize( $arrayCache[ 'meta' ][ 'startTime' ] );
-        $this->stopTime     = unserialize( $arrayCache[ 'meta' ][ 'stopTime' ] );
+        $this->portfolioIds  = $arrayCache[ 'data' ];
+        $this->startTime     = unserialize( $arrayCache[ 'meta' ][ self::START_TIME ] );
+        $this->stopTime      = unserialize( $arrayCache[ 'meta' ][ self::STOP_TIME ] );
+        $this->lastRunStatus = $arrayCache[ 'meta' ][ self::LAST_RUN_STATUS ];
     }
 
 
@@ -95,9 +96,8 @@ class Portfolios {
             $this->_cachePortfolioIds();
             $this->Debug->_debug( "Writing the Portfolio IDs to cache." );
             return $this->portfolioIds;
-        }
-        catch (\Exception $exception){
-            $this->_cacheFailure($exception);
+        } catch ( \Exception $exception ) {
+            $this->_cacheFailure( $exception );
             throw $exception;
         }
     }
@@ -150,6 +150,7 @@ class Portfolios {
 
     /**
      * When you catch an exception during the run of this class, record the failure in cache.
+     *
      * @param \Exception $exception
      *
      * @return void
