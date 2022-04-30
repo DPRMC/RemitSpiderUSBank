@@ -9,11 +9,7 @@ use HeadlessChromium\Page;
 /**
  *
  */
-class HistoryLinks {
-
-
-    protected Page  $Page;
-    protected Debug $Debug;
+class HistoryLinks extends BaseData {
 
 
     /**
@@ -33,6 +29,11 @@ class HistoryLinks {
      */
     protected string $dealName;
 
+    /**
+     * This exists in this->data as well, this propery is available for clarity.
+     * @var array
+     */
+    protected array $historyLinks;
 
     /**
      *
@@ -59,6 +60,7 @@ class HistoryLinks {
         $this->Page               = $Page;
         $this->Debug              = $Debug;
         $this->pathToHistoryLinks = $pathToHistoryLinks;
+        $this->pathToCache        = $pathToHistoryLinks;
     }
 
 
@@ -80,6 +82,16 @@ class HistoryLinks {
 
 
     /**
+     * The parent method does the heavy lifting, I just denormalize the data for clarity.
+     * @return void
+     */
+    public function loadFromCache() {
+        parent::loadFromCache();
+        $this->historyLinks = $this->data;
+    }
+
+
+    /**
      * @param string $dealLinkSuffix
      *
      * @return array
@@ -96,7 +108,7 @@ class HistoryLinks {
     public function get( string $dealLinkSuffix ): array {
 
         $this->_setDealIdAndName( $dealLinkSuffix );
-        $historyLinks = [];
+        $newHistoryLinks = [];
 
         // Example URL:
         // https://trustinvestorreporting.usbank.com/TIR/public/deals/detail/1234/abc-defg-2001-1
@@ -116,67 +128,38 @@ class HistoryLinks {
 
             // This is the one we want!
             if ( 'periodic_report_2' == $class ):
-                $fullSuffix = $element->getAttribute( 'href' );
-//                var_dump($fullSuffix); flush();
-//                var_dump(self::HISTORY_LINK_PREFIX); flush();
+                $fullSuffix     = $element->getAttribute( 'href' );
                 $minSuffix      = str_replace( self::HISTORY_LINK_PREFIX, '', $fullSuffix );
-                $historyLinks[] = $minSuffix;
+                $newHistoryLinks[] = $minSuffix;
             endif;
         endforeach;
 
-        $this->_cacheHistoryLinks( $historyLinks );
+        $this->_setDataToCache( $newHistoryLinks);
 
-        return $historyLinks;
+        $this->_cacheData( $this->historyLinks );
+
+        return $newHistoryLinks;
     }
 
 
     /**
-     * @param array $newHistoryLinks
+     * @param array $data
      *
      * @return void
-     * @throws \Exception
      */
-    protected function _cacheHistoryLinks( array $newHistoryLinks ): void {
-
-        // Init the array if it does not exist.
-        if ( file_exists( $this->pathToHistoryLinks ) ):
-            $jsonHistoryLinks = file_get_contents( $this->pathToHistoryLinks );
-            $historyLinks     = json_decode( $jsonHistoryLinks, TRUE );
-        else:
-            $historyLinks = [];
-        endif;
-
-
+    protected function _setDataToCache( array $data ) {
+        $this->loadFromCache();
         // Init the Security Index of the array if it does not exist.
-        if ( FALSE == array_key_exists( $this->dealId, $historyLinks ) ):
-            $historyLinks[ $this->dealId ] = [];
+        if ( FALSE == array_key_exists( $this->dealId, $this->historyLinks ) ):
+            $this->historyLinks[ $this->dealId ] = [];
         endif;
 
         // Write all the new history links to the array.
-        foreach ( $newHistoryLinks as $historyLink ):
-            $myKey                                   = $this->_getMyUniqueId( $historyLink );
-            $historyLinks[ $this->dealId ][ $myKey ] = $historyLink;
+        foreach ( $data as $historyLink ):
+            $myKey                                         = $this->_getMyUniqueId( $historyLink );
+            $this->historyLinks[ $this->dealId ][ $myKey ] = $historyLink;
         endforeach;
-
-
-        // Encode and save the array to the json file.
-        $writeSuccess = file_put_contents( $this->pathToHistoryLinks,
-                                           json_encode( $historyLinks ) );
-        if ( FALSE === $writeSuccess ):
-            throw new \Exception( "Unable to write US Bank Deal History Links to cache file: " . $this->pathToHistoryLinks );
-        endif;
-    }
-
-
-    /**
-     * Helper function. This returns an MD5 hash used as a unique identifier (array index) for each history link.
-     *
-     * @param string $historyLink
-     *
-     * @return string
-     */
-    protected function _getMyUniqueId( string $historyLink ): string {
-        return md5( $historyLink );
+        $this->data = $this->historyLinks;
     }
 
 

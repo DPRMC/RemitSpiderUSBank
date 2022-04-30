@@ -16,10 +16,21 @@ abstract class BaseData {
     protected Carbon $stopTime;
     protected string $lastRunStatus;
 
+    /**
+     * @var string I use Carbon a lot. Let the user specify their own timezone, if that matters.
+     */
     protected string $timezone;
 
+    /**
+     * @var string Data gets stored in flat files. Each data type has its own cache location.
+     *             In reality there is no reason all data types can't share the same cache location.
+     */
     protected string $pathToCache;
 
+
+    /**
+     * @var array A generic array to hold all the data from US Bank.
+     */
     protected array $data;
 
     const META            = 'meta';
@@ -43,12 +54,16 @@ abstract class BaseData {
 
 
     /**
+     * If you don't want to overwrite your cache file...
+     * Like if you only did a partial run to ADD TO your cache file...
+     *
      * @param array $data
      *
      * @return void
      * @throws \Exception
      */
     protected function _cacheData( array $data ) {
+
         $dataToWrite = [
             self::META => [
                 self::START_TIME      => serialize( $this->startTime ),
@@ -92,5 +107,18 @@ abstract class BaseData {
         endif;
     }
 
+
+    /**
+     * Helper function. This returns an MD5 hash used as a unique identifier (array index) for a data "record".
+     *
+     * @param string $string
+     *
+     * @return string
+     */
+    protected function _getMyUniqueId( string $string ): string {
+        return md5( $string );
+    }
+
+    abstract protected function _setDataToCache( array $data);
 
 }

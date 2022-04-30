@@ -9,10 +9,8 @@ use HeadlessChromium\Page;
 /**
  *
  */
-class Deals {
+class Deals extends BaseData {
 
-    protected Page  $Page;
-    protected Debug $Debug;
 
     protected array  $dealLinkSuffixes;
     protected string $pathToDealLinkSuffixes;
@@ -34,10 +32,12 @@ class Deals {
      */
     public function __construct( Page   &$Page,
                                  Debug  &$Debug,
-                                 string $pathToDealLinkSuffixes = '' ) {
+                                 string $pathToDealLinkSuffixes = '',
+                                 string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE ) {
         $this->Page                   = $Page;
         $this->Debug                  = $Debug;
         $this->pathToDealLinkSuffixes = $pathToDealLinkSuffixes;
+        $this->timezone               = $timezone;
     }
 
 
@@ -59,7 +59,7 @@ class Deals {
      */
     public function getAllDealLinkSuffixesForPortfolioId( string $usBankPortfolioId ): array {
 
-        try{
+        try {
             // Start on Portfolios page
             $this->Page->navigate( Portfolios::URL_BASE_PORTFOLIOS )
                        ->waitForNavigation( Page::NETWORK_IDLE,
@@ -93,12 +93,13 @@ class Deals {
 
             $this->Debug->_debug( "I found " . count( $this->dealLinkSuffixes ) . " Deal Link Suffixes." );
 
-            $this->_cacheDealLinkSuffixes();
+            $this->_setDataToCache( $this->dealLinkSuffixes);
+            $this->_cacheData($this->dealLinkSuffixes);
 
             $this->Debug->_debug( "Writing the Deal Link Suffixes to cache." );
 
             return $this->dealLinkSuffixes;
-        } catch (\Exception $exception) {
+        } catch ( \Exception $exception ) {
 
         }
 
@@ -113,8 +114,8 @@ class Deals {
      */
     protected function _parseDealLinkSuffixesFromHTML( string $htmlWithListOfLinksToDeals ): array {
         $dealLinkSuffixes = [];
-        $pattern = '/\/detail\/(\d*\/.*)/';
-        $dom     = new \DOMDocument();
+        $pattern          = '/\/detail\/(\d*\/.*)/';
+        $dom              = new \DOMDocument();
         @$dom->loadHTML( $htmlWithListOfLinksToDeals );
         $elements = $dom->getElementsByTagName( 'a' );
         foreach ( $elements as $element ):
@@ -122,7 +123,7 @@ class Deals {
 
             // This is the one we want!
             if ( 'draggable-report-1' == $id ):
-                $href            = $element->getAttribute( 'href' );
+                $href           = $element->getAttribute( 'href' );
                 $dealLinkSuffix = NULL;
                 preg_match( $pattern, $href, $dealLinkSuffix );
 
@@ -137,41 +138,22 @@ class Deals {
     }
 
 
-    /**
-     * @return void
-     * @throws \Exception
-     */
-    protected function _cacheDealLinkSuffixes(): void {
-        $writeSuccess = file_put_contents( $this->pathToDealLinkSuffixes,
-                                           implode( "\n", $this->dealLinkSuffixes ) );
-        if ( FALSE === $writeSuccess ):
-            throw new \Exception( "Unable to write US Bank Deal link suffixes to cache file: " . $this->pathToDealLinkSuffixes );
-        endif;
+    protected function _setDataToCache( array $data ) {
+        $this->dealLinkSuffixes = $data;
+        $this->data = $data;
     }
 
 
+
+
     /**
-     * When you catch an exception during the run of this class, record the failure in cache.
-     *
-     * @param \Exception $exception
-     *
+     * The parent method does the heavy lifting, I just denormalize the data for clarity.
      * @return void
-     * @throws \Exception
      */
-    protected function _cacheFailure( \Exception $exception ): void {
-
-        $stringCache = file_get_contents( $this->pathToPortfolioIds );
-        $arrayCache  = json_decode( $stringCache, TRUE );
-
-        $arrayCache[ self::META ] = [
-            self::START_TIME      => serialize( $this->startTime ),
-            self::STOP_TIME       => serialize( $this->stopTime ),
-            self::LAST_RUN_STATUS => $exception->getMessage(),
-        ];
-
-        $writeSuccess = file_put_contents( $this->pathToPortfolioIds, json_encode( $arrayCache ) );
-        if ( FALSE === $writeSuccess ):
-            throw new \Exception( "Unable to write US Bank Portfolio IDs to cache file: " . $this->pathToPortfolioIds );
-        endif;
+    public function loadFromCache() {
+        parent::loadFromCache();
+        $this->dealLinkSuffixes = $this->data;
     }
+
+
 }

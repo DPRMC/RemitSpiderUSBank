@@ -71,6 +71,7 @@ class Portfolios extends BaseData {
             $this->portfolioIds = $this->_parseOutUSBankPortfolioIds( $portfolioHTML );
             $this->Debug->_debug( "I found " . count( $this->portfolioIds ) . " Portfolio IDs." );
             $this->stopTime = Carbon::now( $this->timezone );
+            $this->_setDataToCache( $this->portfolioIds);
             $this->_cacheData($this->portfolioIds);
             $this->Debug->_debug( "Writing the Portfolio IDs to cache." );
             return $this->portfolioIds;
@@ -110,5 +111,9 @@ class Portfolios extends BaseData {
     public function loadFromCache() {
         parent::loadFromCache();
         $this->portfolioIds = $this->data;
+    }
+
+    protected function _setDataToCache( array $data ) {
+        $this->data = $data;
     }
 }
