@@ -2,6 +2,7 @@
 
 namespace DPRMC\RemitSpiderUSBank\Helpers;
 
+use Carbon\Carbon;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Clip;
 use HeadlessChromium\Page;
@@ -12,9 +13,11 @@ use HeadlessChromium\Page;
 class Deals extends BaseData {
 
 
+    /**
+     * Exists in this->data, but when loading from Cache I load it here for clarity.
+     * @var array
+     */
     protected array  $dealLinkSuffixes;
-    protected string $pathToDealLinkSuffixes;
-
 
     /**
      *
@@ -36,7 +39,8 @@ class Deals extends BaseData {
                                  string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE ) {
         $this->Page                   = $Page;
         $this->Debug                  = $Debug;
-        $this->pathToDealLinkSuffixes = $pathToDealLinkSuffixes;
+        $this->pathToCache = $pathToDealLinkSuffixes;
+
         $this->timezone               = $timezone;
     }
 
@@ -60,6 +64,9 @@ class Deals extends BaseData {
     public function getAllDealLinkSuffixesForPortfolioId( string $usBankPortfolioId ): array {
 
         try {
+            $this->Debug->_debug( "Getting all Deal Link Suffixes." );
+            $this->startTime = Carbon::now( $this->timezone );
+
             // Start on Portfolios page
             $this->Page->navigate( Portfolios::URL_BASE_PORTFOLIOS )
                        ->waitForNavigation( Page::NETWORK_IDLE,
@@ -92,15 +99,16 @@ class Deals extends BaseData {
             $this->dealLinkSuffixes = $this->_parseDealLinkSuffixesFromHTML( $htmlWithListOfLinksToDeals );
 
             $this->Debug->_debug( "I found " . count( $this->dealLinkSuffixes ) . " Deal Link Suffixes." );
-
-            $this->_setDataToCache( $this->dealLinkSuffixes);
-            $this->_cacheData($this->dealLinkSuffixes);
+            $this->stopTime = Carbon::now( $this->timezone );
+            $this->_setDataToCache( $this->dealLinkSuffixes );
+            $this->_cacheData( $this->dealLinkSuffixes );
 
             $this->Debug->_debug( "Writing the Deal Link Suffixes to cache." );
 
             return $this->dealLinkSuffixes;
         } catch ( \Exception $exception ) {
-
+            $this->_cacheFailure( $exception );
+            throw $exception;
         }
 
     }
@@ -140,14 +148,13 @@ class Deals extends BaseData {
 
     protected function _setDataToCache( array $data ) {
         $this->dealLinkSuffixes = $data;
-        $this->data = $data;
+        $this->data             = $data;
     }
-
-
 
 
     /**
      * The parent method does the heavy lifting, I just denormalize the data for clarity.
+     *
      * @return void
      */
     public function loadFromCache() {
