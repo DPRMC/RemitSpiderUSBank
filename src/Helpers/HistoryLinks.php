@@ -3,6 +3,7 @@
 namespace DPRMC\RemitSpiderUSBank\Helpers;
 
 
+use Carbon\Carbon;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Page;
 
@@ -31,6 +32,7 @@ class HistoryLinks extends BaseData {
 
     /**
      * This exists in this->data as well, this propery is available for clarity.
+     *
      * @var array
      */
     protected array $historyLinks;
@@ -51,16 +53,19 @@ class HistoryLinks extends BaseData {
     const HISTORY_LINK = RemitSpiderUSBank::BASE_URL . self::HISTORY_LINK_PREFIX;
 
 
-    /**
-     * @param \HeadlessChromium\Page                 $Page
-     * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
-     * @param string                                 $pathToHistoryLinks
-     */
-    public function __construct( Page &$Page, Debug &$Debug, string $pathToHistoryLinks ) {
+    // CACHE
+    const LINK = 'link';       // The history link.
+
+
+    public function __construct( Page   &$Page,
+                                 Debug  &$Debug,
+                                 string $pathToHistoryLinks,
+                                 string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE ) {
         $this->Page               = $Page;
         $this->Debug              = $Debug;
         $this->pathToHistoryLinks = $pathToHistoryLinks;
         $this->pathToCache        = $pathToHistoryLinks;
+        $this->timezone           = $timezone;
     }
 
 
@@ -83,11 +88,13 @@ class HistoryLinks extends BaseData {
 
     /**
      * The parent method does the heavy lifting, I just denormalize the data for clarity.
+     *
      * @return void
      */
     public function loadFromCache() {
         parent::loadFromCache();
         $this->historyLinks = $this->data;
+        unset( $this->data );
     }
 
 
@@ -106,39 +113,48 @@ class HistoryLinks extends BaseData {
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
      */
     public function get( string $dealLinkSuffix ): array {
+        try {
+            $this->Debug->_debug( "Getting all History Links for a Deal Link Suffix." );
+            $this->loadFromCache();
+            $this->startTime = Carbon::now( $this->timezone );
+            $this->_setDealIdAndName( $dealLinkSuffix );
+            $newHistoryLinks = [];
 
-        $this->_setDealIdAndName( $dealLinkSuffix );
-        $newHistoryLinks = [];
+            // Example URL:
+            // https://trustinvestorreporting.usbank.com/TIR/public/deals/detail/1234/abc-defg-2001-1
+            $this->Page->navigate( self::BASE_DEAL_URL . $dealLinkSuffix )
+                       ->waitForNavigation( Page::NETWORK_IDLE, 5000 );
 
-        // Example URL:
-        // https://trustinvestorreporting.usbank.com/TIR/public/deals/detail/1234/abc-defg-2001-1
-        $this->Page->navigate( self::BASE_DEAL_URL . $dealLinkSuffix )
-                   ->waitForNavigation( Page::NETWORK_IDLE, 5000 );
+            $this->Debug->_screenshot( 'deal_page_' . urlencode( $dealLinkSuffix ) );
+            $this->Debug->_html( 'deal_page_' . urlencode( $dealLinkSuffix ) );
 
-        $this->Debug->_screenshot( 'deal_page_' . urlencode( $dealLinkSuffix ) );
-        $this->Debug->_html( 'deal_page_' . urlencode( $dealLinkSuffix ) );
+            $html = $this->Page->getHtml();
 
-        $html = $this->Page->getHtml();
+            $dom = new \DOMDocument();
+            @$dom->loadHTML( $html );
+            $elements = $dom->getElementsByTagName( 'a' );
+            foreach ( $elements as $element ):
+                $class = $element->getAttribute( 'class' );
 
-        $dom = new \DOMDocument();
-        @$dom->loadHTML( $html );
-        $elements = $dom->getElementsByTagName( 'a' );
-        foreach ( $elements as $element ):
-            $class = $element->getAttribute( 'class' );
+                // This is the one we want!
+                if ( 'periodic_report_2' == $class ):
+                    $fullSuffix        = $element->getAttribute( 'href' );
+                    $minSuffix         = str_replace( self::HISTORY_LINK_PREFIX, '', $fullSuffix );
+                    $newHistoryLinks[] = $minSuffix;
+                endif;
+            endforeach;
+            $this->Debug->_debug( "I found " . count( $newHistoryLinks ) . " History Links." );
+            $this->stopTime = Carbon::now( $this->timezone );
+            $this->_setDataToCache( $newHistoryLinks );
 
-            // This is the one we want!
-            if ( 'periodic_report_2' == $class ):
-                $fullSuffix     = $element->getAttribute( 'href' );
-                $minSuffix      = str_replace( self::HISTORY_LINK_PREFIX, '', $fullSuffix );
-                $newHistoryLinks[] = $minSuffix;
-            endif;
-        endforeach;
+            $this->_cacheData( $this->historyLinks );
 
-        $this->_setDataToCache( $newHistoryLinks);
+            return $newHistoryLinks;
+        } catch ( \Exception $exception ) {
+            $this->_cacheFailure( $exception );
+            throw $exception;
+        }
 
-        $this->_cacheData( $this->historyLinks );
-
-        return $newHistoryLinks;
     }
 
 
@@ -148,7 +164,6 @@ class HistoryLinks extends BaseData {
      * @return void
      */
     protected function _setDataToCache( array $data ) {
-        $this->loadFromCache();
         // Init the Security Index of the array if it does not exist.
         if ( FALSE == array_key_exists( $this->dealId, $this->historyLinks ) ):
             $this->historyLinks[ $this->dealId ] = [];
@@ -156,8 +171,18 @@ class HistoryLinks extends BaseData {
 
         // Write all the new history links to the array.
         foreach ( $data as $historyLink ):
-            $myKey                                         = $this->_getMyUniqueId( $historyLink );
-            $this->historyLinks[ $this->dealId ][ $myKey ] = $historyLink;
+            $myKey = $this->_getMyUniqueId( $historyLink );
+            if ( FALSE == array_key_exists( $myKey, $this->historyLinks[ $this->dealId ] ) ):
+                $this->historyLinks[ $this->dealId ][ $myKey ] = [
+                    self::LINK        => $historyLink,
+                    self::ADDED_AT    => Carbon::now( $this->timezone ),
+                    self::LAST_PULLED => NULL,
+                ];
+            else:
+                // The value already exists. Do nothing.
+            endif;
+
+
         endforeach;
         $this->data = $this->historyLinks;
     }

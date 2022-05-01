@@ -15,9 +15,10 @@ class Deals extends BaseData {
 
     /**
      * Exists in this->data, but when loading from Cache I load it here for clarity.
+     *
      * @var array
      */
-    protected array  $dealLinkSuffixes;
+    protected array $dealLinkSuffixes;
 
     /**
      *
@@ -37,11 +38,10 @@ class Deals extends BaseData {
                                  Debug  &$Debug,
                                  string $pathToDealLinkSuffixes = '',
                                  string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE ) {
-        $this->Page                   = $Page;
-        $this->Debug                  = $Debug;
+        $this->Page        = $Page;
+        $this->Debug       = $Debug;
         $this->pathToCache = $pathToDealLinkSuffixes;
-
-        $this->timezone               = $timezone;
+        $this->timezone    = $timezone;
     }
 
 
@@ -64,6 +64,7 @@ class Deals extends BaseData {
     public function getAllDealLinkSuffixesForPortfolioId( string $usBankPortfolioId ): array {
 
         try {
+            $this->loadFromCache();
             $this->Debug->_debug( "Getting all Deal Link Suffixes." );
             $this->startTime = Carbon::now( $this->timezone );
 

@@ -15,7 +15,7 @@ class Portfolios extends BaseData {
     /**
      * @var array Exists in this->data, but when loading from Cache I load it here for clarity.
      */
-    protected array  $portfolioIds;
+    protected array $portfolioIds;
 
 
     /**
@@ -23,6 +23,9 @@ class Portfolios extends BaseData {
      */
     const URL_BASE_PORTFOLIOS = RemitSpiderUSBank::BASE_URL . '/TIR/portfolios?layout=layout&OWASP_CSRFTOKEN=';
 
+
+    // CACHE
+    const PORTFOLIO_ID = 'portfolioId';
 
     /**
      * @param \HeadlessChromium\Page                 $Page
@@ -34,10 +37,10 @@ class Portfolios extends BaseData {
                                  Debug  &$Debug,
                                  string $pathToPortfolioIds = '',
                                  string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE ) {
-        $this->Page               = $Page;
-        $this->Debug              = $Debug;
+        $this->Page        = $Page;
+        $this->Debug       = $Debug;
         $this->pathToCache = $pathToPortfolioIds;
-        $this->timezone           = $timezone;
+        $this->timezone    = $timezone;
     }
 
 
@@ -71,8 +74,9 @@ class Portfolios extends BaseData {
             $this->portfolioIds = $this->_parseOutUSBankPortfolioIds( $portfolioHTML );
             $this->Debug->_debug( "I found " . count( $this->portfolioIds ) . " Portfolio IDs." );
             $this->stopTime = Carbon::now( $this->timezone );
-            $this->_setDataToCache( $this->portfolioIds);
-            $this->_cacheData($this->portfolioIds);
+
+            $this->_setDataToCache( $this->portfolioIds );
+            $this->_cacheData();
             $this->Debug->_debug( "Writing the Portfolio IDs to cache." );
             return $this->portfolioIds;
         } catch ( \Exception $exception ) {
@@ -97,7 +101,8 @@ class Portfolios extends BaseData {
 
             // This is the one we want!
             if ( 'lnk_portfoliotab' == $class ):
-                $portfolioIds[] = $element->getAttribute( 'id' );
+                $portfolioId = $element->getAttribute( 'id' );
+                $portfolioIds[$portfolioId] = $portfolioId;
             endif;
         endforeach;
         return $portfolioIds;
@@ -106,14 +111,28 @@ class Portfolios extends BaseData {
 
     /**
      * The parent method does the heavy lifting, I just denormalize the data for clarity.
+     *
      * @return void
      */
     public function loadFromCache() {
         parent::loadFromCache();
         $this->portfolioIds = $this->data;
+        unset( $this->data );
     }
 
+
+    /**
+     * @param array $data
+     *
+     * @return void
+     */
     protected function _setDataToCache( array $data ) {
-        $this->data = $data;
+        foreach ( $data as $id => $portfolioId ):
+            $this->data[ $portfolioId ] = [
+                BaseData::ADDED_AT => Carbon::now( $this->timezone ),
+                BaseData::LAST_PULLED => null,
+                self::PORTFOLIO_ID => $portfolioId
+            ];
+        endforeach;
     }
 }

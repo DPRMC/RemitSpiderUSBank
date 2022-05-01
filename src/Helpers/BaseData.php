@@ -12,14 +12,30 @@ abstract class BaseData {
     protected Page  $Page;
     protected Debug $Debug;
 
-    protected Carbon $startTime;
-    protected Carbon $stopTime;
-    protected string $lastRunStatus;
+
+    /**
+     * @var \Carbon\Carbon|null When the run started.
+     */
+    protected ?Carbon $startTime;
+
+
+    /**
+     * @var \Carbon\Carbon|null When the run ended;
+     */
+    protected ?Carbon $stopTime;
+
+
+    /**
+     * @var string|null Ex: "ok" means success. Anything else is an error.
+     */
+    protected ?string $lastRunStatus;
+
 
     /**
      * @var string I use Carbon a lot. Let the user specify their own timezone, if that matters.
      */
     protected string $timezone;
+
 
     /**
      * @var string Data gets stored in flat files. Each data type has its own cache location.
@@ -38,11 +54,24 @@ abstract class BaseData {
     const START_TIME      = 'startTime';
     const STOP_TIME       = 'stopTime';
     const LAST_RUN_STATUS = 'lastRunStatus';
+    const ADDED_AT        = 'addedAt';    // When was this data added to the cache.
+    const LAST_PULLED     = 'lastPulled'; // When was the info pointed to be this data last loaded.
 
     /**
+     * Call this method anywhere to load the contents of the cache file into this->data
+     * ...along with some other standard meta data.
+     * This method should be extended in the child classes to move the contents of
+     * this->data into more appropriate locations.
+     *
      * @return void
      */
     public function loadFromCache() {
+        if ( FALSE == file_exists( $this->pathToCache ) ):
+            $this->data          = [];
+            $this->lastRunStatus = NULL;
+            return;
+        endif;
+
         $stringCache = file_get_contents( $this->pathToCache );
         $arrayCache  = json_decode( $stringCache, TRUE );
 
@@ -57,12 +86,10 @@ abstract class BaseData {
      * If you don't want to overwrite your cache file...
      * Like if you only did a partial run to ADD TO your cache file...
      *
-     * @param array $data
-     *
      * @return void
      * @throws \Exception
      */
-    protected function _cacheData( array $data ) {
+    protected function _cacheData() {
 
         $dataToWrite = [
             self::META => [
@@ -71,7 +98,7 @@ abstract class BaseData {
                 self::LAST_RUN_STATUS => 'ok',
             ],
             self::DATA => [
-                $data,
+                $this->data,
             ],
         ];
 
@@ -119,6 +146,6 @@ abstract class BaseData {
         return md5( $string );
     }
 
-    abstract protected function _setDataToCache( array $data);
+    abstract protected function _setDataToCache( array $data );
 
 }
