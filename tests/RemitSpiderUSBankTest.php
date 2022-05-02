@@ -122,8 +122,11 @@ class RemitSpiderUSBankTest extends TestCase {
      */
     public function testGetPortfolioIds() {
         $spider = $this->_getSpider();
-        $spider->Login->login();
-        $portfolioIds = $spider->Portfolios->getAllPortfolioIds( $spider->Login->csrf );
+//        $spider->Login->login();
+
+        $spider->Portfolios->loadFromCache();
+
+//        $portfolioIds = $spider->Portfolios->getAllPortfolioIds( $spider->Login->csrf );
         $this->assertNotEmpty( $portfolioIds );
     }
 

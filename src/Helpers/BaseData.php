@@ -75,7 +75,14 @@ abstract class BaseData {
         $stringCache = file_get_contents( $this->pathToCache );
         $arrayCache  = json_decode( $stringCache, TRUE );
 
+        print_r($arrayCache); flush();
+
         $this->data          = $arrayCache[ self::DATA ];
+
+
+        print_r($this->data); flush();
+
+        die();
         $this->startTime     = unserialize( $arrayCache[ self::META ][ self::START_TIME ] );
         $this->stopTime      = unserialize( $arrayCache[ self::META ][ self::STOP_TIME ] );
         $this->lastRunStatus = $arrayCache[ self::META ][ self::LAST_RUN_STATUS ];
