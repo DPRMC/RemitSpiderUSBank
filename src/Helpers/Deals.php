@@ -33,6 +33,7 @@ class Deals extends BaseData {
      * @param \HeadlessChromium\Page                 $Page
      * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
      * @param string                                 $pathToDealLinkSuffixes
+     * @param string                                 $timezone
      */
     public function __construct( Page   &$Page,
                                  Debug  &$Debug,

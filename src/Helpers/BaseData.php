@@ -75,14 +75,19 @@ abstract class BaseData {
         $stringCache = file_get_contents( $this->pathToCache );
         $arrayCache  = json_decode( $stringCache, TRUE );
 
-        print_r($arrayCache); flush();
+        print_r( $arrayCache );
+        flush();
 
-        $this->data          = $arrayCache[ self::DATA ];
+
+        print_r( $arrayCache[ self::DATA ] );
+        flush();
+
+        $this->data = $arrayCache[ self::DATA ];
 
 
-        print_r($this->data); flush();
+        print_r( $this->data );
+        flush();
 
-        die();
         $this->startTime     = unserialize( $arrayCache[ self::META ][ self::START_TIME ] );
         $this->stopTime      = unserialize( $arrayCache[ self::META ][ self::STOP_TIME ] );
         $this->lastRunStatus = $arrayCache[ self::META ][ self::LAST_RUN_STATUS ];
@@ -104,9 +109,7 @@ abstract class BaseData {
                 self::STOP_TIME       => serialize( $this->stopTime ),
                 self::LAST_RUN_STATUS => 'ok',
             ],
-            self::DATA => [
-                $this->data,
-            ],
+            self::DATA => $this->data,
         ];
 
         $writeSuccess = file_put_contents( $this->pathToCache, json_encode( $dataToWrite ) );

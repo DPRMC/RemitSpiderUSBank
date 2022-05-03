@@ -8,14 +8,17 @@ use HeadlessChromium\Page;
 
 
 /**
- *
+ * A given US Bank login can have multiple Portfolios under it.
+ * The only thing I really need from here is the Portfolio ID
+ * ALL other US Bank data can be retrieved given a Portfolio ID.
+ * It all starts here!
  */
 class Portfolios extends BaseData {
 
     /**
-     * @var array Exists in this->data, but when loading from Cache I load it here for clarity.
+     * @var array
      */
-    protected array $portfolioIds;
+    public array $portfolioIds;
 
 
     /**
@@ -117,6 +120,7 @@ class Portfolios extends BaseData {
     public function loadFromCache() {
         parent::loadFromCache();
         $this->portfolioIds = $this->data;
+
         unset( $this->data );
     }
 
