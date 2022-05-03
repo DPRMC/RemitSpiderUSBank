@@ -214,4 +214,8 @@ class HistoryLinks extends BaseData {
     public static function getAbsoluteLink( string $linkSuffix ): string {
         return self::HISTORY_LINK . $linkSuffix;
     }
+
+    public function getObjects(): array {
+        // TODO: Implement getObjects() method.
+    }
 }

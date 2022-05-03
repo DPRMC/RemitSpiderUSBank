@@ -47,7 +47,7 @@ abstract class BaseData {
     /**
      * @var array A generic array to hold all the data from US Bank.
      */
-    protected array $data;
+    public array $data;
 
     const META            = 'meta';
     const DATA            = 'data';
@@ -158,4 +158,6 @@ abstract class BaseData {
 
     abstract protected function _setDataToCache( array $data );
 
+
+    abstract public function getObjects(): array;
 }

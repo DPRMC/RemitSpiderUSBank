@@ -3,6 +3,7 @@
 namespace DPRMC\RemitSpiderUSBank\Helpers;
 
 use Carbon\Carbon;
+use DPRMC\RemitSpiderUSBank\Objects\Portfolio;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Page;
 
@@ -104,8 +105,8 @@ class Portfolios extends BaseData {
 
             // This is the one we want!
             if ( 'lnk_portfoliotab' == $class ):
-                $portfolioId = $element->getAttribute( 'id' );
-                $portfolioIds[$portfolioId] = $portfolioId;
+                $portfolioId                  = $element->getAttribute( 'id' );
+                $portfolioIds[ $portfolioId ] = $portfolioId;
             endif;
         endforeach;
         return $portfolioIds;
@@ -119,9 +120,7 @@ class Portfolios extends BaseData {
      */
     public function loadFromCache() {
         parent::loadFromCache();
-        $this->portfolioIds = $this->data;
-
-        unset( $this->data );
+        $this->portfolioIds = array_keys( $this->data );
     }
 
 
@@ -133,10 +132,18 @@ class Portfolios extends BaseData {
     protected function _setDataToCache( array $data ) {
         foreach ( $data as $id => $portfolioId ):
             $this->data[ $portfolioId ] = [
-                BaseData::ADDED_AT => Carbon::now( $this->timezone ),
-                BaseData::LAST_PULLED => null,
-                self::PORTFOLIO_ID => $portfolioId
+                BaseData::ADDED_AT    => Carbon::now( $this->timezone ),
+                BaseData::LAST_PULLED => NULL,
+                self::PORTFOLIO_ID    => $portfolioId,
             ];
         endforeach;
+    }
+
+    public function getObjects(): array {
+        $objects = [];
+        foreach ( $this->data as $data ):
+            $objects[] = new Portfolio( $data );
+        endforeach;
+        return $objects;
     }
 }

@@ -164,5 +164,9 @@ class Deals extends BaseData {
         $this->dealLinkSuffixes = $this->data;
     }
 
+    public function getObjects(): array {
+        // TODO: Implement getObjects() method.
+    }
+
 
 }
