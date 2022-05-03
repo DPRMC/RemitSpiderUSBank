@@ -1,6 +1,6 @@
 <?php
 
-namespace DPRMC\RemitSpiderUSBank\Helpers;
+namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 
 use Carbon\Carbon;
@@ -32,9 +32,9 @@ class FileIndex {
 
 
     /**
-     * @param \HeadlessChromium\Page                 $Page
-     * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
-     * @param string                                 $pathToFileIndex
+     * @param \HeadlessChromium\Page                    $Page
+     * @param \DPRMC\RemitSpiderUSBank\Collectors\Debug $Debug
+     * @param string                                    $pathToFileIndex
      */
     public function __construct( Page &$Page, Debug &$Debug, string $pathToFileIndex ) {
         $this->Page            = $Page;

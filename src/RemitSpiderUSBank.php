@@ -2,13 +2,13 @@
 
 namespace DPRMC\RemitSpiderUSBank;
 
-use DPRMC\RemitSpiderUSBank\Helpers\Deals;
-use DPRMC\RemitSpiderUSBank\Helpers\FileIndex;
-use DPRMC\RemitSpiderUSBank\Helpers\Portfolios;
-use DPRMC\RemitSpiderUSBank\Helpers\USBankBrowser;
-use DPRMC\RemitSpiderUSBank\Helpers\Debug;
-use DPRMC\RemitSpiderUSBank\Helpers\HistoryLinks;
-use DPRMC\RemitSpiderUSBank\Helpers\Login;
+use DPRMC\RemitSpiderUSBank\Collectors\Deals;
+use DPRMC\RemitSpiderUSBank\Collectors\FileIndex;
+use DPRMC\RemitSpiderUSBank\Collectors\Portfolios;
+use DPRMC\RemitSpiderUSBank\Collectors\USBankBrowser;
+use DPRMC\RemitSpiderUSBank\Collectors\Debug;
+use DPRMC\RemitSpiderUSBank\Collectors\HistoryLinks;
+use DPRMC\RemitSpiderUSBank\Collectors\Login;
 use HeadlessChromium\Cookies\CookiesCollection;
 use PHPUnit\TextUI\XmlConfiguration\File;
 

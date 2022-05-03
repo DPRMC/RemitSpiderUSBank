@@ -100,7 +100,7 @@ class RemitSpiderUSBankTest extends TestCase {
         $url           = 'https://example.com/404.html';
         $pathTo404Html = 'tests/resources/404.html';
         $html          = file_get_contents( $pathTo404Html );
-        \DPRMC\RemitSpiderUSBank\Helpers\Errors::is404( $url, $html );
+        \DPRMC\RemitSpiderUSBank\Collectors\Errors::is404( $url, $html );
     }
 
 

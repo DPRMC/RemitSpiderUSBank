@@ -1,6 +1,6 @@
 <?php
 
-namespace DPRMC\RemitSpiderUSBank\Helpers;
+namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 
 use Carbon\Carbon;

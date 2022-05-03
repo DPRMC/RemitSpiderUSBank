@@ -1,6 +1,6 @@
 <?php
 
-namespace DPRMC\RemitSpiderUSBank\Helpers;
+namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 use Carbon\Carbon;
 use DPRMC\RemitSpiderUSBank\Objects\Portfolio;
@@ -32,10 +32,10 @@ class Portfolios extends BaseData {
     const PORTFOLIO_ID = 'portfolioId';
 
     /**
-     * @param \HeadlessChromium\Page                 $Page
-     * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
-     * @param string                                 $pathToPortfolioIds
-     * @param string                                 $timezone
+     * @param \HeadlessChromium\Page                    $Page
+     * @param \DPRMC\RemitSpiderUSBank\Collectors\Debug $Debug
+     * @param string                                    $pathToPortfolioIds
+     * @param string                                    $timezone
      */
     public function __construct( Page   &$Page,
                                  Debug  &$Debug,

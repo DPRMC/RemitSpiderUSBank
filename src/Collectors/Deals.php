@@ -1,6 +1,6 @@
 <?php
 
-namespace DPRMC\RemitSpiderUSBank\Helpers;
+namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 use Carbon\Carbon;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
@@ -30,10 +30,10 @@ class Deals extends BaseData {
 
 
     /**
-     * @param \HeadlessChromium\Page                 $Page
-     * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
-     * @param string                                 $pathToDealLinkSuffixes
-     * @param string                                 $timezone
+     * @param \HeadlessChromium\Page                    $Page
+     * @param \DPRMC\RemitSpiderUSBank\Collectors\Debug $Debug
+     * @param string                                    $pathToDealLinkSuffixes
+     * @param string                                    $timezone
      */
     public function __construct( Page   &$Page,
                                  Debug  &$Debug,

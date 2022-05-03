@@ -1,6 +1,6 @@
 <?php
 
-namespace DPRMC\RemitSpiderUSBank\Helpers;
+namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
@@ -31,10 +31,10 @@ class Login {
 
 
     /**
-     * @param \HeadlessChromium\Page                 $Page
-     * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
-     * @param string                                 $user
-     * @param string                                 $pass
+     * @param \HeadlessChromium\Page                    $Page
+     * @param \DPRMC\RemitSpiderUSBank\Collectors\Debug $Debug
+     * @param string                                    $user
+     * @param string                                    $pass
      */
     public function __construct( Page   &$Page,
                                  Debug  &$Debug,
