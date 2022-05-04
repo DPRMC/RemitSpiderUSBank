@@ -61,7 +61,7 @@ class Portfolios extends BaseData {
      * @throws \HeadlessChromium\Exception\NoResponseAvailable
      * @throws \HeadlessChromium\Exception\OperationTimedOut
      */
-    public function getAllPortfolioIds( string $csrf ): array {
+    public function getAll( string $csrf ): array {
         try {
             $this->Debug->_debug( "Getting all Portfolio IDs." );
             $this->startTime = Carbon::now( $this->timezone );
@@ -82,8 +82,9 @@ class Portfolios extends BaseData {
             $this->_setDataToCache( $this->portfolioIds );
             $this->_cacheData();
             $this->Debug->_debug( "Writing the Portfolio IDs to cache." );
-            return $this->portfolioIds;
+            return $this->getObjects();
         } catch ( \Exception $exception ) {
+            $this->stopTime = Carbon::now( $this->timezone );
             $this->_cacheFailure( $exception );
             throw $exception;
         }
@@ -139,10 +140,14 @@ class Portfolios extends BaseData {
         endforeach;
     }
 
+
+    /**
+     * @return array
+     */
     public function getObjects(): array {
         $objects = [];
         foreach ( $this->data as $data ):
-            $objects[] = new Portfolio( $data );
+            $objects[] = new Portfolio( $data, $this->timezone, $this->pathToCache );
         endforeach;
         return $objects;
     }

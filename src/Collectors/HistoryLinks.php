@@ -4,6 +4,8 @@ namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 
 use Carbon\Carbon;
+use DPRMC\RemitSpiderUSBank\Objects\HistoryLink;
+use DPRMC\RemitSpiderUSBank\Objects\Portfolio;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Page;
 
@@ -35,7 +37,7 @@ class HistoryLinks extends BaseData {
      *
      * @var array
      */
-    protected array $historyLinks;
+    public array $historyLinks;
 
     /**
      *
@@ -94,7 +96,6 @@ class HistoryLinks extends BaseData {
     public function loadFromCache() {
         parent::loadFromCache();
         $this->historyLinks = $this->data;
-        unset( $this->data );
     }
 
 
@@ -112,12 +113,14 @@ class HistoryLinks extends BaseData {
      * @throws \HeadlessChromium\Exception\OperationTimedOut
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
      */
-    public function get( string $dealLinkSuffix ): array {
+    public function getAllByDeal( string $dealLinkSuffix ): array {
         try {
             $this->Debug->_debug( "Getting all History Links for a Deal Link Suffix." );
+            $this->_setDealIdAndName( $dealLinkSuffix );
+
             $this->loadFromCache();
             $this->startTime = Carbon::now( $this->timezone );
-            $this->_setDealIdAndName( $dealLinkSuffix );
+
             $newHistoryLinks = [];
 
             // Example URL:
@@ -147,10 +150,12 @@ class HistoryLinks extends BaseData {
             $this->stopTime = Carbon::now( $this->timezone );
             $this->_setDataToCache( $newHistoryLinks );
 
-            $this->_cacheData( $this->historyLinks );
+            $this->_cacheData();
 
-            return $newHistoryLinks;
+//            return $newHistoryLinks;
+            return $this->getObjects();
         } catch ( \Exception $exception ) {
+            $this->stopTime = Carbon::now( $this->timezone );
             $this->_cacheFailure( $exception );
             throw $exception;
         }
@@ -175,8 +180,8 @@ class HistoryLinks extends BaseData {
             if ( FALSE == array_key_exists( $myKey, $this->historyLinks[ $this->dealId ] ) ):
                 $this->historyLinks[ $this->dealId ][ $myKey ] = [
                     self::LINK        => $historyLink,
-                    self::ADDED_AT    => Carbon::now( $this->timezone ),
-                    self::LAST_PULLED => NULL,
+                    BaseData::ADDED_AT    => Carbon::now( $this->timezone ),
+                    BaseData::LAST_PULLED => NULL,
                 ];
             else:
                 // The value already exists. Do nothing.
@@ -216,6 +221,12 @@ class HistoryLinks extends BaseData {
     }
 
     public function getObjects(): array {
-        // TODO: Implement getObjects() method.
+        $objects = [];
+        foreach ( $this->data as $portfolioId => $historyLinks ):
+            foreach($historyLinks as $uniqueId => $data):
+                $objects[$portfolioId][$uniqueId] = new HistoryLink( $data, $this->timezone, $this->pathToCache );
+            endforeach;
+        endforeach;
+        return $objects;
     }
 }

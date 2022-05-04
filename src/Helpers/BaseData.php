@@ -72,25 +72,23 @@ abstract class BaseData {
             return;
         endif;
 
-        $stringCache = file_get_contents( $this->pathToCache );
-        $arrayCache  = json_decode( $stringCache, TRUE );
-
-        print_r( $arrayCache );
-        flush();
-
-
-        print_r( $arrayCache[ self::DATA ] );
-        flush();
-
-        $this->data = $arrayCache[ self::DATA ];
-
-
-        print_r( $this->data );
-        flush();
-
+        $stringCache         = file_get_contents( $this->pathToCache );
+        $arrayCache          = json_decode( $stringCache, TRUE );
+        $this->data          = $arrayCache[ self::DATA ];
         $this->startTime     = unserialize( $arrayCache[ self::META ][ self::START_TIME ] );
         $this->stopTime      = unserialize( $arrayCache[ self::META ][ self::STOP_TIME ] );
         $this->lastRunStatus = $arrayCache[ self::META ][ self::LAST_RUN_STATUS ];
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function deleteCache(){
+        if( false == file_exists($this->pathToCache)):
+            return true;
+        endif;
+        return unlink($this->pathToCache);
     }
 
 
@@ -129,6 +127,10 @@ abstract class BaseData {
      */
     protected function _cacheFailure( \Exception $exception ): void {
 
+        if( false == file_exists($this->pathToCache)):
+            file_put_contents( $this->pathToCache,json_encode([]) );
+        endif;
+
         $stringCache = file_get_contents( $this->pathToCache );
         $arrayCache  = json_decode( $stringCache, TRUE );
 
@@ -160,4 +162,13 @@ abstract class BaseData {
 
 
     abstract public function getObjects(): array;
+
+
+    /**
+     * Simple getter function.
+     * @return string
+     */
+    public function getPathToCache(): string {
+        return $this->pathToCache;
+    }
 }

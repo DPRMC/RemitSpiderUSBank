@@ -8,19 +8,26 @@ use DPRMC\RemitSpiderUSBank\Collectors\BaseData;
 
 abstract class BaseObject {
 
-    private array $_data;
-    private string $_timezone;
+    protected array  $_data;
+    protected string $_timezone;
 
-    public Carbon $addedAt;
-    public Carbon $lastPulledAt;
-    public string $timezone;
+    public ?Carbon $addedAt;
+    public ?Carbon $lastPulledAt;
+    public string  $timezone;
 
-    public function __construct( array $data, string $timezone) {
-        $this->_data = $data;
-        $this->_timezone = $timezone;
+    public string $pathToCache;
 
-        $this->addedAt      = $data[ BaseData::ADDED_AT ];
-        $this->lastPulledAt = $data[ BaseData::LAST_PULLED ];
+    // A 1D array of the indexes you need to follow to get to this "rows" data array.
+    public array $indexesToData;
+
+    public function __construct( array $data, string $timezone, string $pathToCache ) {
+        $this->_data       = $data;
+        $this->_timezone   = $timezone;
+        $this->pathToCache = $pathToCache;
+
+
+        $this->addedAt      = @$data[ BaseData::ADDED_AT ];
+        $this->lastPulledAt = @$data[ BaseData::LAST_PULLED ];
     }
 
 
@@ -28,11 +35,20 @@ abstract class BaseObject {
      * @return bool
      */
     public function pulledInTheLastDay(): bool {
-        $now = Carbon::now($this->_timezone);
-        $diffInSeconds = $now->diffInSeconds($this->lastPulledAt);
-        if(86400 > $diffInSeconds):
-            return true;
+        $now           = Carbon::now( $this->_timezone );
+        $diffInSeconds = $now->diffInSeconds( $this->lastPulledAt );
+        if ( 86400 > $diffInSeconds ):
+            return TRUE;
         endif;
-        return false;
+        return FALSE;
     }
+
+
+    public function markAsPulled() {
+        $string = file_get_contents($this->pathToCache);
+        $array = json_decode($string,true);
+    }
+
+
+
 }

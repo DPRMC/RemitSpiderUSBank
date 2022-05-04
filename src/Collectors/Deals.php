@@ -3,6 +3,7 @@
 namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 use Carbon\Carbon;
+use DPRMC\RemitSpiderUSBank\Objects\Deal;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Clip;
 use HeadlessChromium\Page;
@@ -18,7 +19,8 @@ class Deals extends BaseData {
      *
      * @var array
      */
-    protected array $dealLinkSuffixes;
+    public array $dealLinkSuffixes;
+
 
     /**
      *
@@ -28,6 +30,9 @@ class Deals extends BaseData {
     const X_ALL = 220;
     const Y_ALL = 3915;
 
+
+    // CACHE
+    const DEAL_LINK_SUFFIX = 'dealLinkSuffix';
 
     /**
      * @param \HeadlessChromium\Page                    $Page
@@ -62,7 +67,7 @@ class Deals extends BaseData {
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
      * @throws \Exception
      */
-    public function getAllDealLinkSuffixesForPortfolioId( string $usBankPortfolioId ): array {
+    public function getAllByPortfolioId( string $usBankPortfolioId ): array {
 
         try {
             $this->loadFromCache();
@@ -107,8 +112,10 @@ class Deals extends BaseData {
 
             $this->Debug->_debug( "Writing the Deal Link Suffixes to cache." );
 
-            return $this->dealLinkSuffixes;
+            //return $this->dealLinkSuffixes;
+            return $this->getObjects();
         } catch ( \Exception $exception ) {
+            $this->stopTime = Carbon::now( $this->timezone );
             $this->_cacheFailure( $exception );
             throw $exception;
         }
@@ -148,9 +155,22 @@ class Deals extends BaseData {
     }
 
 
+    /**
+     * @param array $data
+     *
+     * @return void
+     */
     protected function _setDataToCache( array $data ) {
         $this->dealLinkSuffixes = $data;
-        $this->data             = $data;
+
+        foreach ( $data as $dealLinkSuffix ):
+//            $uniqueId                = $this->_getMyUniqueId( $dealLinkSuffix );
+            $this->data[ $dealLinkSuffix ] = [
+                BaseData::ADDED_AT     => Carbon::now( $this->timezone ),
+                BaseData::LAST_PULLED  => NULL,
+                self::DEAL_LINK_SUFFIX => $dealLinkSuffix,
+            ];
+        endforeach;
     }
 
 
@@ -161,11 +181,19 @@ class Deals extends BaseData {
      */
     public function loadFromCache() {
         parent::loadFromCache();
-        $this->dealLinkSuffixes = $this->data;
+        $this->dealLinkSuffixes = array_keys( $this->data );
     }
 
+
+    /**
+     * @return array
+     */
     public function getObjects(): array {
-        // TODO: Implement getObjects() method.
+        $objects = [];
+        foreach ( $this->data as $data ):
+            $objects[] = new Deal( $data, $this->timezone, $this->pathToCache );
+        endforeach;
+        return $objects;
     }
 
 

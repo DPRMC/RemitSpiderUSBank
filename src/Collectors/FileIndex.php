@@ -4,18 +4,16 @@ namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 
 use Carbon\Carbon;
+use DPRMC\RemitSpiderUSBank\Objects\File;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Page;
 
 /**
  *
  */
-class FileIndex {
+class FileIndex extends BaseData {
 
 
-    protected Page   $Page;
-    protected Debug  $Debug;
-    protected string $pathToFileIndex;
     protected string $dealId;
 
     // These are the indexes of the file index data.
@@ -36,10 +34,14 @@ class FileIndex {
      * @param \DPRMC\RemitSpiderUSBank\Collectors\Debug $Debug
      * @param string                                    $pathToFileIndex
      */
-    public function __construct( Page &$Page, Debug &$Debug, string $pathToFileIndex ) {
-        $this->Page            = $Page;
-        $this->Debug           = $Debug;
-        $this->pathToFileIndex = $pathToFileIndex;
+    public function __construct( Page   &$Page,
+                                 Debug  &$Debug,
+                                 string $pathToFileIndex,
+                                 string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE ) {
+        $this->Page        = $Page;
+        $this->Debug       = $Debug;
+        $this->pathToCache = $pathToFileIndex;
+        $this->timezone    = $timezone;
     }
 
 
@@ -73,112 +75,86 @@ class FileIndex {
      * @throws \HeadlessChromium\Exception\OperationTimedOut
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
      */
-    public function get( string $historyLinkSuffix ): array {
+    public function getAllFromHistoryLink( string $historyLinkSuffix ): array {
 
-        $this->_setDealId( $historyLinkSuffix );
-        $fileLinks = [];
-
-        // Example URL:
-        //
-        $this->Page->navigate( HistoryLinks::HISTORY_LINK . $historyLinkSuffix )
-                   ->waitForNavigation( Page::NETWORK_IDLE, 5000 );
-
-        $this->Debug->_screenshot( 'historic_files_page_' . urlencode( $historyLinkSuffix ) );
-        $this->Debug->_html( 'historic_files_page_' . urlencode( $historyLinkSuffix ) );
-
-        $html = $this->Page->getHtml();
-        $dom  = new \DOMDocument();
-        @$dom->loadHTML( $html );
-
-
-        $anchors = $dom->getElementsByTagName( 'a' );
-        /**
-         * @var \DOMElement $anchor
-         */
-        foreach ( $anchors as $anchor ):
-
-            $href = $anchor->getAttribute( 'href' );
-            $this->Debug->_debug("href: " . $href);
-
-            if ( $this->_isFileLink( $href ) ):
-
-                $fileTypeNode = $anchor->parentNode;
-                $fileType     = trim( $fileTypeNode->nodeValue );
-                $this->Debug->_debug("fileType: " . $fileType);
-
-                /**
-                 * @var \DOMText $reportDateNode
-                 */
-                $garbageNode = $fileTypeNode->previousSibling; // Skip a node
-                $reportDateNode = $garbageNode->previousSibling;
-                //$this->Debug->_debug("reportDateNode is a : " . get_class($reportDateNode));
-                //echo $reportDateNode->nodeValue;
-
-                $reportDate     = Carbon::parse( trim( (string)$reportDateNode->nodeValue ), 'America/New_York' );
-                $this->Debug->_debug("reportDate carbon : " . $reportDate->toDateString());
-
-                /**
-                 * @var \DOMElement $garbageNode
-                 */
-                $garbageNode = $reportDateNode->previousSibling;
-
-
-                $reportNameNode = $garbageNode->previousSibling;
-                $reportName  = trim( $reportNameNode->nodeValue );
-                $this->Debug->_debug("reportName: " . $reportName);
-
-                $uniqueId = $this->_getMyUniqueId( $href );
-
-                $fileLinks[$uniqueId] = [
-                    self::TYPE => $fileType,
-                    self::DATE => $reportDate->toDateString(),
-                    self::NAME => $reportName,
-                    self::HREF => $href
-                ];
-            endif;
-        endforeach;
-
-        $this->_cacheHistoryLinks($fileLinks);
-
-        return $fileLinks;
-    }
-
-
-    /**
-     * @param array $newFileLinks
-     *
-     * @return void
-     * @throws \Exception
-     */
-    protected function _cacheHistoryLinks( array $newFileLinks ): void {
-
-        // Init the array if it does not exist.
-        if ( file_exists( $this->pathToFileIndex ) ):
-            $jsonFileLinks = file_get_contents( $this->pathToFileIndex );
-            $fileLinks     = json_decode( $jsonFileLinks, TRUE );
-        else:
+        try {
+            $this->Debug->_debug( "Getting all File Indexes from " . $historyLinkSuffix );
+            $this->startTime = Carbon::now( $this->timezone );
+            $this->loadFromCache();
+            $this->_setDealId( $historyLinkSuffix );
             $fileLinks = [];
-        endif;
+
+            // Example URL:
+            $this->Page->navigate( HistoryLinks::HISTORY_LINK . $historyLinkSuffix )
+                       ->waitForNavigation( Page::NETWORK_IDLE, 5000 );
+
+            $this->Debug->_screenshot( 'historic_files_page_' . urlencode( $historyLinkSuffix ) );
+            $this->Debug->_html( 'historic_files_page_' . urlencode( $historyLinkSuffix ) );
+
+            $html = $this->Page->getHtml();
+            $dom  = new \DOMDocument();
+            @$dom->loadHTML( $html );
 
 
-        // Init the Security Index of the array if it does not exist.
-        if ( FALSE == array_key_exists( $this->dealId, $fileLinks ) ):
-            $fileLinks[ $this->dealId ] = [];
-        endif;
+            $anchors = $dom->getElementsByTagName( 'a' );
+            /**
+             * @var \DOMElement $anchor
+             */
+            foreach ( $anchors as $anchor ):
 
-        // Write all the new history links to the array.
-        foreach ( $newFileLinks as $newFileLinkData ):
-            $myKey                                = $this->_getMyUniqueId( $newFileLinkData[self::HREF] );
-            $fileLinks[ $this->dealId ][ $myKey ] = $newFileLinkData;
-        endforeach;
+                $href = $anchor->getAttribute( 'href' );
+                $this->Debug->_debug( "href: " . $href );
+
+                if ( $this->_isFileLink( $href ) ):
+
+                    $fileTypeNode = $anchor->parentNode;
+                    $fileType     = trim( $fileTypeNode->nodeValue );
+                    $this->Debug->_debug( "fileType: " . $fileType );
+
+                    /**
+                     * @var \DOMText $reportDateNode
+                     */
+                    $garbageNode    = $fileTypeNode->previousSibling; // Skip a node
+                    $reportDateNode = $garbageNode->previousSibling;
+                    //$this->Debug->_debug("reportDateNode is a : " . get_class($reportDateNode));
+                    //echo $reportDateNode->nodeValue;
+
+                    $reportDate = Carbon::parse( trim( (string)$reportDateNode->nodeValue ), 'America/New_York' );
+                    $this->Debug->_debug( "reportDate carbon : " . $reportDate->toDateString() );
+
+                    /**
+                     * @var \DOMElement $garbageNode
+                     */
+                    $garbageNode = $reportDateNode->previousSibling;
 
 
-        // Encode and save the array to the json file.
-        $writeSuccess = file_put_contents( $this->pathToFileIndex,
-                                           json_encode( $fileLinks ) );
-        if ( FALSE === $writeSuccess ):
-            throw new \Exception( "Unable to write US Bank Deal File Links to cache file: " . $this->pathToFileIndex );
-        endif;
+                    $reportNameNode = $garbageNode->previousSibling;
+                    $reportName     = trim( $reportNameNode->nodeValue );
+                    $this->Debug->_debug( "reportName: " . $reportName );
+
+                    $uniqueId = $this->_getMyUniqueId( $href );
+
+                    $fileLinks[ $uniqueId ] = [
+                        self::TYPE => $fileType,
+                        self::DATE => $reportDate->toDateString(),
+                        self::NAME => $reportName,
+                        self::HREF => $href,
+                    ];
+                endif;
+            endforeach;
+
+            $this->stopTime = Carbon::now( $this->timezone );
+
+            $this->_setDataToCache( $fileLinks );
+            $this->_cacheData();
+            $this->Debug->_debug( "Writing the File Indexes to cache." );
+
+            return $this->getObjects();
+        } catch ( \Exception $exception ) {
+            $this->stopTime = Carbon::now( $this->timezone );
+            $this->_cacheFailure( $exception );
+            throw $exception;
+        }
     }
 
 
@@ -210,11 +186,36 @@ class FileIndex {
 
 
     /**
-     * @param string $suffix
+     * @param array $data
      *
-     * @return string
+     * @return void
      */
-    public static function getLink(string $suffix): string {
+    protected function _setDataToCache( array $data ) {
 
+        if ( FALSE == array_key_exists( $this->dealId, $this->data ) ):
+            $this->data[ $this->dealId ] = [];
+        endif;
+
+        // Write all the new history links to the array.
+        foreach ( $data as $newFileLinkData ):
+            $myKey = $this->_getMyUniqueId( $newFileLinkData[ self::HREF ] );
+            if ( FALSE == array_key_exists( $myKey, $this->data[ $this->dealId ] ) ):
+                $newFileLinkData[ BaseData::LAST_PULLED ] = NULL;
+                $newFileLinkData[ BaseData::ADDED_AT ]    = Carbon::now( $this->timezone );
+                $this->data[ $this->dealId ][ $myKey ]    = $newFileLinkData;
+            endif;
+        endforeach;
+    }
+
+
+    /**
+     * @return array
+     */
+    public function getObjects(): array {
+        $objects = [];
+        foreach ( $this->data as $data ):
+            $objects[] = new File( $data, $this->timezone, $this->pathToCache );
+        endforeach;
+        return $objects;
     }
 }
