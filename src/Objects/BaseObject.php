@@ -26,8 +26,8 @@ abstract class BaseObject {
         $this->pathToCache = $pathToCache;
 
 
-        $this->addedAt      = isset($data[ BaseData::ADDED_AT ]) ? Carbon::parse($data[ BaseData::ADDED_AT ], $timezone) : NULL;
-        $this->lastPulledAt = isset($data[ BaseData::LAST_PULLED ]) ? Carbon::parse($data[ BaseData::LAST_PULLED ], $timezone) : NULL;
+        $this->addedAt      = isset( $data[ BaseData::ADDED_AT ] ) ? Carbon::parse( $data[ BaseData::ADDED_AT ], $timezone ) : NULL;
+        $this->lastPulledAt = isset( $data[ BaseData::LAST_PULLED ] ) ? Carbon::parse( $data[ BaseData::LAST_PULLED ], $timezone ) : NULL;
     }
 
 
@@ -35,20 +35,24 @@ abstract class BaseObject {
      * @return bool
      */
     public function pulledInTheLastDay(): bool {
+        if ( is_null( $this->lastPulledAt ) ):
+            return FALSE;
+        endif;
+
         $now           = Carbon::now( $this->_timezone );
         $diffInSeconds = $now->diffInSeconds( $this->lastPulledAt );
         if ( 86400 > $diffInSeconds ):
             return TRUE;
         endif;
+
         return FALSE;
     }
 
 
     public function markAsPulled() {
-        $string = file_get_contents($this->pathToCache);
-        $array = json_decode($string,true);
+        $string = file_get_contents( $this->pathToCache );
+        $array  = json_decode( $string, TRUE );
     }
-
 
 
 }
