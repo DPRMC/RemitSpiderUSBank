@@ -26,8 +26,8 @@ abstract class BaseObject {
         $this->pathToCache = $pathToCache;
 
 
-        $this->addedAt      = @$data[ BaseData::ADDED_AT ];
-        $this->lastPulledAt = @$data[ BaseData::LAST_PULLED ];
+        $this->addedAt      = isset($data[ BaseData::ADDED_AT ]) ? Carbon::parse($data[ BaseData::ADDED_AT ], $timezone) : NULL;
+        $this->lastPulledAt = isset($data[ BaseData::LAST_PULLED ]) ? Carbon::parse($data[ BaseData::LAST_PULLED ], $timezone) : NULL;
     }
 
 
