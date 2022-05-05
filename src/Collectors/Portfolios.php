@@ -146,8 +146,8 @@ class Portfolios extends BaseData {
      */
     public function getObjects(): array {
         $objects = [];
-        foreach ( $this->data as $data ):
-            $objects[] = new Portfolio( $data, $this->timezone, $this->pathToCache );
+        foreach ( $this->data as $portfolioId => $data ):
+            $objects[] = new Portfolio( $portfolioId, $data, $this->timezone, $this->pathToCache );
         endforeach;
         return $objects;
     }
