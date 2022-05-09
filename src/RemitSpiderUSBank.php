@@ -44,8 +44,8 @@ class RemitSpiderUSBank {
 
 
     const BASE_URL                    = 'https://trustinvestorreporting.usbank.com';
-    const PORTFOLIO_IDS_FILENAME      = '_portfolio_ids.txt';
-    const DEAL_LINK_SUFFIXES_FILENAME = '_deal_link_suffixes.txt';
+    const PORTFOLIO_IDS_FILENAME      = '_portfolio_ids.json';
+    const DEAL_LINK_SUFFIXES_FILENAME = '_deal_link_suffixes.json';
     const HISTORY_LINKS_FILENAME      = '_history_links.json';
     const FILE_INDEX_FILENAME         = '_file_index.json';
 

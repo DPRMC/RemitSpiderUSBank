@@ -21,6 +21,7 @@ class Deals extends BaseData {
      */
     public array $dealLinkSuffixes;
 
+    public string $portfolioId;
 
     /**
      *
@@ -33,6 +34,9 @@ class Deals extends BaseData {
 
     // CACHE
     const DEAL_LINK_SUFFIX = 'dealLinkSuffix';
+    const PORTFOLIO_ID     = 'portfolioId';
+    const DEAL_ID          = 'dealId';
+    const DEAL_NAME        = 'dealName';
 
     /**
      * @param \HeadlessChromium\Page                    $Page
@@ -68,6 +72,8 @@ class Deals extends BaseData {
      * @throws \Exception
      */
     public function getAllByPortfolioId( string $usBankPortfolioId ): array {
+
+        $this->portfolioId = $usBankPortfolioId;
 
         try {
             $this->loadFromCache();
@@ -159,18 +165,62 @@ class Deals extends BaseData {
      * @param array $data
      *
      * @return void
+     * @throws \Exception
      */
     protected function _setDataToCache( array $data ) {
         $this->dealLinkSuffixes = $data;
 
         foreach ( $data as $dealLinkSuffix ):
-//            $uniqueId                = $this->_getMyUniqueId( $dealLinkSuffix );
+            $dealId = $this->_getDealIdFromSuffix( $dealLinkSuffix );
             $this->data[ $dealLinkSuffix ] = [
                 BaseData::ADDED_AT     => Carbon::now( $this->timezone ),
                 BaseData::LAST_PULLED  => NULL,
                 self::DEAL_LINK_SUFFIX => $dealLinkSuffix,
+                self::PORTFOLIO_ID     => $this->portfolioId,
+                self::DEAL_ID          => $dealId,
+                self::DEAL_NAME        => $this->_getDealNameFromSuffix( $dealLinkSuffix ),
             ];
         endforeach;
+    }
+
+
+    /**
+     * @param string $dealSuffix
+     *
+     * @return string
+     * @throws \Exception
+     */
+    protected function _getDealIdFromSuffix( string $dealSuffix ): string {
+        $dealParts = $this->_getDealPartsFromSuffix( $dealSuffix );
+        return $dealParts[ 0 ];
+    }
+
+
+    /**
+     * @param string $dealSuffix
+     *
+     * @return string
+     * @throws \Exception
+     */
+    protected function _getDealNameFromSuffix( string $dealSuffix ): string {
+        $dealParts = $this->_getDealPartsFromSuffix( $dealSuffix );
+        return $dealParts[ 1 ];
+    }
+
+
+    /**
+     * @param string $dealSuffix
+     *
+     * @return array
+     * @throws \Exception
+     */
+    private function _getDealPartsFromSuffix( string $dealSuffix ): array {
+        $dealSuffixParts = explode( '/', $dealSuffix );
+        if ( 2 != sizeof( $dealSuffixParts ) ):
+            throw new \Exception( "Unable to find deal id and name in " . $dealSuffix );
+        endif;
+
+        return $dealSuffixParts;
     }
 
 
@@ -191,10 +241,10 @@ class Deals extends BaseData {
     public function getObjects(): array {
         $objects = [];
         foreach ( $this->data as $data ):
-            $objects[] = new Deal( $data, $this->timezone, $this->pathToCache );
+            $objects[] = new Deal( $data,
+                                   $this->timezone,
+                                   $this->pathToCache );
         endforeach;
         return $objects;
     }
-
-
 }

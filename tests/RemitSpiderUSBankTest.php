@@ -50,47 +50,47 @@ class RemitSpiderUSBankTest extends TestCase {
      * @test
      * @group all
      */
-    public function testAll() {
-        $spider = $this->_getSpider();
-        $spider->Login->login();
-        $portfolioIds = $spider->Portfolios->getAll( $spider->Login->csrf );
-
-        $dealLinkSuffixesByPortfolioId = [];
-        foreach ( $portfolioIds as $portfolioId ):
-            $dealLinkSuffixesByPortfolioId[ $portfolioId ] = $spider->Deals->getAllByPortfolioId( $portfolioId );
-        endforeach;
-
-
-        $historyLinksByPortfolioId = [];
-        $dealIdToDealName          = [];
-        foreach ( $dealLinkSuffixesByPortfolioId as $portfolioId => $dealLinkSuffixes ):
-            $historyLinksByPortfolioId[$portfolioId] = [];
-            foreach ( $dealLinkSuffixes as $dealLinkSuffix ):
-                $historyLinks                         = $spider->HistoryLinks->getAllByDeal( $dealLinkSuffix );
-                $dealId                               = $spider->HistoryLinks->getDealId();
-                $dealName                             = $spider->HistoryLinks->getDealName();
-                $dealIdToDealName[ $dealId ]          = $dealName;
-                $historyLinksByPortfolioId[$portfolioId][ $dealId ] = $historyLinks;
-            endforeach;
-        endforeach;
-
-
-
-        $fileIndexes = [];
-        foreach ( $historyLinksByPortfolioId as $portfolioId => $dealIds ):
-            $fileIndexes[$portfolioId] = [];
-            foreach ( $dealIds as $dealId => $historyLinks ):
-                $fileIndexes[$portfolioId][$dealId] = [];
-                foreach($historyLinks as $historyLinkSuffix):
-                    $tempFileIndexes = $spider->FileIndex->getAllFromHistoryLink( $historyLinkSuffix);
-                    $fileIndexes[$portfolioId][$dealId] = array_merge($fileIndexes[$portfolioId][$dealId], $tempFileIndexes);
-                endforeach;
-            endforeach;
-        endforeach;
-
-
-        print_r($fileIndexes);
-    }
+//    public function testAll() {
+//        $spider = $this->_getSpider();
+//        $spider->Login->login();
+//        $portfolioIds = $spider->Portfolios->getAll( $spider->Login->csrf );
+//
+//        $dealLinkSuffixesByPortfolioId = [];
+//        foreach ( $portfolioIds as $portfolioId ):
+//            $dealLinkSuffixesByPortfolioId[ $portfolioId ] = $spider->Deals->getAllByPortfolioId( $portfolioId );
+//        endforeach;
+//
+//
+//        $historyLinksByPortfolioId = [];
+//        $dealIdToDealName          = [];
+//        foreach ( $dealLinkSuffixesByPortfolioId as $portfolioId => $dealLinkSuffixes ):
+//            $historyLinksByPortfolioId[$portfolioId] = [];
+//            foreach ( $dealLinkSuffixes as $dealLinkSuffix ):
+//                $historyLinks                         = $spider->HistoryLinks->getAllByDeal( $dealLinkSuffix );
+//                $dealId                               = $spider->HistoryLinks->getDealId();
+//                $dealName                             = $spider->HistoryLinks->getDealName();
+//                $dealIdToDealName[ $dealId ]          = $dealName;
+//                $historyLinksByPortfolioId[$portfolioId][ $dealId ] = $historyLinks;
+//            endforeach;
+//        endforeach;
+//
+//
+//
+//        $fileIndexes = [];
+//        foreach ( $historyLinksByPortfolioId as $portfolioId => $dealIds ):
+//            $fileIndexes[$portfolioId] = [];
+//            foreach ( $dealIds as $dealId => $historyLinks ):
+//                $fileIndexes[$portfolioId][$dealId] = [];
+//                foreach($historyLinks as $historyLinkSuffix):
+//                    $tempFileIndexes = $spider->FileIndex->getAllFromHistoryLink( $historyLinkSuffix);
+//                    $fileIndexes[$portfolioId][$dealId] = array_merge($fileIndexes[$portfolioId][$dealId], $tempFileIndexes);
+//                endforeach;
+//            endforeach;
+//        endforeach;
+//
+//
+//        print_r($fileIndexes);
+//    }
 
 
     /**
@@ -242,7 +242,7 @@ class RemitSpiderUSBankTest extends TestCase {
         $spider->Login->login();
 
         $fileIndex = $spider->FileIndex->getAllFromHistoryLink( $_ENV[ 'HISTORY_LINK' ] );
-        print_r($fileIndex); flush(); die();
+        print_r($fileIndex); flush();
     }
 
 }
