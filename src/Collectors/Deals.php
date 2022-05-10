@@ -172,7 +172,7 @@ class Deals extends BaseData {
 
         foreach ( $data as $dealLinkSuffix ):
             $dealId = $this->_getDealIdFromSuffix( $dealLinkSuffix );
-            $this->data[ $dealLinkSuffix ] = [
+            $this->data[ $dealId ] = [
                 BaseData::ADDED_AT     => Carbon::now( $this->timezone ),
                 BaseData::LAST_PULLED  => NULL,
                 self::DEAL_LINK_SUFFIX => $dealLinkSuffix,
