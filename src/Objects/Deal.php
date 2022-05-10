@@ -40,4 +40,30 @@ class Deal extends BaseObject {
     }
 
 
+    /**
+     * Simple getter.
+     * @return string
+     */
+    public function getPortfolioId(): string {
+        return $this->portfolioId;
+    }
+
+    /**
+     * Simple getter.
+     * @return string
+     */
+    public function getDealName(): string {
+        return $this->dealName;
+    }
+
+    /**
+     * Simple getter.
+     * @return string
+     */
+    public function getDealId(): string {
+        return $this->dealId;
+    }
+
+
+
 }
