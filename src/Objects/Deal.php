@@ -13,6 +13,7 @@ class Deal extends BaseObject {
     protected string $portfolioId;
     protected string $dealId;
     protected string $dealName;
+    protected string $dealLinkSuffix;
 
     /**
      * @param array  $data
@@ -25,6 +26,7 @@ class Deal extends BaseObject {
         $this->portfolioId = $data[ Deals::PORTFOLIO_ID ];
         $this->dealId      = $data[ Deals::DEAL_ID ];
         $this->dealName    = $data[ Deals::DEAL_NAME ];
+        $this->dealLinkSuffix = $this->_data[ Deals::DEAL_LINK_SUFFIX ];
     }
 
 
@@ -35,8 +37,11 @@ class Deal extends BaseObject {
      * @return string
      */
     public function getDealLink(): string {
-        $dealLinkSuffix = $this->_data[ Deals::DEAL_LINK_SUFFIX ];
-        return HistoryLinks::BASE_DEAL_URL . $dealLinkSuffix;
+        return HistoryLinks::BASE_DEAL_URL . $this->dealLinkSuffix;
+    }
+
+    public function getDealLinkSuffix(): string {
+        return $this->dealLinkSuffix;
     }
 
 
@@ -63,6 +68,9 @@ class Deal extends BaseObject {
     public function getDealId(): string {
         return $this->dealId;
     }
+
+
+
 
 
 
