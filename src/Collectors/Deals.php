@@ -127,7 +127,6 @@ class Deals extends BaseData {
 
             $this->Debug->_debug( "Writing the Deal Link Suffixes to cache." );
 
-            //return $this->dealLinkSuffixes;
             return $this->getObjects();
         } catch ( \Exception $exception ) {
             $this->stopTime = Carbon::now( $this->timezone );
