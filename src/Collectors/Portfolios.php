@@ -3,6 +3,8 @@
 namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 use Carbon\Carbon;
+use DPRMC\RemitSpiderUSBank\Helpers\BaseData;
+use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\Objects\Portfolio;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Page;
@@ -33,7 +35,7 @@ class Portfolios extends BaseData {
 
     /**
      * @param \HeadlessChromium\Page                    $Page
-     * @param \DPRMC\RemitSpiderUSBank\Collectors\Debug $Debug
+     * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
      * @param string                                    $pathToPortfolioIds
      * @param string                                    $timezone
      */

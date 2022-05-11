@@ -3,6 +3,7 @@
 namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 
+use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Clip;
 use HeadlessChromium\Cookies\CookiesCollection;
@@ -32,7 +33,7 @@ class Login {
 
     /**
      * @param \HeadlessChromium\Page                    $Page
-     * @param \DPRMC\RemitSpiderUSBank\Collectors\Debug $Debug
+     * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
      * @param string                                    $user
      * @param string                                    $pass
      */

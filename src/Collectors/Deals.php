@@ -3,6 +3,8 @@
 namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 use Carbon\Carbon;
+use DPRMC\RemitSpiderUSBank\Helpers\BaseData;
+use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\Objects\Deal;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Clip;
@@ -40,7 +42,7 @@ class Deals extends BaseData {
 
     /**
      * @param \HeadlessChromium\Page                    $Page
-     * @param \DPRMC\RemitSpiderUSBank\Collectors\Debug $Debug
+     * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
      * @param string                                    $pathToDealLinkSuffixes
      * @param string                                    $timezone
      */

@@ -4,6 +4,8 @@ namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 
 use Carbon\Carbon;
+use DPRMC\RemitSpiderUSBank\Helpers\BaseData;
+use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\Objects\HistoryLink;
 use DPRMC\RemitSpiderUSBank\Objects\Portfolio;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
