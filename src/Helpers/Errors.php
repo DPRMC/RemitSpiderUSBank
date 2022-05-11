@@ -1,6 +1,6 @@
 <?php
 
-namespace DPRMC\RemitSpiderUSBank\Collectors;
+namespace DPRMC\RemitSpiderUSBank\Helpers;
 
 use DPRMC\RemitSpiderUSBank\Exceptions\Exception404Returned;
 use HeadlessChromium\Clip;

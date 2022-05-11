@@ -4,6 +4,8 @@ namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 
 use Carbon\Carbon;
+use DPRMC\RemitSpiderUSBank\Helpers\BaseData;
+use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\Objects\File;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Page;
@@ -21,7 +23,7 @@ class FileIndex extends BaseData {
     const DATE = 'date';
     const NAME = 'name';
     const HREF = 'href';
-
+    const DEAL_ID = 'dealId';
 
 //    /**
 //     * Ex: https://trustinvestorreporting.usbank.com/TIR/public/deals/periodicReportHistory/1234/2/5678?extension=CSV
@@ -30,9 +32,10 @@ class FileIndex extends BaseData {
 
 
     /**
-     * @param \HeadlessChromium\Page                    $Page
-     * @param \DPRMC\RemitSpiderUSBank\Collectors\Debug $Debug
-     * @param string                                    $pathToFileIndex
+     * @param \HeadlessChromium\Page                 $Page
+     * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
+     * @param string                                 $pathToFileIndex
+     * @param string                                 $timezone
      */
     public function __construct( Page   &$Page,
                                  Debug  &$Debug,
@@ -145,6 +148,7 @@ class FileIndex extends BaseData {
                         self::DATE => $reportDate->toDateString(),
                         self::NAME => $reportName,
                         self::HREF => $href,
+                        self::DEAL_ID => $this->dealId,
                     ];
                 endif;
             endforeach;
@@ -220,8 +224,12 @@ class FileIndex extends BaseData {
     public function getObjects(): array {
         $objects = [];
         foreach ( $this->data as $data ):
-            $objects[] = new File( $data, $this->timezone, $this->pathToCache );
+            $objects[] = new File( $data, $this->timezone, $this->pathToCache, $this->dealId );
         endforeach;
         return $objects;
+    }
+
+    public function getDealId(): string {
+        return $this->dealId;
     }
 }

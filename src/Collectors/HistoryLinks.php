@@ -56,7 +56,8 @@ class HistoryLinks extends BaseData {
 
 
     // CACHE
-    const LINK = 'link';       // The history link.
+    const LINK    = 'link';       // The history link.
+    const DEAL_ID = 'dealId';
 
 
     public function __construct( Page   &$Page,
@@ -179,7 +180,8 @@ class HistoryLinks extends BaseData {
             $myKey = $this->_getMyUniqueId( $historyLink );
             if ( FALSE == array_key_exists( $myKey, $this->historyLinks[ $this->dealId ] ) ):
                 $this->historyLinks[ $this->dealId ][ $myKey ] = [
-                    self::LINK        => $historyLink,
+                    self::DEAL_ID         => $this->dealId,
+                    self::LINK            => $historyLink,
                     BaseData::ADDED_AT    => Carbon::now( $this->timezone ),
                     BaseData::LAST_PULLED => NULL,
                 ];
@@ -223,8 +225,11 @@ class HistoryLinks extends BaseData {
     public function getObjects(): array {
         $objects = [];
         foreach ( $this->data as $portfolioId => $historyLinks ):
-            foreach($historyLinks as $uniqueId => $data):
-                $objects[$portfolioId][$uniqueId] = new HistoryLink( $data, $this->timezone, $this->pathToCache );
+            foreach ( $historyLinks as $uniqueId => $data ):
+                $objects[ $portfolioId ][ $uniqueId ] = new HistoryLink( $data,
+                                                                         $this->timezone,
+                                                                         $this->pathToCache,
+                                                                         $portfolioId );
             endforeach;
         endforeach;
         return $objects;

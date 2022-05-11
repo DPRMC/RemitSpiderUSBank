@@ -1,6 +1,6 @@
 <?php
 
-namespace DPRMC\RemitSpiderUSBank\Collectors;
+namespace DPRMC\RemitSpiderUSBank\Helpers;
 
 use Carbon\Carbon;
 use HeadlessChromium\Page;

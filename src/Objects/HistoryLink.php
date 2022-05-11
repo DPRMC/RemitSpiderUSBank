@@ -6,8 +6,14 @@ use DPRMC\RemitSpiderUSBank\Collectors\HistoryLinks;
 
 class HistoryLink extends BaseObject {
 
-    public function __construct( array $data, string $timezone, string $pathToCache ) {
+    protected string $portfolioId;
+    protected string $dealId;
+
+    public function __construct( array $data, string $timezone, string $pathToCache, string $portfolioId ) {
         parent::__construct( $data, $timezone,  $pathToCache );
+
+        $this->portfolioId = $portfolioId;
+        $this->dealId = $data[HistoryLinks::DEAL_ID];
     }
 
 
@@ -20,5 +26,22 @@ class HistoryLink extends BaseObject {
             return $this->_data[HistoryLinks::LINK];
         endif;
         throw new \Exception("Key " . HistoryLinks::LINK . " not found in _data for " . self::class);
+    }
+
+    /**
+     * A simple getter.
+     * @return string
+     */
+    public function getPortfolioId(): string {
+        return $this->portfolioId;
+    }
+
+
+    /**
+     * A simple getter.
+     * @return string
+     */
+    public function getDealId(): string {
+        return $this->dealId;
     }
 }
