@@ -3,7 +3,7 @@
 namespace DPRMC\RemitSpiderUSBank\Objects;
 
 use Carbon\Carbon;
-use DPRMC\RemitSpiderUSBank\Collectors\BaseData;
+use DPRMC\RemitSpiderUSBank\Helpers\BaseData;
 
 
 abstract class BaseObject {
