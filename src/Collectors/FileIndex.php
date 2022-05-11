@@ -119,8 +119,14 @@ class FileIndex extends BaseData {
                     //$this->Debug->_debug("reportDateNode is a : " . get_class($reportDateNode));
                     //echo $reportDateNode->nodeValue;
 
-                    $reportDate = Carbon::parse( trim( (string)$reportDateNode->nodeValue ), 'America/New_York' );
-                    $this->Debug->_debug( "reportDate carbon : " . $reportDate->toDateString() );
+                    $stringReportDate = isset( $reportDateNode->nodeValue ) ? trim( (string)$reportDateNode->nodeValue ) : NULL;
+                    if ( $stringReportDate ):
+                        $reportDate = Carbon::parse( trim( (string)$reportDateNode->nodeValue ), 'America/New_York' );
+                        $this->Debug->_debug( "reportDate carbon : " . $reportDate->toDateString() );
+                    else:
+                        $reportDate = NULL;
+                    endif;
+
 
                     /**
                      * @var \DOMElement $garbageNode
