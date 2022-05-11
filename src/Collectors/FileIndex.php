@@ -19,10 +19,10 @@ class FileIndex extends BaseData {
     protected string $dealId;
 
     // These are the indexes of the file index data.
-    const TYPE = 'type';
-    const DATE = 'date';
-    const NAME = 'name';
-    const HREF = 'href';
+    const TYPE    = 'type';
+    const DATE    = 'date';
+    const NAME    = 'name';
+    const HREF    = 'href';
     const DEAL_ID = 'dealId';
 
 //    /**
@@ -144,10 +144,10 @@ class FileIndex extends BaseData {
                     $uniqueId = $this->_getMyUniqueId( $href );
 
                     $fileLinks[ $uniqueId ] = [
-                        self::TYPE => $fileType,
-                        self::DATE => $reportDate->toDateString(),
-                        self::NAME => $reportName,
-                        self::HREF => $href,
+                        self::TYPE    => $fileType,
+                        self::DATE    => $reportDate->toDateString(),
+                        self::NAME    => $reportName,
+                        self::HREF    => $href,
                         self::DEAL_ID => $this->dealId,
                     ];
                 endif;
@@ -212,7 +212,10 @@ class FileIndex extends BaseData {
             if ( FALSE == array_key_exists( $myKey, $this->data[ $this->dealId ] ) ):
                 $newFileLinkData[ BaseData::LAST_PULLED ] = NULL;
                 $newFileLinkData[ BaseData::ADDED_AT ]    = Carbon::now( $this->timezone );
-                $this->data[ $this->dealId ][ $myKey ]    = $newFileLinkData;
+                $newFileLinkData[ self::DEAL_ID ]         = $this->dealId;
+
+
+                $this->data[ $this->dealId ][ $myKey ] = $newFileLinkData;
             endif;
         endforeach;
     }
@@ -224,7 +227,9 @@ class FileIndex extends BaseData {
     public function getObjects(): array {
         $objects = [];
         foreach ( $this->data as $data ):
-            $objects[] = new File( $data, $this->timezone, $this->pathToCache, $this->dealId );
+            $objects[] = new File( $data,
+                                   $this->timezone,
+                                   $this->pathToCache );
         endforeach;
         return $objects;
     }
