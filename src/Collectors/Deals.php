@@ -53,14 +53,9 @@ class Deals extends BaseData {
     public function __construct( Page   &$Page,
                                  Debug  &$Debug,
                                  string $pathToDealLinkSuffixes = '',
-                                 string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE,
-                                 int    $x_all = self::X_ALL_DEFAULT,
-                                 int    $y_all = self::Y_ALL_DEFAULT ) {
+                                 string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE ) {
 
         parent::__construct( $Page, $Debug, $pathToDealLinkSuffixes, $timezone );
-
-        $this->x_all = $x_all;
-        $this->y_all = $y_all;
     }
 
 
@@ -80,7 +75,7 @@ class Deals extends BaseData {
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
      * @throws \Exception
      */
-    public function getAllByPortfolioId( string $usBankPortfolioId ): array {
+    public function getAllByPortfolioId( string $usBankPortfolioId, int $x_all = self::X_ALL_DEFAULT, int $y_all = self::Y_ALL_DEFAULT ): array {
 
         $this->portfolioId = $usBankPortfolioId;
 
@@ -103,10 +98,10 @@ class Deals extends BaseData {
 
             $this->Debug->_debug( "Navigating to Deal Links page at: " . $linkToAllDealsInPortfolio );
 
-            $clip = new Clip( 0, 0, $this->x_all, $this->y_all );
+            $clip = new Clip( 0, 0, $x_all, $y_all );
             $this->Debug->_screenshot( 'test', $clip );
 
-            $this->Page->mouse()->move( $this->x_all, $this->y_all )->click();
+            $this->Page->mouse()->move( $x_all, $y_all )->click();
 
             sleep( 2 );
 
