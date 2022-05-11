@@ -31,8 +31,8 @@ class Deals extends BaseData {
      */
     const URL_LIST_OF_DEALS = RemitSpiderUSBank::BASE_URL . '/TIR/portfolios/getPortfolioDeals/';
 
-    const X_ALL = 220;
-    const Y_ALL = 3915;
+    const X_ALL_DEFAULT = 220;
+    const Y_ALL_DEFAULT = 3915;
 
 
     // CACHE
@@ -41,18 +41,26 @@ class Deals extends BaseData {
     const DEAL_ID          = 'dealId';
     const DEAL_NAME        = 'dealName';
 
+    protected int $x_all;
+    protected int $y_all;
+
     /**
-     * @param \HeadlessChromium\Page                    $Page
+     * @param \HeadlessChromium\Page                 $Page
      * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
-     * @param string                                    $pathToDealLinkSuffixes
-     * @param string                                    $timezone
+     * @param string                                 $pathToDealLinkSuffixes
+     * @param string                                 $timezone
      */
     public function __construct( Page   &$Page,
                                  Debug  &$Debug,
                                  string $pathToDealLinkSuffixes = '',
-                                 string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE ) {
+                                 string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE,
+                                 int    $x_all = self::X_ALL_DEFAULT,
+                                 int    $y_all = self::Y_ALL_DEFAULT ) {
 
-        parent::__construct($Page,$Debug,$pathToDealLinkSuffixes, $timezone);
+        parent::__construct( $Page, $Debug, $pathToDealLinkSuffixes, $timezone );
+
+        $this->x_all = $x_all;
+        $this->y_all = $y_all;
     }
 
 
@@ -95,10 +103,10 @@ class Deals extends BaseData {
 
             $this->Debug->_debug( "Navigating to Deal Links page at: " . $linkToAllDealsInPortfolio );
 
-            $clip = new Clip( 0, 0, self::X_ALL, self::Y_ALL );
+            $clip = new Clip( 0, 0, $this->x_all, $this->y_all );
             $this->Debug->_screenshot( 'test', $clip );
 
-            $this->Page->mouse()->move( self::X_ALL, self::Y_ALL )->click();
+            $this->Page->mouse()->move( $this->x_all, $this->y_all )->click();
 
             sleep( 2 );
 
@@ -115,7 +123,7 @@ class Deals extends BaseData {
             $this->Debug->_debug( "I found " . count( $this->dealLinkSuffixes ) . " Deal Link Suffixes." );
             $this->stopTime = Carbon::now( $this->timezone );
             $this->_setDataToCache( $this->dealLinkSuffixes );
-            $this->_cacheData( $this->dealLinkSuffixes );
+            $this->_cacheData();
 
             $this->Debug->_debug( "Writing the Deal Link Suffixes to cache." );
 
@@ -172,7 +180,7 @@ class Deals extends BaseData {
         $this->dealLinkSuffixes = $data;
 
         foreach ( $data as $dealLinkSuffix ):
-            $dealId = $this->_getDealIdFromSuffix( $dealLinkSuffix );
+            $dealId                = $this->_getDealIdFromSuffix( $dealLinkSuffix );
             $this->data[ $dealId ] = [
                 BaseData::ADDED_AT     => Carbon::now( $this->timezone ),
                 BaseData::LAST_PULLED  => NULL,
