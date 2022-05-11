@@ -61,6 +61,8 @@ class Deals extends BaseData {
 
     /**
      * @param string $usBankPortfolioId
+     * @param int    $x_all Different versions of the Chromium browser have different fonts. Moves the links.
+     * @param int    $y_all
      *
      * @return array
      * @throws \DPRMC\RemitSpiderUSBank\Exceptions\Exception404Returned
@@ -73,9 +75,10 @@ class Deals extends BaseData {
      * @throws \HeadlessChromium\Exception\NoResponseAvailable
      * @throws \HeadlessChromium\Exception\OperationTimedOut
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
-     * @throws \Exception
      */
-    public function getAllByPortfolioId( string $usBankPortfolioId, int $x_all = self::X_ALL_DEFAULT, int $y_all = self::Y_ALL_DEFAULT ): array {
+    public function getAllByPortfolioId( string $usBankPortfolioId,
+                                         int $x_all = self::X_ALL_DEFAULT,
+                                         int $y_all = self::Y_ALL_DEFAULT ): array {
 
         $this->portfolioId = $usBankPortfolioId;
 
