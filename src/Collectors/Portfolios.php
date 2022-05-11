@@ -5,6 +5,7 @@ namespace DPRMC\RemitSpiderUSBank\Collectors;
 use Carbon\Carbon;
 use DPRMC\RemitSpiderUSBank\Helpers\BaseData;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
+use DPRMC\RemitSpiderUSBank\Helpers\Errors;
 use DPRMC\RemitSpiderUSBank\Objects\Portfolio;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Page;
@@ -34,24 +35,21 @@ class Portfolios extends BaseData {
     const PORTFOLIO_ID = 'portfolioId';
 
     /**
-     * @param \HeadlessChromium\Page                    $Page
+     * @param \HeadlessChromium\Page                 $Page
      * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
-     * @param string                                    $pathToPortfolioIds
-     * @param string                                    $timezone
+     * @param string                                 $pathToPortfolioIds
+     * @param string                                 $timezone
      */
     public function __construct( Page   &$Page,
                                  Debug  &$Debug,
                                  string $pathToPortfolioIds = '',
                                  string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE ) {
-        $this->Page        = $Page;
-        $this->Debug       = $Debug;
-        $this->pathToCache = $pathToPortfolioIds;
-        $this->timezone    = $timezone;
+        parent::__construct( $Page, $Debug, $pathToPortfolioIds, $timezone );
     }
 
 
     /**
-     * @param string $csrf
+     * @param string $csrf FYI, it doesn't look like csrf is required here.
      *
      * @return array
      * @throws \DPRMC\RemitSpiderUSBank\Exceptions\Exception404Returned
@@ -134,11 +132,20 @@ class Portfolios extends BaseData {
      */
     protected function _setDataToCache( array $data ) {
         foreach ( $data as $id => $portfolioId ):
-            $this->data[ $portfolioId ] = [
-                BaseData::ADDED_AT    => Carbon::now( $this->timezone ),
-                BaseData::LAST_PULLED => NULL,
-                self::PORTFOLIO_ID    => $portfolioId,
-            ];
+
+            // If this Portfolio already exists in local data...
+            // (meaning it was in cache and loadedFromCache)
+            // Then we can skip this "row" so we don't overwrite the ADDED_AT
+            // or LAST_PULLED field.
+            if ( isset( $this->data[ $portfolioId ] ) ):
+                continue;
+            else:
+                $this->data[ $portfolioId ] = [
+                    BaseData::ADDED_AT    => Carbon::now( $this->timezone ),
+                    BaseData::LAST_PULLED => NULL,
+                    self::PORTFOLIO_ID    => $portfolioId,
+                ];
+            endif;
         endforeach;
     }
 

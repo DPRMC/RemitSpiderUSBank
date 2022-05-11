@@ -5,6 +5,7 @@ namespace DPRMC\RemitSpiderUSBank\Collectors;
 use Carbon\Carbon;
 use DPRMC\RemitSpiderUSBank\Helpers\BaseData;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
+use DPRMC\RemitSpiderUSBank\Helpers\Errors;
 use DPRMC\RemitSpiderUSBank\Objects\Deal;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Clip;
@@ -50,10 +51,8 @@ class Deals extends BaseData {
                                  Debug  &$Debug,
                                  string $pathToDealLinkSuffixes = '',
                                  string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE ) {
-        $this->Page        = $Page;
-        $this->Debug       = $Debug;
-        $this->pathToCache = $pathToDealLinkSuffixes;
-        $this->timezone    = $timezone;
+
+        parent::__construct($Page,$Debug,$pathToDealLinkSuffixes, $timezone);
     }
 
 

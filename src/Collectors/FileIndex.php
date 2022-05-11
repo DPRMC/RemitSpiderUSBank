@@ -41,10 +41,7 @@ class FileIndex extends BaseData {
                                  Debug  &$Debug,
                                  string $pathToFileIndex,
                                  string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE ) {
-        $this->Page        = $Page;
-        $this->Debug       = $Debug;
-        $this->pathToCache = $pathToFileIndex;
-        $this->timezone    = $timezone;
+        parent::__construct( $Page, $Debug, $pathToFileIndex, $timezone );
     }
 
 
@@ -83,7 +80,7 @@ class FileIndex extends BaseData {
         try {
             $this->Debug->_debug( "Getting all File Indexes from " . $historyLinkSuffix );
             $this->startTime = Carbon::now( $this->timezone );
-            $this->loadFromCache();
+            //$this->loadFromCache();
             $this->_setDealId( $historyLinkSuffix );
             $fileLinks = [];
 
@@ -171,12 +168,12 @@ class FileIndex extends BaseData {
     /**
      * Helper function. This returns an MD5 hash used as a unique identifier (array index) for each file link.
      *
-     * @param string $href
+     * @param string $string
      *
      * @return string
      */
-    protected function _getMyUniqueId( string $href ): string {
-        return md5( $href );
+    protected function _getMyUniqueId( string $string ): string {
+        return md5( $string );
     }
 
 
@@ -207,15 +204,18 @@ class FileIndex extends BaseData {
         endif;
 
         // Write all the new history links to the array.
-        foreach ( $data as $newFileLinkData ):
-            $myKey = $this->_getMyUniqueId( $newFileLinkData[ self::HREF ] );
-            if ( FALSE == array_key_exists( $myKey, $this->data[ $this->dealId ] ) ):
+        foreach ( $data as $uniqueId => $newFileLinkData ):
+//            $myKey = $this->_getMyUniqueId( $newFileLinkData[ self::HREF ] );
+
+            // If this file row already exists in cache, I can skip adding it again, so
+            // that I don't overwrite the LAST_PULLED or ADDED_AT values.
+            if ( array_key_exists( $uniqueId, $this->data[ $this->dealId ] ) ):
+                continue;
+            else:
                 $newFileLinkData[ BaseData::LAST_PULLED ] = NULL;
                 $newFileLinkData[ BaseData::ADDED_AT ]    = Carbon::now( $this->timezone );
                 $newFileLinkData[ self::DEAL_ID ]         = $this->dealId;
-
-
-                $this->data[ $this->dealId ][ $myKey ] = $newFileLinkData;
+                $this->data[ $this->dealId ][ $uniqueId ] = $newFileLinkData;
             endif;
         endforeach;
     }
@@ -226,10 +226,12 @@ class FileIndex extends BaseData {
      */
     public function getObjects(): array {
         $objects = [];
-        foreach ( $this->data as $data ):
-            $objects[] = new File( $data,
-                                   $this->timezone,
-                                   $this->pathToCache );
+        foreach ( $this->data as $dealId => $rowsForDeal ):
+            foreach ( $rowsForDeal as $uniqueId => $data ):
+                $objects[ $uniqueId ] = new File( $data,
+                                                  $this->timezone,
+                                                  $this->pathToCache );
+            endforeach;
         endforeach;
         return $objects;
     }

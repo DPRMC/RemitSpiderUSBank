@@ -3,6 +3,7 @@
 namespace DPRMC\RemitSpiderUSBank\Helpers;
 
 use Carbon\Carbon;
+use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Page;
 
 /**
@@ -57,6 +58,18 @@ abstract class BaseData {
     const ADDED_AT        = 'addedAt';    // When was this data added to the cache.
     const LAST_PULLED     = 'lastPulled'; // When was the info pointed to be this data last loaded.
 
+
+    public function __construct( Page   &$Page,
+                                 Debug  &$Debug,
+                                 string $pathToCache,
+                                 string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE ) {
+        $this->Page        = $Page;
+        $this->Debug       = $Debug;
+        $this->pathToCache = $pathToCache;
+        $this->timezone    = $timezone;
+        $this->data        = [];
+    }
+
     /**
      * Call this method anywhere to load the contents of the cache file into this->data
      * ...along with some other standard meta data.
@@ -84,11 +97,11 @@ abstract class BaseData {
     /**
      * @return bool
      */
-    public function deleteCache(){
-        if( false == file_exists($this->pathToCache)):
-            return true;
+    public function deleteCache() {
+        if ( FALSE == file_exists( $this->pathToCache ) ):
+            return TRUE;
         endif;
-        return unlink($this->pathToCache);
+        return unlink( $this->pathToCache );
     }
 
 
@@ -127,8 +140,8 @@ abstract class BaseData {
      */
     protected function _cacheFailure( \Exception $exception ): void {
 
-        if( false == file_exists($this->pathToCache)):
-            file_put_contents( $this->pathToCache,json_encode([]) );
+        if ( FALSE == file_exists( $this->pathToCache ) ):
+            file_put_contents( $this->pathToCache, json_encode( [] ) );
         endif;
 
         $stringCache = file_get_contents( $this->pathToCache );
@@ -166,6 +179,7 @@ abstract class BaseData {
 
     /**
      * Simple getter function.
+     *
      * @return string
      */
     public function getPathToCache(): string {

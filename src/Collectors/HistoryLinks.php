@@ -66,11 +66,10 @@ class HistoryLinks extends BaseData {
                                  Debug  &$Debug,
                                  string $pathToHistoryLinks,
                                  string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE ) {
-        $this->Page               = $Page;
-        $this->Debug              = $Debug;
+
+        parent::__construct($Page,$Debug,$pathToHistoryLinks, $timezone);
+
         $this->pathToHistoryLinks = $pathToHistoryLinks;
-        $this->pathToCache        = $pathToHistoryLinks;
-        $this->timezone           = $timezone;
     }
 
 

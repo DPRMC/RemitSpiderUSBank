@@ -13,6 +13,7 @@ class File extends BaseObject {
                                  string $timezone,
                                  string $pathToCache ) {
         parent::__construct( $data, $timezone, $pathToCache );
+
         $this->dealId = $data[ FileIndex::DEAL_ID ];
     }
 
