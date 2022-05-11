@@ -48,10 +48,10 @@ class Debug {
         if ( $this->debug ):
             if ( $clip ):
                 $this->page->screenshot( [ 'clip' => $clip ] )
-                           ->saveToFile( $time . '_' . $micro . '_' . $suffix . '.jpg' );
+                           ->saveToFile( $this->pathToScreenshots . $time . '_' . $micro . '_' . $suffix . '.jpg' );
             else:
                 $this->page->screenshot()
-                           ->saveToFile( $time . '_' . $micro . '_' . $suffix . '.jpg' );
+                           ->saveToFile( $this->pathToScreenshots . $time . '_' . $micro . '_' . $suffix . '.jpg' );
             endif;
         endif;
     }
