@@ -74,6 +74,7 @@ class FileIndex extends BaseData {
      * @throws \HeadlessChromium\Exception\NoResponseAvailable
      * @throws \HeadlessChromium\Exception\OperationTimedOut
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
+     * @throws \Throwable
      */
     public function getAllFromHistoryLink( string $historyLinkSuffix ): array {
 
@@ -157,7 +158,9 @@ class FileIndex extends BaseData {
             $this->Debug->_debug( "Writing the File Indexes to cache." );
 
             return $this->getObjects();
-        } catch ( \Exception $exception ) {
+        } catch ( \Throwable $exception ) {
+
+
             $this->stopTime = Carbon::now( $this->timezone );
             $this->_cacheFailure( $exception );
             throw $exception;
