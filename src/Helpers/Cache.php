@@ -35,14 +35,9 @@ class Cache {
     public static function getDealIdsFromHistoryLinks(RemitSpiderUSBank $spider): array {
         $dealIds = [];
         $spider->HistoryLinks->loadFromCache();
-        $historyLinks = $spider->HistoryLinks->getObjects();
-        /**
-         * @var \DPRMC\RemitSpiderUSBank\Objects\HistoryLink $historyLink
-         */
-        foreach($historyLinks as $historyLink):
-            $dealIds[] = $historyLink->getDealId();
-        endforeach;
-        return $dealIds;
+        $historyLinksByDeal = $spider->HistoryLinks->getObjects();
+
+        return array_keys($historyLinksByDeal);
     }
 
 
