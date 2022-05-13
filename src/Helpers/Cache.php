@@ -59,4 +59,15 @@ class Cache {
         return $dealIds;
     }
 
+
+    /**
+     * @param \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank $spider
+     *
+     * @return string
+     */
+    public static function getFileCacheAsString(RemitSpiderUSBank $spider): string {
+        $pathToCache = $spider->FileIndex->getPathToCache();
+        return file_get_contents($pathToCache);
+    }
+
 }
