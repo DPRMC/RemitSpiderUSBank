@@ -3,13 +3,13 @@
 namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 use Carbon\Carbon;
-use DPRMC\RemitSpiderUSBank\Helpers\BaseData;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\Helpers\Errors;
 use DPRMC\RemitSpiderUSBank\Objects\Deal;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Clip;
 use HeadlessChromium\Page;
+
 
 /**
  *
@@ -60,9 +60,10 @@ class Deals extends BaseData {
 
 
     /**
-     * @param string $usBankPortfolioId
-     * @param int    $x_all Different versions of the Chromium browser have different fonts. Moves the links.
-     * @param int    $y_all
+     * @param string                                     $usBankPortfolioId
+     * @param \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank $spider
+     * @param int                                        $x_all Different versions of the Chromium browser have different fonts. Moves the links.
+     * @param int                                        $y_all
      *
      * @return array
      * @throws \DPRMC\RemitSpiderUSBank\Exceptions\Exception404Returned
@@ -76,9 +77,10 @@ class Deals extends BaseData {
      * @throws \HeadlessChromium\Exception\OperationTimedOut
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
      */
-    public function getAllByPortfolioId( string $usBankPortfolioId,
-                                         int $x_all = self::X_ALL_DEFAULT,
-                                         int $y_all = self::Y_ALL_DEFAULT ): array {
+    public function getAllByPortfolioId( string            $usBankPortfolioId,
+                                         RemitSpiderUSBank $spider,
+                                         int               $x_all = self::X_ALL_DEFAULT,
+                                         int               $y_all = self::Y_ALL_DEFAULT ): array {
 
         $this->portfolioId = $usBankPortfolioId;
 
@@ -122,6 +124,8 @@ class Deals extends BaseData {
             $this->stopTime = Carbon::now( $this->timezone );
             $this->_setDataToCache( $this->dealLinkSuffixes );
             $this->_cacheData();
+
+            $this->notifyParentPullWasSuccessful($spider, $usBankPortfolioId);
 
             $this->Debug->_debug( "Writing the Deal Link Suffixes to cache." );
 
@@ -179,12 +183,12 @@ class Deals extends BaseData {
         foreach ( $data as $dealLinkSuffix ):
             $dealId                = $this->_getDealIdFromSuffix( $dealLinkSuffix );
             $this->data[ $dealId ] = [
-                BaseData::ADDED_AT     => Carbon::now( $this->timezone ),
-                BaseData::LAST_PULLED  => NULL,
-                self::DEAL_LINK_SUFFIX => $dealLinkSuffix,
-                self::PORTFOLIO_ID     => $this->portfolioId,
-                self::DEAL_ID          => $dealId,
-                self::DEAL_NAME        => $this->_getDealNameFromSuffix( $dealLinkSuffix ),
+                BaseData::ADDED_AT             => Carbon::now( $this->timezone ),
+                BaseData::CHILDREN_LAST_PULLED => NULL,
+                self::DEAL_LINK_SUFFIX         => $dealLinkSuffix,
+                self::PORTFOLIO_ID             => $this->portfolioId,
+                self::DEAL_ID                  => $dealId,
+                self::DEAL_NAME                => $this->_getDealNameFromSuffix( $dealLinkSuffix ),
             ];
         endforeach;
     }
@@ -252,5 +256,18 @@ class Deals extends BaseData {
                                    $this->pathToCache );
         endforeach;
         return $objects;
+    }
+
+    /**
+     * @param \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank $spider
+     * @param                                            $parentId
+     *
+     * @return void
+     * @throws \Exception
+     */
+    public function notifyParentPullWasSuccessful( RemitSpiderUSBank $spider, $parentId): void {
+        $spider->Portfolios->loadFromCache();
+        $spider->Portfolios->data[$parentId][BaseData::CHILDREN_LAST_PULLED] = Carbon::now($this->timezone);
+        $spider->Portfolios->_cacheData();
     }
 }

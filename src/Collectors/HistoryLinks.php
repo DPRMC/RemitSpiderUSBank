@@ -4,10 +4,8 @@ namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 
 use Carbon\Carbon;
-use DPRMC\RemitSpiderUSBank\Helpers\BaseData;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\Objects\HistoryLink;
-use DPRMC\RemitSpiderUSBank\Objects\Portfolio;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Page;
 
@@ -181,10 +179,10 @@ class HistoryLinks extends BaseData {
             $myKey = $this->_getMyUniqueId( $historyLink );
             if ( FALSE == array_key_exists( $myKey, $this->historyLinks[ $this->dealId ] ) ):
                 $this->historyLinks[ $this->dealId ][ $myKey ] = [
-                    self::DEAL_ID         => $this->dealId,
-                    self::LINK            => $historyLink,
-                    BaseData::ADDED_AT    => Carbon::now( $this->timezone ),
-                    BaseData::LAST_PULLED => NULL,
+                    self::DEAL_ID                  => $this->dealId,
+                    self::LINK                     => $historyLink,
+                    BaseData::ADDED_AT             => Carbon::now( $this->timezone ),
+                    BaseData::CHILDREN_LAST_PULLED => NULL,
                 ];
             else:
                 // The value already exists. Do nothing.
@@ -234,5 +232,19 @@ class HistoryLinks extends BaseData {
             endforeach;
         endforeach;
         return $objects;
+    }
+
+
+    /**
+     * @param \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank $spider
+     * @param                                            $parentId
+     *
+     * @return void
+     * @throws \Exception
+     */
+    public function notifyParentPullWasSuccessful( RemitSpiderUSBank $spider, $parentId): void {
+        $spider->Deals->loadFromCache();
+        $spider->Deals->data[$parentId][BaseData::CHILDREN_LAST_PULLED] = Carbon::now($this->timezone);
+        $spider->Deals->_cacheData();
     }
 }

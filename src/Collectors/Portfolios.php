@@ -3,7 +3,6 @@
 namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 use Carbon\Carbon;
-use DPRMC\RemitSpiderUSBank\Helpers\BaseData;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\Helpers\Errors;
 use DPRMC\RemitSpiderUSBank\Objects\Portfolio;
@@ -141,9 +140,9 @@ class Portfolios extends BaseData {
                 continue;
             else:
                 $this->data[ $portfolioId ] = [
-                    BaseData::ADDED_AT    => Carbon::now( $this->timezone ),
-                    BaseData::LAST_PULLED => NULL,
-                    self::PORTFOLIO_ID    => $portfolioId,
+                    BaseData::ADDED_AT             => Carbon::now( $this->timezone ),
+                    BaseData::CHILDREN_LAST_PULLED => NULL,
+                    self::PORTFOLIO_ID             => $portfolioId,
                 ];
             endif;
         endforeach;
@@ -159,5 +158,9 @@ class Portfolios extends BaseData {
             $objects[] = new Portfolio( $portfolioId, $data, $this->timezone, $this->pathToCache );
         endforeach;
         return $objects;
+    }
+
+    public function notifyParentPullWasSuccessful( RemitSpiderUSBank $spider, $parentId ): void {
+        // TODO: Implement notifyParentPullWasSuccessful() method.
     }
 }

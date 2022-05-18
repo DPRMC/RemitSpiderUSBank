@@ -3,7 +3,7 @@
 namespace DPRMC\RemitSpiderUSBank\Objects;
 
 use Carbon\Carbon;
-use DPRMC\RemitSpiderUSBank\Helpers\BaseData;
+use DPRMC\RemitSpiderUSBank\Collectors\BaseData;
 
 
 abstract class BaseObject {
@@ -12,7 +12,7 @@ abstract class BaseObject {
     protected string $_timezone;
 
     public ?Carbon $addedAt;
-    public ?Carbon $lastPulledAt;
+    public ?Carbon $childrenLastPulled;
     public string  $timezone;
 
     public string $pathToCache;
@@ -26,8 +26,8 @@ abstract class BaseObject {
         $this->pathToCache = $pathToCache;
 
 
-        $this->addedAt      = isset( $data[ BaseData::ADDED_AT ] ) ? Carbon::parse( $data[ BaseData::ADDED_AT ], $timezone ) : NULL;
-        $this->lastPulledAt = isset( $data[ BaseData::LAST_PULLED ] ) ? Carbon::parse( $data[ BaseData::LAST_PULLED ], $timezone ) : NULL;
+        $this->addedAt            = isset( $data[ BaseData::ADDED_AT ] ) ? Carbon::parse( $data[ BaseData::ADDED_AT ], $timezone ) : NULL;
+        $this->childrenLastPulled = isset( $data[ BaseData::CHILDREN_LAST_PULLED ] ) ? Carbon::parse( $data[ BaseData::CHILDREN_LAST_PULLED ], $timezone ) : NULL;
     }
 
 
@@ -35,12 +35,12 @@ abstract class BaseObject {
      * @return bool
      */
     public function pulledInTheLastDay(): bool {
-        if ( is_null( $this->lastPulledAt ) ):
+        if ( is_null( $this->childrenLastPulled ) ):
             return FALSE;
         endif;
 
         $now           = Carbon::now( $this->_timezone );
-        $diffInSeconds = $now->diffInSeconds( $this->lastPulledAt );
+        $diffInSeconds = $now->diffInSeconds( $this->childrenLastPulled );
         if ( 86400 > $diffInSeconds ):
             return TRUE;
         endif;
@@ -49,10 +49,7 @@ abstract class BaseObject {
     }
 
 
-    public function markAsPulled() {
-        $string = file_get_contents( $this->pathToCache );
-        $array  = json_decode( $string, TRUE );
-    }
+
 
 
 }

@@ -131,7 +131,7 @@ class RemitSpiderUSBankTest extends TestCase {
         $this->assertNotEmpty( $portfolios );
 
         $spider->Portfolios->loadFromCache();
-        $this->assertNotEmpty($spider->Portfolios->portfolioIds);
+        $this->assertNotEmpty( $spider->Portfolios->portfolioIds );
 
         // Calling this again, to test 'continue' code in _setDataToCache()
         $portfolios = $spider->Portfolios->getAll( $spider->Login->csrf );
@@ -140,21 +140,19 @@ class RemitSpiderUSBankTest extends TestCase {
         /**
          * @var \DPRMC\RemitSpiderUSBank\Objects\Portfolio $firstPortfolio
          */
-        $firstPortfolio = $portfolios[0];
+        $firstPortfolio = $portfolios[ 0 ];
 
         $pulledInTheLastDay = $firstPortfolio->pulledInTheLastDay();
-        $this->assertFalse($pulledInTheLastDay);
+        $this->assertFalse( $pulledInTheLastDay );
 
         // Manually set the lastPulledAt time to an hour ago for the next assertion.
-        $firstPortfolio->lastPulledAt = \Carbon\Carbon::now(self::TIMEZONE)->subHour();
+        $firstPortfolio->childrenLastPulled = \Carbon\Carbon::now( self::TIMEZONE )->subHour();
 
         $pulledInTheLastDay = $firstPortfolio->pulledInTheLastDay();
-        $this->assertTrue($pulledInTheLastDay);
+        $this->assertTrue( $pulledInTheLastDay );
 
-        $spider->Portfolios->deleteCache();
-        $this->assertFileDoesNotExist($spider->Portfolios->getPathToCache());
-
-
+//        $spider->Portfolios->deleteCache();
+//        $this->assertFileDoesNotExist($spider->Portfolios->getPathToCache());
 
 
     }
@@ -168,27 +166,33 @@ class RemitSpiderUSBankTest extends TestCase {
         $spider = $this->_getSpider();
         $spider->Deals->deleteCache();
         $spider->Login->login();
-        $deals = $spider->Deals->getAllByPortfolioId( $_ENV[ 'PORTFOLIO_ID' ] );
+
+
+
+        $deals = $spider->Deals->getAllByPortfolioId( $_ENV[ 'PORTFOLIO_ID' ],
+                                                      $spider );
         $this->assertNotEmpty( $deals );
 
         $spider->Deals->loadFromCache();
-        $this->assertNotEmpty($spider->Deals->dealLinkSuffixes);
+        $this->assertNotEmpty( $spider->Deals->dealLinkSuffixes );
 
         /**
          * @var \DPRMC\RemitSpiderUSBank\Objects\Deal $firstDeal
          */
-        $firstDeal = $deals[0];
-        $this->assertInstanceOf(\DPRMC\RemitSpiderUSBank\Objects\Deal::class, $firstDeal);
+        $firstDeal = $deals[ 0 ];
+        $this->assertInstanceOf( \DPRMC\RemitSpiderUSBank\Objects\Deal::class, $firstDeal );
+
+        //$spider->Deals->notifyParentPullWasSuccessful($spider,$firstDeal->getDealId());
 
         $pulledInTheLastDay = $firstDeal->pulledInTheLastDay();
-        $this->assertFalse($pulledInTheLastDay);
+        $this->assertFalse( $pulledInTheLastDay );
 
-        $firstDeal->lastPulledAt = \Carbon\Carbon::now(self::TIMEZONE)->subHour();
-        $pulledInTheLastDay = $firstDeal->pulledInTheLastDay();
-        $this->assertTrue($pulledInTheLastDay);
+        $firstDeal->childrenLastPulled = \Carbon\Carbon::now( self::TIMEZONE )->subHour();
+        $pulledInTheLastDay            = $firstDeal->pulledInTheLastDay();
+        $this->assertTrue( $pulledInTheLastDay );
 
-        $spider->Deals->deleteCache();
-        $this->assertFileDoesNotExist($spider->Deals->getPathToCache());
+//        $spider->Deals->deleteCache();
+//        $this->assertFileDoesNotExist( $spider->Deals->getPathToCache() );
     }
 
 
@@ -205,38 +209,38 @@ class RemitSpiderUSBankTest extends TestCase {
         $this->assertNotEmpty( $historyLinks );
 
         $spider->HistoryLinks->loadFromCache();
-        $this->assertNotEmpty($spider->HistoryLinks->historyLinks);
+        $this->assertNotEmpty( $spider->HistoryLinks->historyLinks );
 
-        $dealId = $spider->HistoryLinks->getDealId();
+        $dealId   = $spider->HistoryLinks->getDealId();
         $dealName = $spider->HistoryLinks->getDealName();
 
-        $this->assertIsString($dealId);
-        $this->assertIsString($dealName);
+        $this->assertIsString( $dealId );
+        $this->assertIsString( $dealName );
 
         /**
          * @var array $historyLinksForPortfolioId An array of HistoryLink objects.
          */
-        $historyLinksForPortfolioId = array_pop($historyLinks);
+        $historyLinksForPortfolioId = array_pop( $historyLinks );
 
         /**
          * @var \DPRMC\RemitSpiderUSBank\Objects\HistoryLink $firstHistoryLink
          */
-        $firstHistoryLink = array_pop($historyLinksForPortfolioId);
-        $this->assertInstanceOf(\DPRMC\RemitSpiderUSBank\Objects\HistoryLink::class, $firstHistoryLink);
+        $firstHistoryLink = array_pop( $historyLinksForPortfolioId );
+        $this->assertInstanceOf( \DPRMC\RemitSpiderUSBank\Objects\HistoryLink::class, $firstHistoryLink );
 
-        $linkSuffix = $firstHistoryLink->getLink();
-        $absoluteLink = \DPRMC\RemitSpiderUSBank\Collectors\HistoryLinks::getAbsoluteLink($linkSuffix);
-        $this->assertIsString($absoluteLink);
+        $linkSuffix   = $firstHistoryLink->getLink();
+        $absoluteLink = \DPRMC\RemitSpiderUSBank\Collectors\HistoryLinks::getAbsoluteLink( $linkSuffix );
+        $this->assertIsString( $absoluteLink );
 
         $pulledInTheLastDay = $firstHistoryLink->pulledInTheLastDay();
-        $this->assertFalse($pulledInTheLastDay);
+        $this->assertFalse( $pulledInTheLastDay );
 
-        $firstHistoryLink->lastPulledAt = \Carbon\Carbon::now(self::TIMEZONE)->subHour();
-        $pulledInTheLastDay = $firstHistoryLink->pulledInTheLastDay();
-        $this->assertTrue($pulledInTheLastDay);
+        $firstHistoryLink->childrenLastPulled = \Carbon\Carbon::now( self::TIMEZONE )->subHour();
+        $pulledInTheLastDay                   = $firstHistoryLink->pulledInTheLastDay();
+        $this->assertTrue( $pulledInTheLastDay );
 
-        $spider->HistoryLinks->deleteCache();
-        $this->assertFileDoesNotExist($spider->HistoryLinks->getPathToCache());
+//        $spider->HistoryLinks->deleteCache();
+//        $this->assertFileDoesNotExist( $spider->HistoryLinks->getPathToCache() );
     }
 
 
@@ -250,9 +254,12 @@ class RemitSpiderUSBankTest extends TestCase {
 
         $spider->FileIndex->deleteCache();
 
-        $fileIndex = $spider->FileIndex->getAllFromHistoryLink( $_ENV[ 'HISTORY_LINK' ] );
+        $fileIndex = $spider->FileIndex->getAllFromHistoryLink( $_ENV[ 'HISTORY_LINK' ],
+                                                                $spider );
 
-        $this->assertNotEmpty($fileIndex);
+        print_r($fileIndex);
+
+        $this->assertNotEmpty( $fileIndex );
     }
 
 }

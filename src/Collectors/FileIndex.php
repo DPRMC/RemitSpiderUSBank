@@ -4,7 +4,6 @@ namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 
 use Carbon\Carbon;
-use DPRMC\RemitSpiderUSBank\Helpers\BaseData;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\Objects\File;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
@@ -76,7 +75,7 @@ class FileIndex extends BaseData {
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
      * @throws \Throwable
      */
-    public function getAllFromHistoryLink( string $historyLinkSuffix ): array {
+    public function getAllFromHistoryLink( string $historyLinkSuffix, RemitSpiderUSBank $spider, ): array {
 
         try {
             $this->Debug->_debug( "Getting all File Indexes from " . $historyLinkSuffix );
@@ -148,13 +147,18 @@ class FileIndex extends BaseData {
                         self::HREF    => $href,
                         self::DEAL_ID => $this->dealId,
                     ];
+                    $historyLinkId = $this->_getMyUniqueId( $historyLinkSuffix );
+                    $this->notifyParentPullWasSuccessful( $spider, [ $this->dealId, $historyLinkId ] );
                 endif;
+
             endforeach;
 
             $this->stopTime = Carbon::now( $this->timezone );
 
             $this->_setDataToCache( $fileLinks );
             $this->_cacheData();
+
+
             $this->Debug->_debug( "Writing the File Indexes to cache." );
 
             return $this->getObjects();
@@ -215,10 +219,10 @@ class FileIndex extends BaseData {
             if ( array_key_exists( $uniqueId, $this->data[ $this->dealId ] ) ):
                 continue;
             else:
-                $newFileLinkData[ BaseData::LAST_PULLED ] = NULL;
-                $newFileLinkData[ BaseData::ADDED_AT ]    = Carbon::now( $this->timezone );
-                $newFileLinkData[ self::DEAL_ID ]         = $this->dealId;
-                $this->data[ $this->dealId ][ $uniqueId ] = $newFileLinkData;
+                $newFileLinkData[ BaseData::CHILDREN_LAST_PULLED ] = NULL;
+                $newFileLinkData[ BaseData::ADDED_AT ]             = Carbon::now( $this->timezone );
+                $newFileLinkData[ self::DEAL_ID ]                  = $this->dealId;
+                $this->data[ $this->dealId ][ $uniqueId ]          = $newFileLinkData;
             endif;
         endforeach;
     }
@@ -241,5 +245,21 @@ class FileIndex extends BaseData {
 
     public function getDealId(): string {
         return $this->dealId;
+    }
+
+
+    /**
+     * @param \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank $spider
+     * @param                                            $parentId
+     *
+     * @return void
+     * @throws \Exception
+     */
+    public function notifyParentPullWasSuccessful( RemitSpiderUSBank $spider, $parentId ): void {
+        $spider->HistoryLinks->loadFromCache();
+        $dealId                                                                               = $parentId[ 0 ];
+        $uniqueId                                                                             = $parentId[ 1 ];
+        $spider->HistoryLinks->data[ $dealId ][ $uniqueId ][ BaseData::CHILDREN_LAST_PULLED ] = Carbon::now( $this->timezone );
+        $spider->HistoryLinks->_cacheData();
     }
 }

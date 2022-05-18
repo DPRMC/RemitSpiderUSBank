@@ -1,8 +1,9 @@
 <?php
 
-namespace DPRMC\RemitSpiderUSBank\Helpers;
+namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 use Carbon\Carbon;
+use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Page;
 
@@ -50,13 +51,16 @@ abstract class BaseData {
      */
     public array $data;
 
-    const META            = 'meta';
-    const DATA            = 'data';
-    const START_TIME      = 'startTime';
-    const STOP_TIME       = 'stopTime';
-    const LAST_RUN_STATUS = 'lastRunStatus';
-    const ADDED_AT        = 'addedAt';    // When was this data added to the cache.
-    const LAST_PULLED     = 'lastPulled'; // When was the info pointed to be this data last loaded.
+
+    public Carbon $childrenLastPulledAt;
+
+    const META                 = 'meta';
+    const DATA                 = 'data';
+    const START_TIME           = 'startTime';
+    const STOP_TIME            = 'stopTime';
+    const LAST_RUN_STATUS      = 'lastRunStatus';
+    const ADDED_AT             = 'addedAt';            // When was this data added to the cache.
+    const CHILDREN_LAST_PULLED = 'childrenLastPulled'; // When was the info pointed to be this data last loaded.
 
 
     public function __construct( Page   &$Page,
@@ -69,6 +73,13 @@ abstract class BaseData {
         $this->timezone    = $timezone;
         $this->data        = [];
     }
+
+    abstract protected function _setDataToCache( array $data );
+
+    abstract public function getObjects(): array;
+
+    abstract public function notifyParentPullWasSuccessful( RemitSpiderUSBank $spider, $parentId ): void;
+
 
     /**
      * Call this method anywhere to load the contents of the cache file into this->data
@@ -85,12 +96,12 @@ abstract class BaseData {
             return;
         endif;
 
-        $stringCache         = file_get_contents( $this->pathToCache );
-        $arrayCache          = json_decode( $stringCache, TRUE );
-        $this->data          = $arrayCache[ self::DATA ];
-        $this->startTime     = unserialize( $arrayCache[ self::META ][ self::START_TIME ] );
-        $this->stopTime      = unserialize( $arrayCache[ self::META ][ self::STOP_TIME ] );
-        $this->lastRunStatus = $arrayCache[ self::META ][ self::LAST_RUN_STATUS ];
+        $stringCache                = file_get_contents( $this->pathToCache );
+        $arrayCache                 = json_decode( $stringCache, TRUE );
+        $this->data                 = $arrayCache[ self::DATA ];
+        $this->startTime            = unserialize( $arrayCache[ self::META ][ self::START_TIME ] );
+        $this->stopTime             = unserialize( $arrayCache[ self::META ][ self::STOP_TIME ] );
+        $this->lastRunStatus        = $arrayCache[ self::META ][ self::LAST_RUN_STATUS ];
     }
 
 
@@ -112,13 +123,13 @@ abstract class BaseData {
      * @return void
      * @throws \Exception
      */
-    protected function _cacheData() {
+    protected function _cacheData(): void {
 
         $dataToWrite = [
             self::META => [
-                self::START_TIME      => serialize( $this->startTime ),
-                self::STOP_TIME       => serialize( $this->stopTime ),
-                self::LAST_RUN_STATUS => 'ok',
+                self::START_TIME           => serialize( $this->startTime ),
+                self::STOP_TIME            => serialize( $this->stopTime ),
+                self::LAST_RUN_STATUS      => 'ok',
             ],
             self::DATA => $this->data,
         ];
@@ -170,11 +181,6 @@ abstract class BaseData {
     protected function _getMyUniqueId( string $string ): string {
         return md5( $string );
     }
-
-    abstract protected function _setDataToCache( array $data );
-
-
-    abstract public function getObjects(): array;
 
 
     /**
