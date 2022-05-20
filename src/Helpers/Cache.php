@@ -70,4 +70,37 @@ class Cache {
         return file_get_contents($pathToCache);
     }
 
+
+    /**
+     * @param \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank $spider
+     *
+     * @return string
+     */
+    public static function getPortfolioCacheAsString(RemitSpiderUSBank $spider): string {
+        $pathToCache = $spider->Portfolios->getPathToCache();
+        return file_get_contents($pathToCache);
+    }
+
+
+    /**
+     * @param \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank $spider
+     *
+     * @return string
+     */
+    public static function getDealCacheAsString(RemitSpiderUSBank $spider): string {
+        $pathToCache = $spider->Deals->getPathToCache();
+        return file_get_contents($pathToCache);
+    }
+
+
+    /**
+     * @param \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank $spider
+     *
+     * @return string
+     */
+    public static function getHistoryLinkCacheAsString(RemitSpiderUSBank $spider): string {
+        $pathToCache = $spider->HistoryLinks->getPathToCache();
+        return file_get_contents($pathToCache);
+    }
+
 }
