@@ -61,6 +61,23 @@ class Deal extends BaseObject {
         return $this->dealName;
     }
 
+
+    /**
+     * Original: absc_-2006-he2
+     * Clean: absc-2006-he2
+     * @return string
+     */
+    public function getCleanDealName(): string {
+        $dealName = trim($this->dealName);
+        $dealName = strtolower($this->dealName);
+        $dealName = str_replace(' ','-',$dealName);
+        $dealName = str_replace('_','-',$dealName);
+        $dealName = str_replace('--','-',$dealName);
+        $dealName = str_replace('---','-',$dealName);
+        return $dealName;
+    }
+
+
     /**
      * Simple getter.
      * @return string
