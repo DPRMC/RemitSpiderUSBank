@@ -80,8 +80,15 @@ class FileIndex extends BaseData {
         try {
             $this->Debug->_debug( "Getting all File Indexes from " . $historyLinkSuffix );
             $this->startTime = Carbon::now( $this->timezone );
-            //$this->loadFromCache();
+
+
             $this->_setDealId( $historyLinkSuffix );
+
+
+
+            $this->loadFromCache();
+
+
             $fileLinks = [];
 
             // Example URL:
