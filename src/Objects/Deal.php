@@ -23,9 +23,9 @@ class Deal extends BaseObject {
     public function __construct( array $data, string $timezone, string $pathToCache ) {
         parent::__construct( $data, $timezone, $pathToCache );
 
-        $this->portfolioId = $data[ Deals::PORTFOLIO_ID ];
-        $this->dealId      = $data[ Deals::DEAL_ID ];
-        $this->dealName    = $data[ Deals::DEAL_NAME ];
+        $this->portfolioId    = $data[ Deals::PORTFOLIO_ID ];
+        $this->dealId         = $data[ Deals::DEAL_ID ];
+        $this->dealName       = $data[ Deals::DEAL_NAME ];
         $this->dealLinkSuffix = $this->_data[ Deals::DEAL_LINK_SUFFIX ];
     }
 
@@ -47,6 +47,7 @@ class Deal extends BaseObject {
 
     /**
      * Simple getter.
+     *
      * @return string
      */
     public function getPortfolioId(): string {
@@ -55,6 +56,7 @@ class Deal extends BaseObject {
 
     /**
      * Simple getter.
+     *
      * @return string
      */
     public function getDealName(): string {
@@ -65,30 +67,31 @@ class Deal extends BaseObject {
     /**
      * Original: absc_-2006-he2
      * Clean: absc-2006-he2
+     *
      * @return string
      */
     public function getCleanDealName(): string {
-        $dealName = trim($this->dealName);
-        $dealName = strtolower($this->dealName);
-        $dealName = str_replace(' ','-',$dealName);
-        $dealName = str_replace('_','-',$dealName);
-        $dealName = str_replace('--','-',$dealName);
-        $dealName = str_replace('---','-',$dealName);
+        $dealName = trim( $this->dealName );
+        $dealName = strtolower( $this->dealName );
+        $dealName = str_replace( ' ', '-', $dealName );
+        $dealName = str_replace( '_', '-', $dealName );
+
+        // Let's replace repeat dashes (--) with single dashes.
+        $pattern  = '/-{2,}/';
+        $dealName = preg_replace( $pattern, '-', $dealName );
+
         return $dealName;
     }
 
 
     /**
      * Simple getter.
+     *
      * @return string
      */
     public function getDealId(): string {
         return $this->dealId;
     }
-
-
-
-
 
 
 }

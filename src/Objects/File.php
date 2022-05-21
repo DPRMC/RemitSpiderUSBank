@@ -53,7 +53,10 @@ class File extends BaseObject {
         $name = preg_replace($pattern,'-',$name);
 
         $name = str_replace( '_', '-', $name );
-        $name = str_replace( '--', '-', $name );
+
+        // Let's replace repeat dashes (--) with single dashes.
+        $pattern = '/-{2,}/';
+        $name = preg_replace($pattern,'-',$name);
 
         return $name;
     }
