@@ -279,6 +279,13 @@ class FileIndex extends BaseData {
         $spider->HistoryLinks->_cacheData();
     }
 
+    /**
+     * @param \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank $spider
+     * @param                                            $ids [dealId, this->getUniqueId]
+     *
+     * @return void
+     * @throws \Exception
+     */
     public function markFileAsDownloaded( RemitSpiderUSBank $spider, $ids ) {
         $spider->FileIndex->loadFromCache();
         $dealId                                                                               = $ids[ 0 ];
