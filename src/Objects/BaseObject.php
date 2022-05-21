@@ -32,6 +32,14 @@ abstract class BaseObject {
 
 
     /**
+     * A simple getter
+     * @return string Ex: America/New_York
+     */
+    public function getTimezone(): string {
+        return $this->_timezone;
+    }
+
+    /**
      * @return bool
      */
     public function pulledInTheLastDay(): bool {
@@ -47,9 +55,6 @@ abstract class BaseObject {
 
         return FALSE;
     }
-
-
-
 
 
 }
