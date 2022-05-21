@@ -29,7 +29,7 @@ class File extends BaseObject {
     }
 
     public function getDate(): Carbon {
-        return Carbon::parse( $this->_data[ 'date' ], $this->timezone );
+        return Carbon::parse( $this->_data[ 'date' ], $this->getTimezone() );
     }
 
     public function getName(): string {
@@ -59,11 +59,11 @@ class File extends BaseObject {
     }
 
     public function getChildrenLastPulled(): string {
-        return Carbon::parse( $this->_data[ 'childrenLastPulled' ], $this->timezone );
+        return Carbon::parse( $this->_data[ 'childrenLastPulled' ], $this->getTimezone() );
     }
 
     public function getAddedAt(): string {
-        return Carbon::parse( $this->_data[ 'addedAt' ], $this->timezone );
+        return Carbon::parse( $this->_data[ 'addedAt' ], $this->getTimezone() );
     }
 
     public function getCleanType(): string {
