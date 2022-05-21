@@ -40,6 +40,20 @@ class File extends BaseObject {
         return $this->_data[ 'href' ];
     }
 
+    /**
+     * HREF: /TIR/public/deals/populateReportDocument/47370585/CSV
+     * RETURNS: csv
+     *
+     * @return string
+     */
+    public function getFileExtension(): string {
+        $href          = $this->getHref();
+        $hrefParts     = explode( '/', $href );
+        $fileExtension = end( $hrefParts );
+        $fileExtension = strtolower( $fileExtension );
+        return $fileExtension;
+    }
+
     public function getLink(): string {
         return RemitSpiderUSBank::BASE_URL . $this->_data[ 'href' ];
     }
