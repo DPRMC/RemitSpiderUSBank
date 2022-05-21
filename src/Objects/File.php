@@ -41,7 +41,7 @@ class File extends BaseObject {
     }
 
     public function getLink(): string {
-        return RemitSpiderUSBank::BASE_URL . '/' . $this->_data['href'];
+        return RemitSpiderUSBank::BASE_URL .  $this->_data['href'];
     }
 
     public function getChildrenLastPulled(): string {
