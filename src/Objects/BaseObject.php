@@ -39,6 +39,7 @@ abstract class BaseObject {
         return $this->_timezone;
     }
 
+
     /**
      * @return bool
      */
