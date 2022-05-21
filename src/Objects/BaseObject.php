@@ -13,7 +13,6 @@ abstract class BaseObject {
 
     public ?Carbon $addedAt;
     public ?Carbon $childrenLastPulled;
-    public string  $timezone;
 
     public string $pathToCache;
 
