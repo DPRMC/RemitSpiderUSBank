@@ -46,9 +46,15 @@ class File extends BaseObject {
     public function getCleanName(): string {
         $name = $this->getName();
         $name = strtolower( $name );
-        $name = str_replace( ' ', '-', $name );
+
+        // There are some tabs and new lines in some of the names.
+        // Let's get rid of those.
+        $pattern = '/\s/';
+        $name = preg_replace($pattern,'-',$name);
+
         $name = str_replace( '_', '-', $name );
         $name = str_replace( '--', '-', $name );
+
         return $name;
     }
 
