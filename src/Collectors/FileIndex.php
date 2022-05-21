@@ -85,7 +85,6 @@ class FileIndex extends BaseData {
             $this->_setDealId( $historyLinkSuffix );
 
 
-
             $this->loadFromCache();
 
 
@@ -154,7 +153,7 @@ class FileIndex extends BaseData {
                         self::HREF    => $href,
                         self::DEAL_ID => $this->dealId,
                     ];
-                    $historyLinkId = $this->_getMyUniqueId( $historyLinkSuffix );
+                    $historyLinkId          = $this->_getMyUniqueId( $historyLinkSuffix );
                     $this->notifyParentPullWasSuccessful( $spider, [ $this->dealId, $historyLinkId ] );
                 endif;
 
@@ -188,6 +187,16 @@ class FileIndex extends BaseData {
      */
     protected function _getMyUniqueId( string $string ): string {
         return md5( $string );
+    }
+
+
+    /**
+     * @param string $historyLinkSuffix
+     *
+     * @return string
+     */
+    public function getUniqueId( string $historyLinkSuffix ): string {
+        return $this->_getMyUniqueId( $historyLinkSuffix );
     }
 
 
@@ -268,5 +277,13 @@ class FileIndex extends BaseData {
         $uniqueId                                                                             = $parentId[ 1 ];
         $spider->HistoryLinks->data[ $dealId ][ $uniqueId ][ BaseData::CHILDREN_LAST_PULLED ] = Carbon::now( $this->timezone );
         $spider->HistoryLinks->_cacheData();
+    }
+
+    public function markFileAsDownloaded( RemitSpiderUSBank $spider, $ids ) {
+        $spider->FileIndex->loadFromCache();
+        $dealId                                                                               = $ids[ 0 ];
+        $uniqueId                                                                             = $ids[ 1 ];
+        $spider->FileIndex->data[$dealId][$uniqueId][BaseData::CHILDREN_LAST_PULLED] = Carbon::now( $this->timezone );
+        $spider->FileIndex->_cacheData();
     }
 }
