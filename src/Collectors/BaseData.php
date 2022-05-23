@@ -99,9 +99,9 @@ abstract class BaseData {
         $stringCache                = file_get_contents( $this->pathToCache );
         $arrayCache                 = json_decode( $stringCache, TRUE );
         $this->data                 = $arrayCache[ self::DATA ] ?? [] ;
-        $this->startTime            = unserialize( $arrayCache[ self::META ][ self::START_TIME ] );
-        $this->stopTime             = unserialize( $arrayCache[ self::META ][ self::STOP_TIME ] );
-        $this->lastRunStatus        = $arrayCache[ self::META ][ self::LAST_RUN_STATUS ];
+        $this->startTime            = isset($arrayCache[ self::META ][ self::START_TIME ]) ? unserialize( $arrayCache[ self::META ][ self::START_TIME ] ) : null;
+        $this->stopTime            = isset($arrayCache[ self::META ][ self::STOP_TIME ]) ? unserialize( $arrayCache[ self::META ][ self::STOP_TIME ] ) : null;
+        $this->lastRunStatus        = isset($arrayCache[ self::META ][ self::LAST_RUN_STATUS ]) ? $arrayCache[ self::META ][ self::LAST_RUN_STATUS ] : 'not set';
     }
 
 
