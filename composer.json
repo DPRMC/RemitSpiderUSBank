@@ -15,7 +15,7 @@
   ],
   "minimum-stability": "stable",
   "require": {
-    "guzzlehttp/guzzle": "^7",
+    "guzzlehttp/guzzle": "^7.4",
     "chrome-php/chrome": "^1",
     "ext-dom": "*",
     "nesbot/carbon": "^2.57"

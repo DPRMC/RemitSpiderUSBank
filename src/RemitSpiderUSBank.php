@@ -10,6 +10,7 @@ use DPRMC\RemitSpiderUSBank\Collectors\HistoryLinks;
 use DPRMC\RemitSpiderUSBank\Collectors\Login;
 use HeadlessChromium\Cookies\CookiesCollection;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
+use HeadlessChromium\Page;
 
 
 /**
@@ -71,6 +72,7 @@ class RemitSpiderUSBank {
                                  string $pathToDealLinkSuffixes = '',
                                  string $pathToHistoryLinks = '',
                                  string $pathToFileIndex = '',
+                                 string $pathToFileDownloads = '',
                                  string $timezone = self::DEFAULT_TIMEZONE
     ) {
 
@@ -83,6 +85,7 @@ class RemitSpiderUSBank {
         $this->timezone               = $timezone;
 
         $this->USBankBrowser = new USBankBrowser( $chromePath );
+        $this->USBankBrowser->page->setDownloadPath( $pathToFileDownloads );
 
         $this->Debug = new Debug( $this->USBankBrowser->page,
                                   $pathToScreenshots,
@@ -133,246 +136,6 @@ class RemitSpiderUSBank {
             file_put_contents( $this->pathToDealLinkSuffixes, NULL );
         endif;
     }
-
-
-    /*
-
-        /**
-         * @param string $usBankPortfolioId
-         *
-         * @return array
-         * @throws \HeadlessChromium\Exception\CommunicationException
-         * @throws \HeadlessChromium\Exception\CommunicationException\CannotReadResponse
-         * @throws \HeadlessChromium\Exception\CommunicationException\InvalidResponse
-         * @throws \HeadlessChromium\Exception\CommunicationException\ResponseHasError
-         * @throws \HeadlessChromium\Exception\FilesystemException
-         * @throws \HeadlessChromium\Exception\NavigationExpired
-         * @throws \HeadlessChromium\Exception\NoResponseAvailable
-         * @throws \HeadlessChromium\Exception\OperationTimedOut
-         * @throws \HeadlessChromium\Exception\ScreenshotFailed
-         */
-//    public function getAllDealLinkSuffixesForPortfolioId( string $usBankPortfolioId ): array {
-//        $postLoginHTML             = $this->login();
-//        $linkToAllDealsInPortfolio = self::URL_LIST_OF_DEALS . $usBankPortfolioId . '/0?OWASP_CSRFTOKEN=' . $this->csrf;
-//        try {
-//            $this->page->navigate( $linkToAllDealsInPortfolio )->waitForNavigation( Page::NETWORK_IDLE,
-//                                                                                    self::NETWORK_IDLE_MS_TO_WAIT );
-//            $htmlWithListOfLinksToDeals = $this->page->getHtml();
-//
-//            $this->_screenshot( 'all_deals_for_portfolioid_' . $usBankPortfolioId );
-//            $this->_html( 'all_deals_for_portfolioid_' . $usBankPortfolioId );
-//            $dealIds = $this->_getDealLinkSuffixesFromHTML( $htmlWithListOfLinksToDeals );
-//
-//            $writeSuccess = file_put_contents( $this->pathToDealIds, implode( "\n", $dealIds ) );
-//            if ( FALSE === $writeSuccess ):
-//                throw new \Exception( "Unable to write US Bank Deal IDs to cache file: " . $this->pathToDealIds );
-//            endif;
-//
-//            $this->logout();
-//            return $dealIds;
-//        } catch ( \Exception $exception ) {
-//            $this->_debug( "    EXCEPTION: " . $exception->getMessage() );
-//            $this->usBankPortfolioIdsMissingDealLinks[] = $usBankPortfolioId;
-//            throw $exception;
-//        }
-//    }
-//
-//
-//    public function getHistoryLinksFromDealPage( string $dealLinkSuffix ): array {
-//        // Navigate to page
-//
-//        // Snag HTML
-//
-//        // Parse history links from HTML
-//    }
-
-
-    /**
-     * This method REQUIRES that the User has already logged into the system.
-     *
-     * @param string $dealLinkSuffix
-     *
-     * @return array
-     */
-//    public function getFirstPageOfHistoryLinksFromDealLinkSuffix_WITHOUT_LOGIN(string $dealLinkSuffix): array {
-//        $linkToAllDealsInPortfolio = self::BASE_URL . $usBankPortfolioId . '/0?OWASP_CSRFTOKEN=' . $this->csrf;
-//        try {
-//            $this->page->navigate( $linkToAllDealsInPortfolio )->waitForNavigation( Page::NETWORK_IDLE,
-//                                                                                    self::NETWORK_IDLE_MS_TO_WAIT );
-//    }
-
-
-//    protected function _getDealLinkSuffixesFromHTML( string $htmlWithListOfLinksToDeals ): array {
-//        $listOfSecurityIds = [];
-//        //$pattern     = '/\/detail\/(\d*)\//'; // This will grab the ID and Deal Name
-//        $pattern = '/\/detail\/(\d*\/.*)/';
-//        $dom     = new \DOMDocument();
-//        @$dom->loadHTML( $htmlWithListOfLinksToDeals );
-//        $elements = $dom->getElementsByTagName( 'a' );
-//        foreach ( $elements as $element ):
-//            $id = $element->getAttribute( 'id' );
-//
-//            // This is the one we want!
-//            if ( 'draggable-report-1' == $id ):
-//                $href        = $element->getAttribute( 'href' );
-//                $securityIds = NULL;
-//                preg_match( $pattern, $href, $securityIds );
-//
-//                if ( 2 != count( $securityIds ) ):
-//                    throw new \Exception( "Unable to find link to deal in this string: " . $href );
-//                endif;
-//
-//                $listOfSecurityIds[] = $securityIds[ 1 ];
-//            endif;
-//        endforeach;
-//        return $listOfSecurityIds;
-//    }
-
-
-//    public function getAllDealLinks( string $postLoginHTML ): array {
-//
-//        $this->csrf               = $this->getCSRF( $postLoginHTML );
-//        $this->usBankPortfolioIds = $this->_getUSBankPortfolioIds( $postLoginHTML );
-//
-//        $portfolioLinks = [];
-//
-//        foreach ( $this->usBankPortfolioIds as $usBankPortfolioId ):
-//            $portfolioLinks[ $usBankPortfolioId ] = self::URL_LIST_OF_DEALS . $usBankPortfolioId . '/0?OWASP_CSRFTOKEN=' . $this->csrf;
-//        endforeach;
-//
-//
-//        // Example $link
-//        // https://trustinvestorreporting.usbank.com/TIR/portfolios/getPortfolioDeals/123456/0?OWASP_CSRFTOKEN=1111-2222-3333-4444-5555-6666-7777-8888
-//        foreach ( $portfolioLinks as $usBankPortfolioId => $portfolioLink ):
-////            echo $portfolioLink; flush(); die($portfolioLink);
-//            try {
-//                $this->page->navigate( $portfolioLink )->waitForNavigation( Page::NETWORK_IDLE,
-//                                                                            self::NETWORK_IDLE_MS_TO_WAIT );
-//                $htmlWithListOfLinksToDeals = $this->page->getHtml();
-//
-//                $this->_screenshot( 'link_portfolioid_' . $usBankPortfolioId );
-//                $this->setLinksToDealsBySecurityId( $htmlWithListOfLinksToDeals );
-//            } catch ( \Exception $exception ) {
-//                $this->_debug( "    EXCEPTION: " . $exception->getMessage() );
-//                $this->usBankPortfolioIdsMissingDealLinks[] = $usBankPortfolioId;
-//            }
-//        endforeach;
-//
-//        if ( count( $this->linksToDealsBySecurityId ) < 1 ):
-//            throw new \Exception( "No deals were found. Perhaps a login problem" );
-//        endif;
-//
-//        return $this->linksToDealsBySecurityId;
-//    }
-
-
-//    public function getRecentDocs() {
-//        $this->login();
-//        $links = $this->getAllDealLinks();
-//        foreach ( $links as $securityId => $link ):
-//
-//        endforeach;
-//    }
-
-//
-//    // This will click on the history links to get all the files.
-//    public function getAllDocs() {
-//        $this->_debug( "Attempting to login to US Bank..." );
-//        $this->login();
-//        $this->_debug( "Logged in!" );
-//
-//        $this->_debug( "Getting all deal links" );
-//        $html      = $this->page->getHtml();
-//        $dealLinks = $this->getAllDealLinks( $html ); // This works.
-//        $this->_debug( "I found " . count( $dealLinks ) . " deal links." );
-//
-//
-//        foreach ( $dealLinks as $securityId => $dealLink ):
-//            try {
-//                $this->_debug( "Navigating to: " . $dealLink );
-//
-//                $this->page->navigate( $dealLink . '?OWASP_CSRFTOKEN=' . $this->csrf )
-//                           ->waitForNavigation( Page::NETWORK_IDLE,
-//                                                self::NETWORK_IDLE_MS_TO_WAIT );
-//                $html = $this->page->getHtml();
-//                $this->_debug( "I have the HTML code" );
-//
-//                $this->_screenshot( $securityId . '_main' );
-//                $this->_html( $securityId . '_main' );
-//
-//                $this->historyLinksBySecurityId[ $securityId ] = $this->getHistoryLinks( $html );
-//            } catch ( \Exception $exception ) {
-//                $this->_debug( "    EXCEPTION: " . $exception->getMessage() );
-//                $this->securityIdsMissingHistoryLinks[] = $securityId;
-//            }
-//
-//        endforeach;
-//
-//
-//        print_r( $this->historyLinksBySecurityId );
-//        print_r( $this->securityIdsMissingHistoryLinks );
-//        flush();
-//        die();
-//
-//
-//    }
-//
-//
-//    private function getHistoryLinks( string $html ): array {
-//        $historyLinks = [];
-//        $dom          = new \DOMDocument();
-//        @$dom->loadHTML( $html );
-//        $elements = $dom->getElementsByTagName( 'a' );
-//        foreach ( $elements as $element ):
-//            $class = $element->getAttribute( 'class' );
-//
-//            // This is the one we want!
-//            if ( 'periodic_report_2' == $class ):
-//                $historyLinks[] = self::BASE_URL . $element->getAttribute( 'href' );
-//            endif;
-//        endforeach;
-//        return $historyLinks;
-//    }
-//
-//    private function getDownloadLinksFromHistoryLink( string $historyLink, int $securityId ): array {
-//        $downloadLinks = [];
-//
-//        echo "Navigating to nhisoty link: " . $historyLink . "\n\n";
-//        flush();
-//
-//        try {
-//            $this->page->navigate( $historyLink . '&OWASP_CSRFTOKEN=' . $this->csrf )
-//                       ->waitForNavigation( Page::NETWORK_IDLE,
-//                                            self::NETWORK_IDLE_MS_TO_WAIT );
-//            $html = $this->page->getHtml();
-//            echo "Done navigating to history link\n";
-//            flush();
-//
-//            $this->_screenshot( $securityId . '_history' );
-//            $this->_html( $securityId . '_history' );
-//
-//            $downloadLinks = [];
-//            $dom           = new \DOMDocument();
-//            @$dom->loadHTML( $html );
-//            $elements = $dom->getElementsByTagName( 'a' );
-//
-//            foreach ( $elements as $element ):
-//                $href            = $element->getAttribute( 'href' );
-//                $downloadLinks[] = $href;
-//            endforeach;
-//            echo "\nDone getting download links.\n";
-//        } catch ( \Exception $exception ) {
-//            echo "\n\nEXCEPTION: \n\n";
-//            echo $exception->getMessage();
-//            echo "\n\n\n";
-//            flush();
-//
-//
-//        }
-//
-//
-//        return $downloadLinks;
-//    }
 
 
 }

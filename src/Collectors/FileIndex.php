@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\Objects\File;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
+use GuzzleHttp\Client;
 use HeadlessChromium\Page;
 
 /**
@@ -24,11 +25,17 @@ class FileIndex extends BaseData {
     const HREF    = 'href';
     const DEAL_ID = 'dealId';
 
+    const APPROVE_BUTTON_X = 70;
+    const APPROVE_BUTTON_Y = 700;
+
 //    /**
 //     * Ex: https://trustinvestorreporting.usbank.com/TIR/public/deals/periodicReportHistory/1234/2/5678?extension=CSV
 //     */
 //    const BASE_FILE_URL = RemitSpiderUSBank::BASE_URL . '/TIR/public/deals/periodicReportHistory/';
 
+    const BODY     = 'body';
+    const FILENAME = 'filename';
+    const HEADERS  = 'headers';
 
     /**
      * @param \HeadlessChromium\Page                 $Page
@@ -61,7 +68,8 @@ class FileIndex extends BaseData {
 
 
     /**
-     * @param string $historyLinkSuffix
+     * @param string                                     $historyLinkSuffix
+     * @param \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank $spider
      *
      * @return array
      * @throws \HeadlessChromium\Exception\CommunicationException
@@ -288,9 +296,69 @@ class FileIndex extends BaseData {
      */
     public function markFileAsDownloaded( RemitSpiderUSBank $spider, $ids ) {
         $spider->FileIndex->loadFromCache();
-        $dealId                                                                               = $ids[ 0 ];
-        $uniqueId                                                                             = $ids[ 1 ];
-        $spider->FileIndex->data[$dealId][$uniqueId][BaseData::CHILDREN_LAST_PULLED] = Carbon::now( $this->timezone );
+        $dealId                                                                            = $ids[ 0 ];
+        $uniqueId                                                                          = $ids[ 1 ];
+        $spider->FileIndex->data[ $dealId ][ $uniqueId ][ BaseData::CHILDREN_LAST_PULLED ] = Carbon::now( $this->timezone );
         $spider->FileIndex->_cacheData();
     }
+
+
+    public function getFileContents( RemitSpiderUSBank $spider, string $url ): array {
+        $goodLink = str_replace( 'madDisclaimer', 'disclaimer', $url );
+
+        $cookies     = $spider->USBankBrowser->page->getCookies();
+        $cookieArray = [];
+        /**
+         * @var \HeadlessChromium\Cookies\Cookie $cookie
+         */
+        foreach ( $cookies as $cookie ):
+            $cookieArray[ $cookie->getName() ] = $cookie->getValue();
+        endforeach;
+
+        $jar = \GuzzleHttp\Cookie\CookieJar::fromArray(
+            $cookieArray,
+            $cookie->getDomain()
+        );
+
+        $client  = new Client( [
+                                   'base_uri' => $goodLink,
+
+                               ] );
+        $options = [
+            'form_params'     => [
+                'OWASP_CSRFTOKEN' => $spider->Login->csrf,
+            ],
+            'query'           => [
+                'OWASP_CSRFTOKEN' => $spider->Login->csrf,
+            ],
+            'cookies'         => $jar,
+            'allow_redirects' => TRUE,
+        ];
+
+        $response = $client->post( '', $options );
+
+        return [ self::BODY     => $response->getBody(),
+                 self::FILENAME => $this->getFileNameFromHeaders( $response->getHeaders() ),
+                 self::HEADERS  => $response->getHeaders() ];
+    }
+
+
+    /**
+     *
+     * [Content-Disposition] => Array
+     * (
+     * [0] => attachment; filename="aca-abs-2003-1-intra-period-10-10-2021.zip"
+     * )
+     *
+     * @param array $headers
+     *
+     * @return string
+     */
+    protected function getFileNameFromHeaders( array $headers ): string {
+        $string = $headers[ 'Content-Disposition' ][ 0 ];
+        $string = str_replace( '"', '', $string );
+        $string = str_replace( 'attachment; filename=', '', $string );
+        return $string;
+    }
+
 }

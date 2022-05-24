@@ -23,7 +23,11 @@ class RemitSpiderUSBankTest extends TestCase {
                                                               self::$debug,
                                                               '',
                                                               '',
-                                                              '' );
+                                                              '',
+                                                              '',
+                                                              '',
+                                                              '',
+                                                              self::TIMEZONE );
     }
 
     public static function setUpBeforeClass(): void {
@@ -168,7 +172,6 @@ class RemitSpiderUSBankTest extends TestCase {
         $spider->Login->login();
 
 
-
         $deals = $spider->Deals->getAllByPortfolioId( $_ENV[ 'PORTFOLIO_ID' ],
                                                       $spider );
         $this->assertNotEmpty( $deals );
@@ -254,12 +257,32 @@ class RemitSpiderUSBankTest extends TestCase {
 
         $spider->FileIndex->deleteCache();
 
-        $fileIndex = $spider->FileIndex->getAllFromHistoryLink( $_ENV[ 'HISTORY_LINK' ],
-                                                                $spider );
+        /**
+         * @var array $fileIndexes
+         */
+        $fileIndexes = $spider->FileIndex->getAllFromHistoryLink( $_ENV[ 'HISTORY_LINK' ],
+                                                                  $spider );
 
-        print_r($fileIndex);
+        print_r( $fileIndex );
 
         $this->assertNotEmpty( $fileIndex );
+    }
+
+
+    /**
+     * @test
+     * @group download
+     */
+    public function testGetFileNeedingApproveButtonClicked() {
+        $spider = $this->_getSpider();
+        $spider->Login->login();
+        $spider->FileIndex->deleteCache();
+        $response = $spider->FileIndex->getFileContents( $spider, $_ENV[ 'FILE_LINK' ] );
+
+        file_put_contents($response[\DPRMC\RemitSpiderUSBank\Collectors\FileIndex::FILENAME],
+                          $response[\DPRMC\RemitSpiderUSBank\Collectors\FileIndex::BODY]);
+
+        $this->assertNotEmpty($response[\DPRMC\RemitSpiderUSBank\Collectors\FileIndex::BODY]);
     }
 
 }
