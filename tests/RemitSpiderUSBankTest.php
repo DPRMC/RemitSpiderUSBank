@@ -263,9 +263,9 @@ class RemitSpiderUSBankTest extends TestCase {
         $fileIndexes = $spider->FileIndex->getAllFromHistoryLink( $_ENV[ 'HISTORY_LINK' ],
                                                                   $spider );
 
-        print_r( $fileIndex );
+        print_r( $fileIndexes );
 
-        $this->assertNotEmpty( $fileIndex );
+        $this->assertNotEmpty( $fileIndexes );
     }
 
 
