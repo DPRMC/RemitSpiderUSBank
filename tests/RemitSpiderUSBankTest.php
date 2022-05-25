@@ -277,7 +277,7 @@ class RemitSpiderUSBankTest extends TestCase {
         $spider = $this->_getSpider();
         $spider->Login->login();
         $spider->FileIndex->deleteCache();
-        $response = $spider->FileIndex->getFileContents( $spider, $_ENV[ 'FILE_LINK' ] );
+        $response = $spider->FileIndex->getFileContentsViaPost( $spider, $_ENV[ 'FILE_LINK' ] );
 
         file_put_contents($response[\DPRMC\RemitSpiderUSBank\Collectors\FileIndex::FILENAME],
                           $response[\DPRMC\RemitSpiderUSBank\Collectors\FileIndex::BODY]);

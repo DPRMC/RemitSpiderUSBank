@@ -314,14 +314,14 @@ class FileIndex extends BaseData {
      * @throws \HeadlessChromium\Exception\OperationTimedOut
      * @throws \Exception
      */
-    public function getFileContents( RemitSpiderUSBank $spider, string $url ): array {
+    public function getFileContentsViaPost( RemitSpiderUSBank $spider, string $url ): array {
         $goodLink = str_replace( 'madDisclaimer', 'disclaimer', $url );
 
-        $cookies     = $spider->USBankBrowser->page->getCookies();
+        $cookies = $spider->USBankBrowser->page->getCookies();
 
         // User probably forgot to login first...
-        if(empty($cookies)):
-            throw new \Exception("Cookies were empty for the browser.");
+        if ( empty( $cookies ) ):
+            throw new \Exception( "Cookies were empty for the browser. You probably forgot to login." );
         endif;
 
 
@@ -338,10 +338,7 @@ class FileIndex extends BaseData {
             $cookie->getDomain()
         );
 
-        $client  = new Client( [
-                                   'base_uri' => $goodLink,
-
-                               ] );
+        $client  = new Client( [ 'base_uri' => $goodLink, ] );
         $options = [
             'form_params'     => [
                 'OWASP_CSRFTOKEN' => $spider->Login->csrf,
@@ -354,6 +351,47 @@ class FileIndex extends BaseData {
         ];
 
         $response = $client->post( '', $options );
+
+        return [ self::BODY     => $response->getBody(),
+                 self::FILENAME => $this->getFileNameFromHeaders( $response->getHeaders() ),
+                 self::HEADERS  => $response->getHeaders() ];
+    }
+
+
+    public function getFileContentsViaGet( RemitSpiderUSBank $spider, string $url ): array {
+        $goodLink = str_replace( 'madDisclaimer', 'disclaimer', $url );
+
+        $cookies = $spider->USBankBrowser->page->getCookies();
+
+        // User probably forgot to login first...
+        if ( empty( $cookies ) ):
+            throw new \Exception( "Cookies were empty for the browser. You probably forgot to login." );
+        endif;
+
+
+        $cookieArray = [];
+        /**
+         * @var \HeadlessChromium\Cookies\Cookie $cookie
+         */
+        foreach ( $cookies as $cookie ):
+            $cookieArray[ $cookie->getName() ] = $cookie->getValue();
+        endforeach;
+
+        $jar = \GuzzleHttp\Cookie\CookieJar::fromArray(
+            $cookieArray,
+            $cookie->getDomain()
+        );
+
+        $client  = new Client( [ 'base_uri' => $goodLink, ] );
+        $options = [
+            'query'           => [
+                'OWASP_CSRFTOKEN' => $spider->Login->csrf,
+            ],
+            'cookies'         => $jar,
+            'allow_redirects' => TRUE,
+        ];
+
+        $response = $client->get( '', $options );
 
         return [ self::BODY     => $response->getBody(),
                  self::FILENAME => $this->getFileNameFromHeaders( $response->getHeaders() ),
