@@ -57,4 +57,13 @@ abstract class BaseObject {
     }
 
 
+    public function everPulled(): bool {
+        if ( is_null( $this->childrenLastPulled ) ):
+            return FALSE;
+        endif;
+
+        return true;
+    }
+
+
 }
