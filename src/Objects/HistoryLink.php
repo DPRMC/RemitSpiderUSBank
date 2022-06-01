@@ -15,12 +15,8 @@ class HistoryLink extends BaseObject {
 
     public function __construct( array $data, string $timezone, string $pathToCache, string $portfolioId ) {
         parent::__construct( $data, $timezone, $pathToCache );
-
         $this->portfolioId = $portfolioId;
-
         $this->dealId = $data[ HistoryLinks::DEAL_ID ] ?? NULL;
-
-
     }
 
 
