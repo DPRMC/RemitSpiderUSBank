@@ -112,6 +112,7 @@ class RemitSpiderUSBankTest extends TestCase {
 
     /**
      * @test
+     * @group login
      */
     public function testLoginAndLogout() {
         $spider        = $this->_getSpider();

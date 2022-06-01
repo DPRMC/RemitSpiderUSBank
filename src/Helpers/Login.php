@@ -32,10 +32,10 @@ class Login {
 
 
     /**
-     * @param \HeadlessChromium\Page                    $Page
+     * @param \HeadlessChromium\Page                 $Page
      * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
-     * @param string                                    $user
-     * @param string                                    $pass
+     * @param string                                 $user
+     * @param string                                 $pass
      */
     public function __construct( Page   &$Page,
                                  Debug  &$Debug,
@@ -135,6 +135,18 @@ class Login {
                 return $input->getAttribute( 'value' );
             endif;
         endforeach;
+
+        // Secondary Search if first was unfruitful. I have been getting some errors.
+        // This regex search is looing for:
+        // xhr.setRequestHeader('OWASP_CSRFTOKEN', 'AAAA-BBBB-CCCC-DDDD-EEEE-FFFF-GGGG-HHHH');
+        //$pattern = "/'OWASP_CSRFTOKEN', '(.*)'\);/";
+        $pattern = '/([A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4})/';
+        $matches = [];
+        $success = preg_match( $pattern, $html, $matches );
+        if ( 1 === $success ):
+            return $matches[ 1 ];
+        endif;
+
         throw new \Exception( "Unable to find the CSRF value in the HTML." );
     }
 
