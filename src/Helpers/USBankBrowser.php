@@ -17,7 +17,7 @@ class USBankBrowser {
     protected ProcessAwareBrowser $browser;
 
     public Page $page;
-    const NETWORK_IDLE_MS_TO_WAIT = 4000;
+    const NETWORK_IDLE_MS_TO_WAIT    = 4000;
     const BROWSER_WINDOW_SIZE_WIDTH  = 1000;
     const BROWSER_WINDOW_SIZE_HEIGHT = 5000;
     const BROWSER_ENABLE_IMAGES      = TRUE;
@@ -64,4 +64,14 @@ class USBankBrowser {
         $this->page->setCookies( $this->cookies );
     }
 
+
+    public static function isForbidden( string $html ): bool {
+        $pattern = '/403 - Forbidden: Access is denied/';
+        $matches = [];
+        $success = preg_match( $pattern, $html, $matches );
+        if ( 1 !== $success ):
+            return FALSE;
+        endif;
+        return TRUE;
+    }
 }

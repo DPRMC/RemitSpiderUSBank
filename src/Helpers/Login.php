@@ -61,6 +61,7 @@ class Login {
      * @throws \HeadlessChromium\Exception\NoResponseAvailable
      * @throws \HeadlessChromium\Exception\OperationTimedOut
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
+     * @throws \Exception
      */
     public function login(): string {
         $this->Debug->_debug( "Navigating to login screen." );
@@ -86,12 +87,16 @@ class Login {
         $this->Debug->_screenshot( 'am_i_logged_in' );
 
         $this->Page->navigate( self::URL_INTERFACE )->waitForNavigation( Page::NETWORK_IDLE, 5000 );
-
         $this->Debug->_screenshot( 'should_be_the_main_interface' );
-
         $this->cookies = $this->Page->getAllCookies();
         $postLoginHTML = $this->Page->getHtml();
-        $this->csrf    = $this->getCSRF( $postLoginHTML );
+
+        if ( USBankBrowser::isForbidden( $postLoginHTML ) ):
+            throw new \Exception( "US Bank returned Forbidden: Access is denied", 403 );
+        endif;
+
+
+        $this->csrf = $this->getCSRF( $postLoginHTML );
         $this->Debug->_html( "post_login" );
         $this->Debug->_debug( "CSRF saved to Login object." );
         return $postLoginHTML;
