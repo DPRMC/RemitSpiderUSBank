@@ -65,7 +65,7 @@ class HistoryLinks extends BaseData {
                                  string $pathToHistoryLinks,
                                  string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE ) {
 
-        parent::__construct($Page,$Debug,$pathToHistoryLinks, $timezone);
+        parent::__construct( $Page, $Debug, $pathToHistoryLinks, $timezone );
 
         $this->pathToHistoryLinks = $pathToHistoryLinks;
     }
@@ -115,7 +115,7 @@ class HistoryLinks extends BaseData {
      */
     public function getAllByDeal( string $dealLinkSuffix ): array {
         try {
-            $this->Debug->_debug( "Getting all History Links for a Deal Link Suffix." );
+            $this->Debug->_debug( "Getting all History Links for a Deal Link Suffix: " . $dealLinkSuffix );
             $this->_setDealIdAndName( $dealLinkSuffix );
 
             $this->loadFromCache();
@@ -148,6 +148,9 @@ class HistoryLinks extends BaseData {
             endforeach;
             $this->Debug->_debug( "I found " . count( $newHistoryLinks ) . " History Links." );
             $this->stopTime = Carbon::now( $this->timezone );
+
+            dump( $newHistoryLinks );
+
             $this->_setDataToCache( $newHistoryLinks );
 
             $this->_cacheData();
@@ -177,7 +180,17 @@ class HistoryLinks extends BaseData {
         // Write all the new history links to the array.
         foreach ( $data as $historyLink ):
             $myKey = $this->_getMyUniqueId( $historyLink );
-            if ( FALSE == array_key_exists( $myKey, $this->historyLinks[ $this->dealId ] ) ):
+            if (
+                FALSE == array_key_exists( $myKey, $this->historyLinks[ $this->dealId ] )
+
+            ):
+                $this->historyLinks[ $this->dealId ][ $myKey ] = [
+                    self::DEAL_ID                  => $this->dealId,
+                    self::LINK                     => $historyLink,
+                    BaseData::ADDED_AT             => Carbon::now( $this->timezone ),
+                    BaseData::CHILDREN_LAST_PULLED => NULL,
+                ];
+            elseif ( sizeof( $this->historyLinks[ $this->dealId ][ $myKey ] ) < 4 ):
                 $this->historyLinks[ $this->dealId ][ $myKey ] = [
                     self::DEAL_ID                  => $this->dealId,
                     self::LINK                     => $historyLink,
@@ -223,14 +236,28 @@ class HistoryLinks extends BaseData {
 
     public function getObjects(): array {
         $objects = [];
-        foreach ( $this->data as $portfolioId => $historyLinks ):
+
+        foreach ( $this->data as $dealId => $historyLinks ):
+
+            if ( empty( $historyLinks ) ):
+                continue;
+            endif;
+
             foreach ( $historyLinks as $uniqueId => $data ):
-                $objects[ $portfolioId ][ $uniqueId ] = new HistoryLink( $data,
-                                                                         $this->timezone,
-                                                                         $this->pathToCache,
-                                                                         $portfolioId );
+                $objects[ $dealId ][ $uniqueId ] = new HistoryLink( $data,
+                                                                    $this->timezone,
+                                                                    $this->pathToCache );
             endforeach;
         endforeach;
+
+//        foreach ( $this->data as $portfolioId => $historyLinks ):
+//            foreach ( $historyLinks as $uniqueId => $data ):
+//                $objects[ $portfolioId ][ $uniqueId ] = new HistoryLink( $data,
+//                                                                         $this->timezone,
+//                                                                         $this->pathToCache,
+//                                                                         $portfolioId );
+//            endforeach;
+//        endforeach;
         return $objects;
     }
 
@@ -242,9 +269,9 @@ class HistoryLinks extends BaseData {
      * @return void
      * @throws \Exception
      */
-    public function notifyParentPullWasSuccessful( RemitSpiderUSBank $spider, $parentId): void {
+    public function notifyParentPullWasSuccessful( RemitSpiderUSBank $spider, $parentId ): void {
         $spider->Deals->loadFromCache();
-        $spider->Deals->data[$parentId][BaseData::CHILDREN_LAST_PULLED] = Carbon::now($this->timezone);
+        $spider->Deals->data[ $parentId ][ BaseData::CHILDREN_LAST_PULLED ] = Carbon::now( $this->timezone );
         $spider->Deals->_cacheData();
     }
 }
