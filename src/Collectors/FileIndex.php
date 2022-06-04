@@ -302,6 +302,7 @@ class FileIndex extends BaseData {
         $dealId                                                                            = $ids[ 0 ];
         $uniqueId                                                                          = $ids[ 1 ];
         $spider->FileIndex->data[ $dealId ][ $uniqueId ][ BaseData::CHILDREN_LAST_PULLED ] = Carbon::now( $this->timezone );
+        $this->stopTime = Carbon::now($this->timezone);
         $spider->FileIndex->_cacheData();
     }
 
