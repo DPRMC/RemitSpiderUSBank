@@ -4,6 +4,7 @@ namespace DPRMC\RemitSpiderUSBank\Objects;
 
 
 use Carbon\Carbon;
+use DPRMC\RemitSpiderUSBank\Collectors\BaseData;
 use DPRMC\RemitSpiderUSBank\Collectors\FileIndex;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 
@@ -25,7 +26,7 @@ class File extends BaseObject {
     }
 
     public function getType(): string {
-        return $this->_data[ 'type' ];
+        return $this->_data[ FileIndex::TYPE ];
     }
 
     public function getCleanType(): string {
@@ -36,11 +37,11 @@ class File extends BaseObject {
     }
 
     public function getDate(): Carbon {
-        return Carbon::parse( $this->_data[ 'date' ], $this->getTimezone() );
+        return Carbon::parse( $this->_data[ FileIndex::DATE ], $this->getTimezone() );
     }
 
     public function getName(): string {
-        return $this->_data[ 'name' ];
+        return $this->_data[ FileIndex::NAME ];
     }
 
     public function getCleanName(): string {
@@ -62,20 +63,20 @@ class File extends BaseObject {
     }
 
     public function getHref(): string {
-        return $this->_data[ 'href' ];
+        return $this->_data[ FileIndex::HREF ];
     }
 
 
     public function getLink(): string {
-        return RemitSpiderUSBank::BASE_URL . $this->_data[ 'href' ];
+        return RemitSpiderUSBank::BASE_URL . $this->_data[ FileIndex::HREF ];
     }
 
     public function getChildrenLastPulled(): string {
-        return Carbon::parse( $this->_data[ 'childrenLastPulled' ], $this->getTimezone() );
+        return Carbon::parse( $this->_data[ BaseData::CHILDREN_LAST_PULLED ], $this->getTimezone() );
     }
 
     public function getAddedAt(): string {
-        return Carbon::parse( $this->_data[ 'addedAt' ], $this->getTimezone() );
+        return Carbon::parse( $this->_data[ BaseData::ADDED_AT ], $this->getTimezone() );
     }
 
 

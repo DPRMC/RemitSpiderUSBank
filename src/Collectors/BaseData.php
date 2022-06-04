@@ -96,12 +96,12 @@ abstract class BaseData {
             return;
         endif;
 
-        $stringCache                = file_get_contents( $this->pathToCache );
-        $arrayCache                 = json_decode( $stringCache, TRUE );
-        $this->data                 = $arrayCache[ self::DATA ] ?? [] ;
-        $this->startTime            = isset($arrayCache[ self::META ][ self::START_TIME ]) ? unserialize( $arrayCache[ self::META ][ self::START_TIME ] ) : null;
-        $this->stopTime            = isset($arrayCache[ self::META ][ self::STOP_TIME ]) ? unserialize( $arrayCache[ self::META ][ self::STOP_TIME ] ) : null;
-        $this->lastRunStatus        = isset($arrayCache[ self::META ][ self::LAST_RUN_STATUS ]) ? $arrayCache[ self::META ][ self::LAST_RUN_STATUS ] : 'not set';
+        $stringCache         = file_get_contents( $this->pathToCache );
+        $arrayCache          = json_decode( $stringCache, TRUE );
+        $this->data          = $arrayCache[ self::DATA ] ?? [];
+        $this->startTime     = isset( $arrayCache[ self::META ][ self::START_TIME ] ) ? unserialize( $arrayCache[ self::META ][ self::START_TIME ] ) : NULL;
+        $this->stopTime      = isset( $arrayCache[ self::META ][ self::STOP_TIME ] ) ? unserialize( $arrayCache[ self::META ][ self::STOP_TIME ] ) : NULL;
+        $this->lastRunStatus = isset( $arrayCache[ self::META ][ self::LAST_RUN_STATUS ] ) ? $arrayCache[ self::META ][ self::LAST_RUN_STATUS ] : 'not set';
     }
 
 
@@ -127,9 +127,9 @@ abstract class BaseData {
 
         $dataToWrite = [
             self::META => [
-                self::START_TIME           => serialize( $this->startTime ),
-                self::STOP_TIME            => serialize( $this->stopTime ),
-                self::LAST_RUN_STATUS      => 'ok',
+                self::START_TIME      => serialize( $this->startTime ),
+                self::STOP_TIME       => serialize( $this->stopTime ),
+                self::LAST_RUN_STATUS => 'ok',
             ],
             self::DATA => $this->data,
         ];
@@ -163,6 +163,8 @@ abstract class BaseData {
             self::STOP_TIME       => serialize( $this->stopTime ),
             self::LAST_RUN_STATUS => $exception->getMessage(),
         ];
+
+        $arrayCache[ self::DATA ] = $this->data;
 
         $writeSuccess = file_put_contents( $this->pathToCache, json_encode( $arrayCache ) );
         if ( FALSE === $writeSuccess ):

@@ -37,6 +37,8 @@ class FileIndex extends BaseData {
     const FILENAME = 'filename';
     const HEADERS  = 'headers';
 
+    const HTTP_RESPONSE_CODE = 'httpResponseCode';
+
     /**
      * @param \HeadlessChromium\Page                 $Page
      * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
@@ -287,6 +289,7 @@ class FileIndex extends BaseData {
         $spider->HistoryLinks->_cacheData();
     }
 
+
     /**
      * @param \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank $spider
      * @param                                            $ids [dealId, this->getUniqueId]
@@ -305,6 +308,26 @@ class FileIndex extends BaseData {
 
     /**
      * @param \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank $spider
+     * @param                                            $ids
+     *
+     * @return void
+     * @throws \Exception
+     */
+    public function markFileAs404( RemitSpiderUSBank $spider, $ids ) {
+        $spider->FileIndex->loadFromCache();
+        $dealId                                                                            = $ids[ 0 ];
+        $uniqueId                                                                          = $ids[ 1 ];
+        $spider->FileIndex->data[ $dealId ][ $uniqueId ][ BaseData::CHILDREN_LAST_PULLED ] = NULL;
+        $spider->FileIndex->data[ $dealId ][ $uniqueId ][ FileIndex::HTTP_RESPONSE_CODE ]  = 404;
+
+        $this->stopTime = Carbon::now( $this->timezone );
+        $exception      = new \Exception( "Tried to retrieve the file via GET, and received a 404.", 404 );
+        $spider->FileIndex->_cacheFailure( $exception );
+    }
+
+
+    /**
+     * @param \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank $spider
      * @param string                                     $url
      *
      * @return array
@@ -315,7 +338,8 @@ class FileIndex extends BaseData {
      * @throws \Exception
      */
     public function getFileContentsViaPost( RemitSpiderUSBank $spider, string $url ): array {
-        $goodLink = str_replace( 'madDisclaimer', 'disclaimer', $url );
+        $this->startTime = Carbon::now( $this->timezone );
+        $goodLink        = str_replace( 'madDisclaimer', 'disclaimer', $url );
 
         $cookies = $spider->USBankBrowser->page->getCookies();
 
@@ -358,8 +382,20 @@ class FileIndex extends BaseData {
     }
 
 
+    /**
+     * @param \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank $spider
+     * @param string                                     $url
+     *
+     * @return array
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \HeadlessChromium\Exception\CommunicationException
+     * @throws \HeadlessChromium\Exception\NoResponseAvailable
+     * @throws \HeadlessChromium\Exception\OperationTimedOut
+     */
     public function getFileContentsViaGet( RemitSpiderUSBank $spider, string $url ): array {
-        $goodLink = str_replace( 'madDisclaimer', 'disclaimer', $url );
+
+        $this->startTime = Carbon::now( $this->timezone );
+        $goodLink        = str_replace( 'madDisclaimer', 'disclaimer', $url );
 
         $cookies = $spider->USBankBrowser->page->getCookies();
 

@@ -278,12 +278,39 @@ class RemitSpiderUSBankTest extends TestCase {
         $spider = $this->_getSpider();
         $spider->Login->login();
         $spider->FileIndex->deleteCache();
-        $response = $spider->FileIndex->getFileContentsViaPost( $spider, $_ENV[ 'FILE_LINK' ] );
+        try {
+            $response = $spider->FileIndex->getFileContentsViaPost( $spider, $_ENV[ 'FILE_LINK' ] );
+        } catch (\Exception $exception) {
+            $response = $spider->FileIndex->getFileContentsViaGet( $spider, $_ENV[ 'FILE_LINK' ] );
+        }
+
 
         file_put_contents($response[\DPRMC\RemitSpiderUSBank\Collectors\FileIndex::FILENAME],
                           $response[\DPRMC\RemitSpiderUSBank\Collectors\FileIndex::BODY]);
 
         $this->assertNotEmpty($response[\DPRMC\RemitSpiderUSBank\Collectors\FileIndex::BODY]);
+
+        $spider->FileIndex->markFileAsDownloaded($spider, ['1','2']);
+    }
+
+
+    /**
+     * @test
+     * @group 404
+     */
+    public function testGetFileThatDoesNotExistShouldCache404() {
+        $spider = $this->_getSpider();
+        $spider->Login->login();
+        $spider->FileIndex->deleteCache();
+
+        try {
+            $response = $spider->FileIndex->getFileContentsViaGet( $spider, $_ENV[ 'FILE_LINK_404' ] );
+        } catch (Exception $exception) {
+            $spider->FileIndex->markFileAs404($spider, ['1','2']);
+        }
+
+
+
     }
 
 }
