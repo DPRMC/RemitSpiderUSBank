@@ -94,7 +94,7 @@ class Deals extends BaseData {
                        ->waitForNavigation( Page::NETWORK_IDLE,
                                             USBankBrowser::NETWORK_IDLE_MS_TO_WAIT );
 
-            $this->Debug->_screenshot( 'portfolios_page' . $usBankPortfolioId );
+            $this->Debug->_screenshot( 'portfolios_page_' . $usBankPortfolioId );
             $this->Debug->_html( 'portfolios_page_' . $usBankPortfolioId );
 
             // Ex:
@@ -104,7 +104,7 @@ class Deals extends BaseData {
             $this->Debug->_debug( "Navigating to Deal Links page at: " . $linkToAllDealsInPortfolio );
 
             $clip = new Clip( 0, 0, $x_all, $y_all );
-            $this->Debug->_screenshot( 'test', $clip );
+            $this->Debug->_screenshot( 'clickingOnAll', $clip );
 
             $this->Page->mouse()->move( $x_all, $y_all )->click();
 
@@ -116,7 +116,7 @@ class Deals extends BaseData {
             Errors::is404( self::URL_LIST_OF_DEALS . $usBankPortfolioId . '/0', $htmlWithListOfLinksToDeals );
             $this->Debug->_debug( "Got the HTML that should contain deal links." );
 
-            $this->Debug->_screenshot( 'all_deals_for_portfolioid_' . $usBankPortfolioId );
+            $this->Debug->_screenshot( 'all_deals_for_portfolioid_' . $usBankPortfolioId, new Clip( 0, 0, 1000, 7000 ) );
             $this->Debug->_html( 'all_deals_for_portfolioid_' . $usBankPortfolioId );
             $this->dealLinkSuffixes = $this->_parseDealLinkSuffixesFromHTML( $htmlWithListOfLinksToDeals );
 
