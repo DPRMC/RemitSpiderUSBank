@@ -135,7 +135,8 @@ class FileIndex extends BaseData {
                     //$this->Debug->_debug("reportDateNode is a : " . get_class($reportDateNode));
                     //echo $reportDateNode->nodeValue;
 
-                    $stringReportDate = isset( $reportDateNode->nodeValue ) ? trim( (string)$reportDateNode->nodeValue ) : NULL;
+                    $stringReportDate =
+                        isset( $reportDateNode->nodeValue ) ? trim( (string)$reportDateNode->nodeValue ) : NULL;
                     if ( $stringReportDate ):
                         $reportDate = Carbon::parse( trim( (string)$reportDateNode->nodeValue ), 'America/New_York' );
                         $this->Debug->_debug( "reportDate carbon : " . $reportDate->toDateString() );
@@ -285,7 +286,8 @@ class FileIndex extends BaseData {
         $spider->HistoryLinks->loadFromCache();
         $dealId                                                                               = $parentId[ 0 ];
         $uniqueId                                                                             = $parentId[ 1 ];
-        $spider->HistoryLinks->data[ $dealId ][ $uniqueId ][ BaseData::CHILDREN_LAST_PULLED ] = Carbon::now( $this->timezone );
+        $spider->HistoryLinks->data[ $dealId ][ $uniqueId ][ BaseData::CHILDREN_LAST_PULLED ] =
+            Carbon::now( $this->timezone );
         $spider->HistoryLinks->_cacheData();
     }
 
@@ -299,10 +301,19 @@ class FileIndex extends BaseData {
      */
     public function markFileAsDownloaded( RemitSpiderUSBank $spider, $ids ) {
         $spider->FileIndex->loadFromCache();
-        $dealId                                                                            = $ids[ 0 ];
-        $uniqueId                                                                          = $ids[ 1 ];
-        $spider->FileIndex->data[ $dealId ][ $uniqueId ][ BaseData::CHILDREN_LAST_PULLED ] = Carbon::now( $this->timezone );
-        $this->stopTime = Carbon::now($this->timezone);
+        $dealId   = $ids[ 0 ];
+        $uniqueId = $ids[ 1 ];
+
+        // I believe this was writing new rows into the cache, when a previous file index for a deal id didn't already exist.
+        // Not entirely sure how that could happen. Probably in debugging.
+        if ( !isset( $spider->FileIndex->data[ $dealId ][ $uniqueId ] ) ):
+            throw new \Exception( "The FileIndex record for Deal ID: " . $dealId . " does not exist. So how did I try to download a file without a file index?" );
+        endif;
+
+        $spider->FileIndex->data[ $dealId ][ $uniqueId ][ BaseData::CHILDREN_LAST_PULLED ] =
+            Carbon::now( $this->timezone );
+        $this->stopTime                                                                    =
+            Carbon::now( $this->timezone );
         $spider->FileIndex->_cacheData();
     }
 
