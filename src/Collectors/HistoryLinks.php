@@ -33,11 +33,18 @@ class HistoryLinks extends BaseData {
     protected string $dealName;
 
     /**
-     * This exists in this->data as well, this propery is available for clarity.
+     * This exists in this->data as well, this property is available for clarity.
      *
      * @var array
      */
     public array $historyLinks;
+
+    /**
+     * Keyed by Deal ID, values are Carbon objects representing the most recent report date per Deal.
+     *
+     * @var array
+     */
+    public array $mostRecentReportDates = [];
 
     /**
      *
@@ -154,7 +161,8 @@ class HistoryLinks extends BaseData {
             $this->Debug->_debug( "I found " . count( $newHistoryLinks ) . " History Links." );
             $this->stopTime = Carbon::now( $this->timezone );
 
-            dump( $newHistoryLinks );
+            $mostRecentReportDate = $this->_getMostRecentReportDate($dom);
+            $this->mostRecentReportDates[$this->dealId] = $mostRecentReportDate;
 
             $this->_setDataToCache( $newHistoryLinks );
 
