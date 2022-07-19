@@ -123,6 +123,9 @@ class HistoryLinks extends BaseData {
 
             $newHistoryLinks = [];
 
+            // NEW
+            $newHistoryLinkData = [];
+
             // Example URL:
             // https://trustinvestorreporting.usbank.com/TIR/public/deals/detail/1234/abc-defg-2001-1
             $this->Page->navigate( self::BASE_DEAL_URL . $dealLinkSuffix )
@@ -136,6 +139,8 @@ class HistoryLinks extends BaseData {
             $dom = new \DOMDocument();
             @$dom->loadHTML( $html );
             $elements = $dom->getElementsByTagName( 'a' );
+
+
             foreach ( $elements as $element ):
                 $class = $element->getAttribute( 'class' );
 
@@ -273,5 +278,37 @@ class HistoryLinks extends BaseData {
         $spider->Deals->loadFromCache();
         $spider->Deals->data[ $parentId ][ BaseData::CHILDREN_LAST_PULLED ] = Carbon::now( $this->timezone );
         $spider->Deals->_cacheData();
+    }
+
+
+    /**
+     * I am going to save this in the Deal record, so I can easily display Deals that have new data added to them.
+     * @param $dom
+     *
+     * @return \Carbon\Carbon|null
+     */
+    protected function _getMostRecentReportDate( $dom ): ?Carbon {
+        $mostRecentDate = Carbon::today()->addYear();
+        $xpath          = new \DOMXPath( $dom );
+        $query          = "//table//tbody//tr//td[@width='20%']/text()";
+
+        $dateElements = $xpath->query( $query );
+        /**
+         * @var \DOMNode $element
+         */
+        foreach ( $dateElements as $element ):
+            $stringDate = trim( $element->nodeValue );
+
+            $carbonDate = Carbon::parse( $stringDate );
+            if ( $carbonDate->lte( $mostRecentDate ) ):
+                $mostRecentDate = $carbonDate;
+            endif;
+        endforeach;
+
+        if ( $mostRecentDate->isFuture() ):
+            return NULL;
+        endif;
+
+        return $mostRecentDate;
     }
 }
