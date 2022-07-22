@@ -27,6 +27,7 @@ class RemitSpiderUSBankTest extends TestCase {
                                                               '',
                                                               '',
                                                               '',
+                                                              '/Users/michaeldrennen/Desktop/files',
                                                               self::TIMEZONE );
     }
 
@@ -308,9 +309,26 @@ class RemitSpiderUSBankTest extends TestCase {
         } catch (Exception $exception) {
             $spider->FileIndex->markFileAs404($spider, ['1','2']);
         }
+    }
 
 
+
+
+
+
+
+    /**
+     * @test
+     * @group pi
+     */
+    public function testGetPrincipalAndInterestFactors() {
+        $spider = $this->_getSpider();
+        $spider->Login->login();
+
+        $path = '';
+        $spider->PrincipalAndInterestFactors->downloadFilesByDealSuffix( $_ENV[ 'DEAL_SUFFIX' ], $path );
 
     }
+
 
 }
