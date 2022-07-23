@@ -153,10 +153,7 @@ class PrincipalAndInterestFactors {
                     $filePathToTestFor = $filePath . DIRECTORY_SEPARATOR . $filenameParts[0];
 
                     if( file_exists($filePathToTestFor)):
-                        echo "\nFile exists, so skip: " . $filePathToTestFor;
                         continue;
-                    else:
-                        echo "\nFile does not exist, so get it: " . $filePathToTestFor;
                     endif;
 
                     $element->click(); // New
