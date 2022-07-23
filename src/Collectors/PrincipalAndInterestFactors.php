@@ -146,22 +146,18 @@ class PrincipalAndInterestFactors {
                     $dateFromHref = $this->_getDateFromHref( $href );
                     $dateString   = $dateFromHref->format( 'Y-m-d' );
                     $this->Debug->_debug( "clicking on (" . $dateString . "): " . $href  );
-                    //if ( str_contains( $href, 'downloadcomponentfactorsummaries' ) ):
-                    //    $dateFromHref               = $this->_getDateFromHref( $href );
-                    //    $dateString                 = $dateFromHref->format( 'Y-m-d' );
-                    //    $factorLinks[ $dateString ] = $href;
-                    //endif;
-                    //$href                       = $element->getAttribute( 'href' );
                     $dateFromHref = $this->_getDateFromHref( $href );
                     $dateString   = $dateFromHref->format( 'Y-m-d' );
-                    //$factorLinks[ $dateString ] = $href;
+                    $factorLinks[ $dateString ] = $href;
+                    $filenameParts = explode('?', basename($href));
+                    $filePathToTestFor = $pathToDownloadedFiles . DIRECTORY_SEPARATOR . $filenameParts[0];
+
+                    if( file_exists($filePathToTestFor)):
+                        continue;
+                    endif;
+
                     $element->click(); // New
                     sleep( 1 );
-                    //$this->Debug->_screenshot( 'should_see_table_' . urlencode( $dealLinkSuffix ) . '_' . $dateString );
-                    //$this->Debug->_html( 'should_see_tablefiles_' . urlencode( $dealLinkSuffix ) . '_' . $dateString );
-                    //$closeButton = $this->Page->dom()->querySelector( '.ui-dialog-titlebar-close.ui-corner-all' );
-                    //$closeButton->click();
-                    //sleep( 1 );
                 } catch ( \Exception $exception ) {
                     $this->Debug->_debug( "EXCEPTION: " . $exception->getMessage() );
                 }
