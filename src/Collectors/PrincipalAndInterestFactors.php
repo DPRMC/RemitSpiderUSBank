@@ -88,7 +88,7 @@ class PrincipalAndInterestFactors {
     public function downloadFilesByDealSuffix( string $dealLinkSuffix, string $pathToDownloadedFiles ): array {
         $this->startTime = Carbon::now( $this->timezone );
         $dealId          = $this->_getDealIdFromDealLinkSuffix( $dealLinkSuffix );
-        $filePath        = $pathToDownloadedFiles . DIRECTORY_SEPARATOR . $dealId;
+        $filePath        = $pathToDownloadedFiles . $dealId;
         $this->Page->setDownloadPath( $filePath );
         $this->Debug->_debug( "Download path set to: " . $filePath );
 
@@ -150,10 +150,13 @@ class PrincipalAndInterestFactors {
                     $dateString   = $dateFromHref->format( 'Y-m-d' );
                     $factorLinks[ $dateString ] = $href;
                     $filenameParts = explode('?', basename($href));
-                    $filePathToTestFor = $pathToDownloadedFiles . DIRECTORY_SEPARATOR . $filenameParts[0];
+                    $filePathToTestFor = $filePath . DIRECTORY_SEPARATOR . $filenameParts[0];
 
                     if( file_exists($filePathToTestFor)):
+                        echo "\nFile exists, so skip: " . $filePathToTestFor;
                         continue;
+                    else:
+                        echo "\nFile does not exist, so get it: " . $filePathToTestFor;
                     endif;
 
                     $element->click(); // New
