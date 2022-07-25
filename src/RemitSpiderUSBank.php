@@ -4,6 +4,7 @@ namespace DPRMC\RemitSpiderUSBank;
 
 use DPRMC\RemitSpiderUSBank\Collectors\Deals;
 use DPRMC\RemitSpiderUSBank\Collectors\FileIndex;
+use DPRMC\RemitSpiderUSBank\Collectors\PeriodicReportsSecured;
 use DPRMC\RemitSpiderUSBank\Collectors\Portfolios;
 use DPRMC\RemitSpiderUSBank\Collectors\PrincipalAndInterestFactors;
 use DPRMC\RemitSpiderUSBank\Collectors\USBankBrowser;
@@ -28,6 +29,7 @@ class RemitSpiderUSBank {
     public HistoryLinks                $HistoryLinks;
     public FileIndex                   $FileIndex;
     public PrincipalAndInterestFactors $PrincipalAndInterestFactors;
+    public PeriodicReportsSecured $PeriodicReportsSecured;
 
 
     protected bool   $debug;
@@ -38,6 +40,7 @@ class RemitSpiderUSBank {
     protected string $pathToHistoryLinks;
     protected string $pathToFileIndex;
     protected string $pathToPrincipalAndInterestFactors;
+    protected string $pathToPeriodicReportsSecured;
     protected string $timezone;
 
     protected array $portfolioIds;
@@ -52,6 +55,7 @@ class RemitSpiderUSBank {
     const  HISTORY_LINKS_FILENAME                  = '_history_links.json';
     const  FILE_INDEX_FILENAME                     = '_file_index.json';
     const  PRINCIPAL_AND_INTEREST_FACTORS_FILENAME = '_principal_and_interest_factors.json';
+    const  PERIODIC_REPORTS_SECURED = '_periodic_reports_secured.json';
 
     const DEFAULT_TIMEZONE = 'America/New_York';
 
@@ -79,6 +83,7 @@ class RemitSpiderUSBank {
                                  string $pathToFileIndex = '',
                                  string $pathToFileDownloads = '',
                                  string $pathToPrincipalAndInterestFactors = '',
+                                 string $pathToPeriodicReportsSecured = '',
                                  string $timezone = self::DEFAULT_TIMEZONE
     ) {
 
@@ -90,6 +95,8 @@ class RemitSpiderUSBank {
         $this->pathToFileIndex                   = $pathToFileIndex . self::FILE_INDEX_FILENAME;
         $this->pathToPrincipalAndInterestFactors =
             $pathToPrincipalAndInterestFactors . self::PRINCIPAL_AND_INTEREST_FACTORS_FILENAME;
+        $this->pathToPeriodicReportsSecured=
+            $pathToPrincipalAndInterestFactors . self::PERIODIC_REPORTS_SECURED;
 
         $this->timezone = $timezone;
 
@@ -130,6 +137,10 @@ class RemitSpiderUSBank {
         $this->PrincipalAndInterestFactors = new PrincipalAndInterestFactors( $this->USBankBrowser->page,
                                                                               $this->Debug,
                                                                               $this->pathToPrincipalAndInterestFactors,
+                                                                              $this->timezone );
+        $this->PeriodicReportsSecured = new PeriodicReportsSecured( $this->USBankBrowser->page,
+                                                                              $this->Debug,
+                                                                              $this->pathToPeriodicReportsSecured,
                                                                               $this->timezone );
     }
 
