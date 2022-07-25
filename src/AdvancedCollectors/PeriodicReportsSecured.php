@@ -1,10 +1,10 @@
 <?php
 
-namespace DPRMC\RemitSpiderUSBank\Collectors;
+namespace DPRMC\RemitSpiderUSBank\AdvancedCollectors;
 
 
 use Carbon\Carbon;
-use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionUnableToFindPrincipalAndInterestTab;
+use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionUnableToTabByText;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Page;
@@ -12,7 +12,7 @@ use HeadlessChromium\Page;
 /**
  *
  */
-class PrincipalAndInterestFactors {
+class PeriodicReportsSecured {
     protected Page   $Page;
     protected Debug  $Debug;
     protected string $timezone;
@@ -24,6 +24,10 @@ class PrincipalAndInterestFactors {
     const LINK    = 'link';       // The history link.
     const DEAL_ID = 'dealId';
 
+
+    const TAB_TEXT = 'Periodic Reports - Secured';
+
+
     /**
      *
      */
@@ -34,7 +38,7 @@ class PrincipalAndInterestFactors {
                                  string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE ) {
         $this->Page  = $Page;
         $this->Debug = $Debug;
-        $this->timezone          = $timezone;
+        $this->timezone    = $timezone;
     }
 
 
@@ -46,9 +50,9 @@ class PrincipalAndInterestFactors {
      */
     public function getAllByDeal( string $dealLinkSuffix, string $pathToDownloadedFiles ): void {
         try {
-            $this->Debug->_debug( "Getting all Principal and Interest Factors for a Deal Link Suffix: " . $dealLinkSuffix );
+            $this->Debug->_debug( "Getting all Periodic Reports - Secured for a Deal Link Suffix: " . $dealLinkSuffix );
 
-            $this->Debug->_debug( "About to call _getDealLinks" );
+            $this->Debug->_debug( "About to call downloadFilesByDealSuffix" );
 
             $factorLinks = $this->downloadFilesByDealSuffix( $dealLinkSuffix, $pathToDownloadedFiles );
             $this->Debug->_debug( "Done calling _getDealLinks" );
@@ -74,20 +78,6 @@ class PrincipalAndInterestFactors {
     }
 
 
-    /**
-     * @param string $dealLinkSuffix
-     *
-     * @return array
-     * @throws \HeadlessChromium\Exception\CommunicationException
-     * @throws \HeadlessChromium\Exception\CommunicationException\CannotReadResponse
-     * @throws \HeadlessChromium\Exception\CommunicationException\InvalidResponse
-     * @throws \HeadlessChromium\Exception\CommunicationException\ResponseHasError
-     * @throws \HeadlessChromium\Exception\FilesystemException
-     * @throws \HeadlessChromium\Exception\NavigationExpired
-     * @throws \HeadlessChromium\Exception\NoResponseAvailable
-     * @throws \HeadlessChromium\Exception\OperationTimedOut
-     * @throws \HeadlessChromium\Exception\ScreenshotFailed
-     */
     public function downloadFilesByDealSuffix( string $dealLinkSuffix, string $pathToDownloadedFiles ): array {
         $this->startTime = Carbon::now( $this->timezone );
         $dealId          = $this->_getDealIdFromDealLinkSuffix( $dealLinkSuffix );
@@ -106,67 +96,58 @@ class PrincipalAndInterestFactors {
 
 
             // Click the P&I Tab
-            $elements = $this->Page->dom()->search( "//a[contains(text(),'P & I')]" );
+            $elements = $this->Page->dom()->search( "//a[contains(text(),'" . self::TAB_TEXT . "')]" );
 
             if ( !isset( $elements[ 0 ] ) ):
-                throw new ExceptionUnableToFindPrincipalAndInterestTab( "Unable to find a link with the text 'P & I' in it.", 0, null, $dealId, $dealLinkSuffix );
+                throw new ExceptionUnableToTabByText( "Unable to find a link with the text '" . self::TAB_TEXT . "' in it.",
+                                                      0,
+                                                      NULL,
+                                                      self::TAB_TEXT,
+                                                      $dealId,
+                                                      $dealLinkSuffix );
             endif;
             $element = $elements[ 0 ];
             $element->click();
             sleep( 1 );
-            $this->Debug->_debug( "Should be on the P&I tab now." );
+            $this->Debug->_debug( "Should be on the " . self::TAB_TEXT . " tab now." );
 
+            $this->Debug->_screenshot( 'periodic_reports_secured_' . urlencode( $dealLinkSuffix ) );
+            $this->Debug->_html( 'periodic_reports_secured_' . urlencode( $dealLinkSuffix ) );
 
-
-            // TODO get it to expand the divs
-            //$expandButtons = $this->Page->dom()->querySelectorAll( '.min-max-button');
-            //$this->Debug->_debug( "I found " . count( $elements ) . " min max buttons." );
-            //foreach($expandButtons as $expandButton):
-            //    $expandButton->click();
-            //endforeach;
-
-
-
-
-            //$html = $this->Page->getHtml();
-            //$dom  = new \DOMDocument();
-            //@$dom->loadHTML( $html );
-
-            $this->Debug->_screenshot( 'factors_' . urlencode( $dealLinkSuffix ) );
-            $this->Debug->_html( 'factors_' . urlencode( $dealLinkSuffix ) );
-
-//            $elements = $dom->getElementsByTagName( 'a' );
-
-            $elements = $this->Page->dom()->querySelectorAll( '.download_factor' );
-            //$elements = $this->Page->dom()->querySelectorAll( '.view-factor-summary-link' );
+            $elements = $this->Page->dom()->querySelectorAll( '.periodic_report_extension' );
 
             $this->Debug->_debug( "I found " . count( $elements ) . " links." );
 
             $factorLinks = [];
             foreach ( $elements as $element ):
                 try {
-                    $href = $element->getAttribute( 'href' );
-                    $dateFromHref = $this->_getDateFromHref( $href );
-                    $dateString   = $dateFromHref->format( 'Y-m-d' );
-                    $this->Debug->_debug( "clicking on (" . $dateString . "): " . $href  );
-                    $dateFromHref = $this->_getDateFromHref( $href );
-                    $dateString   = $dateFromHref->format( 'Y-m-d' );
-                    $factorLinks[ $dateString ] = $href;
-                    $filenameParts = explode('?', basename($href));
-                    $filePathToTestFor = $filePath . DIRECTORY_SEPARATOR . $filenameParts[0];
+                    /**
+                     * @var string $href https://trustinvestorreporting.usbank.com/TIR/public/deals/populateReportDocument/49656429/ZIP
+                     */
+                    $href         = $element->getAttribute( 'href' );
 
-                    if( file_exists($filePathToTestFor)):
-                        continue;
-                    endif;
+                    dump($href);
+                    //$dateFromHref = $this->_getDateFromHref( $href );
+                    //$dateString   = $dateFromHref->format( 'Y-m-d' );
+                    //$this->Debug->_debug( "clicking on (" . $dateString . "): " . $href );
+                    //$dateFromHref               = $this->_getDateFromHref( $href );
+                    //$dateString                 = $dateFromHref->format( 'Y-m-d' );
+                    //$factorLinks[ $dateString ] = $href;
+                    //$filenameParts              = explode( '?', basename( $href ) );
+                    //$filePathToTestFor          = $filePath . DIRECTORY_SEPARATOR . $filenameParts[ 0 ];
 
-                    $element->click(); // New
+                    //if ( file_exists( $filePathToTestFor ) ):
+                    //    continue;
+                    //endif;
+                    //
+                    //$element->click(); // New
                     sleep( 1 );
                 } catch ( \Exception $exception ) {
                     $this->Debug->_debug( "EXCEPTION: " . $exception->getMessage() );
                 }
 
             endforeach;
-            $this->Debug->_debug( "I found " . count( $factorLinks ) . " P & I Factor sheets." );
+            $this->Debug->_debug( "I found " . count( $links ) . " " . self::TAB_TEXT . " sheets." );
             $this->stopTime = Carbon::now( $this->timezone );
 
             return $factorLinks;
@@ -178,7 +159,6 @@ class PrincipalAndInterestFactors {
 
 
     protected function _getDateFromHref( $href ): Carbon {
-        $pattern = '/(\d{2}-\d{2}-\d{4}).csv/';
         $pattern = '/(\d{2}-\d{2}-\d{4})/';
         $found   = preg_match( $pattern, $href, $matches );
         if ( 1 !== $found ):
@@ -219,8 +199,6 @@ class PrincipalAndInterestFactors {
         $endingParts = explode( '?', $parts[ 5 ] );
         return $endingParts[ 0 ];
     }
-
-
 
 
 }
