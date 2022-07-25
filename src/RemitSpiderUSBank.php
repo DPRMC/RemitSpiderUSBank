@@ -29,7 +29,7 @@ class RemitSpiderUSBank {
     public HistoryLinks                $HistoryLinks;
     public FileIndex                   $FileIndex;
     public PrincipalAndInterestFactors $PrincipalAndInterestFactors;
-    public PeriodicReportsSecured $PeriodicReportsSecured;
+    public PeriodicReportsSecured      $PeriodicReportsSecured;
 
 
     protected bool   $debug;
@@ -55,7 +55,7 @@ class RemitSpiderUSBank {
     const  HISTORY_LINKS_FILENAME                  = '_history_links.json';
     const  FILE_INDEX_FILENAME                     = '_file_index.json';
     const  PRINCIPAL_AND_INTEREST_FACTORS_FILENAME = '_principal_and_interest_factors.json';
-    const  PERIODIC_REPORTS_SECURED = '_periodic_reports_secured.json';
+    const  PERIODIC_REPORTS_SECURED                = '_periodic_reports_secured.json';
 
     const DEFAULT_TIMEZONE = 'America/New_York';
 
@@ -95,8 +95,7 @@ class RemitSpiderUSBank {
         $this->pathToFileIndex                   = $pathToFileIndex . self::FILE_INDEX_FILENAME;
         $this->pathToPrincipalAndInterestFactors =
             $pathToPrincipalAndInterestFactors . self::PRINCIPAL_AND_INTEREST_FACTORS_FILENAME;
-        $this->pathToPeriodicReportsSecured=
-            $pathToPrincipalAndInterestFactors . self::PERIODIC_REPORTS_SECURED;
+        $this->pathToPeriodicReportsSecured      = $pathToPeriodicReportsSecured . self::PERIODIC_REPORTS_SECURED;
 
         $this->timezone = $timezone;
 
@@ -138,10 +137,10 @@ class RemitSpiderUSBank {
                                                                               $this->Debug,
                                                                               $this->pathToPrincipalAndInterestFactors,
                                                                               $this->timezone );
-        $this->PeriodicReportsSecured = new PeriodicReportsSecured( $this->USBankBrowser->page,
-                                                                              $this->Debug,
-                                                                              $this->pathToPeriodicReportsSecured,
-                                                                              $this->timezone );
+        $this->PeriodicReportsSecured      = new PeriodicReportsSecured( $this->USBankBrowser->page,
+                                                                         $this->Debug,
+                                                                         $this->pathToPeriodicReportsSecured,
+                                                                         $this->timezone );
     }
 
 
