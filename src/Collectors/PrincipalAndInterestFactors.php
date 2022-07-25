@@ -16,7 +16,6 @@ class PrincipalAndInterestFactors {
     protected Page   $Page;
     protected Debug  $Debug;
     protected string $timezone;
-    protected string $pathToFactorFiles;
 
     protected ?Carbon $startTime;
     protected ?Carbon $stopTime;
@@ -32,12 +31,9 @@ class PrincipalAndInterestFactors {
 
     public function __construct( Page   &$Page,
                                  Debug  &$Debug,
-                                 string $pathToFactorFiles,
                                  string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE ) {
         $this->Page  = $Page;
         $this->Debug = $Debug;
-
-        $this->pathToFactorFiles = $pathToFactorFiles;
         $this->timezone          = $timezone;
     }
 
@@ -225,8 +221,6 @@ class PrincipalAndInterestFactors {
     }
 
 
-    protected function _getFilePath( string $dealId ): string {
-        return $this->pathToFactorFiles . DIRECTORY_SEPARATOR . $dealId;
-    }
+
 
 }
