@@ -9,6 +9,10 @@ use Carbon\Carbon;
  */
 class PrincipalAndInterestFactors extends AbstractCollector {
 
+
+    protected string $tabText = 'P & I';
+    protected string $querySelector = '.download_factor';
+
     /**
      * @param array  $elements
      * @param string $pathToSaveFiles

@@ -20,6 +20,9 @@ abstract class AbstractCollector {
     protected ?Carbon $startTime;
     protected ?Carbon $stopTime;
 
+    protected string $tabText;
+    protected string $querySelector;
+
     const LINK    = 'link';       // The history link.
     const DEAL_ID = 'dealId';
 
@@ -31,11 +34,10 @@ abstract class AbstractCollector {
     public function __construct( Page   &$Page,
                                  Debug  &$Debug,
                                  string $timezone = RemitSpiderUSBank::DEFAULT_TIMEZONE ) {
-        $this->Page  = $Page;
-        $this->Debug = $Debug;
-        $this->timezone          = $timezone;
+        $this->Page     = $Page;
+        $this->Debug    = $Debug;
+        $this->timezone = $timezone;
     }
-
 
 
     public function downloadFilesByDealSuffix( string $dealLinkSuffix,
@@ -64,7 +66,7 @@ abstract class AbstractCollector {
             if ( !isset( $elements[ 0 ] ) ):
                 throw new ExceptionUnableToTabByText( "Unable to find a link with the text '" . $tabText . "' in it.",
                                                       0,
-                                                      null,
+                                                      NULL,
                                                       $tabText,
                                                       $dealId,
                                                       $dealLinkSuffix );
@@ -80,7 +82,7 @@ abstract class AbstractCollector {
             $elements = $this->Page->dom()->querySelectorAll( $querySelectorForLinks );
             $this->Debug->_debug( "I found " . count( $elements ) . " links." );
 
-            $links = $this->_clickElements($elements, $pathToDownloadedFiles);
+            $links = $this->_clickElements( $elements, $pathToDownloadedFiles );
 
             $this->Debug->_debug( "I found " . count( $links ) . " " . $tabText . " sheets." );
             $this->stopTime = Carbon::now( $this->timezone );
@@ -93,15 +95,12 @@ abstract class AbstractCollector {
     }
 
     /**
-     * @param array $elements
+     * @param array  $elements
      * @param string $pathToSaveFiles
      *
      * @return array An array of the href's that were clicked.
      */
-    abstract protected function _clickElements(array $elements, string $pathToSaveFiles): array;
-
-
-
+    abstract protected function _clickElements( array $elements, string $pathToSaveFiles ): array;
 
 
     protected function _getDealIdFromDealLinkSuffix( string $dealLinkSuffix ): string {
