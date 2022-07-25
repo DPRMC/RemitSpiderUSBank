@@ -4,6 +4,7 @@ namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 
 use Carbon\Carbon;
+use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionUnableToFindPrincipalAndInterestTab;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Page;
@@ -41,13 +42,19 @@ class PrincipalAndInterestFactors {
     }
 
 
-    public function getAllByDeal( string $dealLinkSuffix ) {
+    /**
+     * @param string $dealLinkSuffix
+     * @param string $pathToDownloadedFiles
+     *
+     * @return void
+     */
+    public function getAllByDeal( string $dealLinkSuffix, string $pathToDownloadedFiles ): void {
         try {
             $this->Debug->_debug( "Getting all Principal and Interest Factors for a Deal Link Suffix: " . $dealLinkSuffix );
 
             $this->Debug->_debug( "About to call _getDealLinks" );
 
-            $factorLinks = $this->downloadFilesByDealSuffix( $dealLinkSuffix );
+            $factorLinks = $this->downloadFilesByDealSuffix( $dealLinkSuffix, $pathToDownloadedFiles );
             $this->Debug->_debug( "Done calling _getDealLinks" );
             foreach ( $factorLinks as $date => $factorLink ):
                 $contents = file_get_contents( RemitSpiderUSBank::BASE_URL . $factorLink );
@@ -106,7 +113,7 @@ class PrincipalAndInterestFactors {
             $elements = $this->Page->dom()->search( "//a[contains(text(),'P & I')]" );
 
             if ( !isset( $elements[ 0 ] ) ):
-                throw new \Exception( "Unable to find a link with the text 'P & I' in it." );
+                throw new ExceptionUnableToFindPrincipalAndInterestTab( "Unable to find a link with the text 'P & I' in it.", 0, null, $dealId, $dealLinkSuffix );
             endif;
             $element = $elements[ 0 ];
             $element->click();
