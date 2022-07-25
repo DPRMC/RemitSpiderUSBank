@@ -2,12 +2,7 @@
 
 namespace DPRMC\RemitSpiderUSBank\AdvancedCollectors;
 
-
 use Carbon\Carbon;
-use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionUnableToFindPrincipalAndInterestTab;
-use DPRMC\RemitSpiderUSBank\Helpers\Debug;
-use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
-use HeadlessChromium\Page;
 
 /**
  *

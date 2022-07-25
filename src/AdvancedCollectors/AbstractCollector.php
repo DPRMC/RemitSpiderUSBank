@@ -80,7 +80,7 @@ abstract class AbstractCollector {
             $elements = $this->Page->dom()->querySelectorAll( $querySelectorForLinks );
             $this->Debug->_debug( "I found " . count( $elements ) . " links." );
 
-            $links = $this->_clickElements($elements);
+            $links = $this->_clickElements($elements, $pathToDownloadedFiles);
 
             $this->Debug->_debug( "I found " . count( $links ) . " " . $tabText . " sheets." );
             $this->stopTime = Carbon::now( $this->timezone );
