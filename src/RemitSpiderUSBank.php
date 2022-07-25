@@ -2,11 +2,11 @@
 
 namespace DPRMC\RemitSpiderUSBank;
 
+use DPRMC\RemitSpiderUSBank\AdvancedCollectors\PeriodicReportsSecured;
+use DPRMC\RemitSpiderUSBank\AdvancedCollectors\PrincipalAndInterestFactors;
 use DPRMC\RemitSpiderUSBank\Collectors\Deals;
 use DPRMC\RemitSpiderUSBank\Collectors\FileIndex;
-use DPRMC\RemitSpiderUSBank\Collectors\PeriodicReportsSecured;
 use DPRMC\RemitSpiderUSBank\Collectors\Portfolios;
-use DPRMC\RemitSpiderUSBank\Collectors\PrincipalAndInterestFactors;
 use DPRMC\RemitSpiderUSBank\Collectors\USBankBrowser;
 use DPRMC\RemitSpiderUSBank\Collectors\HistoryLinks;
 use DPRMC\RemitSpiderUSBank\Collectors\Login;
