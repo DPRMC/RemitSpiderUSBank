@@ -3,6 +3,8 @@
 namespace DPRMC\RemitSpiderUSBank\AdvancedCollectors;
 
 use Carbon\Carbon;
+use DPRMC\RemitSpiderUSBank\Helpers\Debug;
+use HeadlessChromium\Page;
 
 /**
  *
@@ -19,7 +21,7 @@ class PrincipalAndInterestFactors extends AbstractCollector {
      *
      * @return array
      */
-    protected function _clickElements( array $elements, string $pathToSaveFiles ): array {
+    protected function _clickElements( array $elements, string $pathToSaveFiles, Page $page, Debug $debug ): array {
         $factorLinks = [];
         foreach ( $elements as $element ):
             try {

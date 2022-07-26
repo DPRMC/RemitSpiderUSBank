@@ -39,6 +39,17 @@ abstract class AbstractCollector {
         $this->timezone = $timezone;
     }
 
+    /**
+     * @param array  $elements
+     * @param string $pathToSaveFiles
+     *
+     * @return array An array of the href's that were clicked.
+     */
+    abstract protected function _clickElements( array $elements,
+                                                string $pathToSaveFiles,
+                                                Page $page,
+                                                Debug $debug ): array;
+
 
     public function downloadFilesByDealSuffix( string $dealLinkSuffix,
                                                string $tabText,
@@ -56,14 +67,15 @@ abstract class AbstractCollector {
             $this->Page->navigate( self::BASE_DEAL_URL . $dealLinkSuffix )
                        ->waitForNavigation( Page::NETWORK_IDLE, 5000 );
 
-            $this->Debug->_screenshot( 'deal_page_' . urlencode( $dealLinkSuffix ) );
-            $this->Debug->_html( 'deal_page_' . urlencode( $dealLinkSuffix ) );
+            $this->Debug->_screenshot( 'the_deal_page_' . urlencode( $dealLinkSuffix ) );
+            $this->Debug->_html( 'the_deal_page_' . urlencode( $dealLinkSuffix ) );
 
 
-            // Click the P&I Tab
+            // Click the TAB with text in $tabText
             $elements = $this->Page->dom()->search( "//a[contains(text(),'" . $tabText . "')]" );
 
             if ( !isset( $elements[ 0 ] ) ):
+                $this->Debug->_debug( "Unable to find a link with the text '" . $tabText . "' in it." );
                 throw new ExceptionUnableToTabByText( "Unable to find a link with the text '" . $tabText . "' in it.",
                                                       0,
                                                       NULL,
@@ -76,13 +88,14 @@ abstract class AbstractCollector {
             sleep( 1 );
             $this->Debug->_debug( "Should be on the '" . $tabText . "' tab now." );
 
-            $this->Debug->_screenshot( 'factors_' . urlencode( $dealLinkSuffix ) );
-            $this->Debug->_html( 'factors_' . urlencode( $dealLinkSuffix ) );
+            $this->Debug->_screenshot( 'tab_main_' . urlencode( $dealLinkSuffix ) );
+            $this->Debug->_html( 'tab_main_' . urlencode( $dealLinkSuffix ) );
 
+            // GET ELEMENTS OF INTEREST ON THAT PAGE.
             $elements = $this->Page->dom()->querySelectorAll( $querySelectorForLinks );
             $this->Debug->_debug( "I found " . count( $elements ) . " links." );
 
-            $links = $this->_clickElements( $elements, $pathToDownloadedFiles );
+            $links = $this->_clickElements( $elements, $pathToDownloadedFiles, $this->Page, $this->Debug );
 
             $this->Debug->_debug( "I found " . count( $links ) . " " . $tabText . " sheets." );
             $this->stopTime = Carbon::now( $this->timezone );
@@ -94,13 +107,7 @@ abstract class AbstractCollector {
         }
     }
 
-    /**
-     * @param array  $elements
-     * @param string $pathToSaveFiles
-     *
-     * @return array An array of the href's that were clicked.
-     */
-    abstract protected function _clickElements( array $elements, string $pathToSaveFiles ): array;
+
 
 
     protected function _getDealIdFromDealLinkSuffix( string $dealLinkSuffix ): string {

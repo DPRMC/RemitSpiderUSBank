@@ -2,6 +2,7 @@
 
 use PHPUnit\Framework\TestCase;
 use \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
+use DPRMC\RemitSpiderUSBank\AdvancedCollectors\PeriodicReportsSecured;
 
 /**
  * To run tests call:
@@ -21,7 +22,6 @@ class RemitSpiderUSBankTest extends TestCase {
                                                               $_ENV[ 'USBANK_USER' ],
                                                               $_ENV[ 'USBANK_PASS' ],
                                                               self::$debug,
-                                                              '',
                                                               '',
                                                               '',
                                                               '',
@@ -281,17 +281,17 @@ class RemitSpiderUSBankTest extends TestCase {
         $spider->FileIndex->deleteCache();
         try {
             $response = $spider->FileIndex->getFileContentsViaPost( $spider, $_ENV[ 'FILE_LINK' ] );
-        } catch (\Exception $exception) {
+        } catch ( \Exception $exception ) {
             $response = $spider->FileIndex->getFileContentsViaGet( $spider, $_ENV[ 'FILE_LINK' ] );
         }
 
 
-        file_put_contents($response[\DPRMC\RemitSpiderUSBank\Collectors\FileIndex::FILENAME],
-                          $response[\DPRMC\RemitSpiderUSBank\Collectors\FileIndex::BODY]);
+        file_put_contents( $response[ \DPRMC\RemitSpiderUSBank\Collectors\FileIndex::FILENAME ],
+                           $response[ \DPRMC\RemitSpiderUSBank\Collectors\FileIndex::BODY ] );
 
-        $this->assertNotEmpty($response[\DPRMC\RemitSpiderUSBank\Collectors\FileIndex::BODY]);
+        $this->assertNotEmpty( $response[ \DPRMC\RemitSpiderUSBank\Collectors\FileIndex::BODY ] );
 
-        $spider->FileIndex->markFileAsDownloaded($spider, ['1','2']);
+        $spider->FileIndex->markFileAsDownloaded( $spider, [ '1', '2' ] );
     }
 
 
@@ -306,15 +306,10 @@ class RemitSpiderUSBankTest extends TestCase {
 
         try {
             $response = $spider->FileIndex->getFileContentsViaGet( $spider, $_ENV[ 'FILE_LINK_404' ] );
-        } catch (Exception $exception) {
-            $spider->FileIndex->markFileAs404($spider, ['1','2']);
+        } catch ( Exception $exception ) {
+            $spider->FileIndex->markFileAs404( $spider, [ '1', '2' ] );
         }
     }
-
-
-
-
-
 
 
     /**
@@ -325,8 +320,34 @@ class RemitSpiderUSBankTest extends TestCase {
         $spider = $this->_getSpider();
         $spider->Login->login();
 
-        $path = '';
-        $spider->PrincipalAndInterestFactors->downloadFilesByDealSuffix( $_ENV[ 'DEAL_SUFFIX' ], $path );
+        $tabText               = "P & I";
+        $querySelectorForLinks = '.download_factor';
+        $path                  = '';
+        $spider->PrincipalAndInterestFactors->downloadFilesByDealSuffix( $_ENV[ 'DEAL_SUFFIX' ],
+                                                                         $tabText,
+                                                                         $querySelectorForLinks,
+                                                                         $path );
+
+    }
+
+
+    /**
+     * @test
+     * @group prs
+     */
+    public function testGetPeriodicReportsSecuredFactors() {
+        $spider = $this->_getSpider();
+        $spider->Login->login();
+
+
+        $tabText               = PeriodicReportsSecured::TAB_TEXT;
+        $querySelectorForLinks = PeriodicReportsSecured::QUERY_SELECTOR_FOR_LINKS;
+        $path                  = 'deletecontents';
+
+        $spider->PeriodicReportsSecured->downloadFilesByDealSuffix( $_ENV[ 'SECURED_DEAL_SUFFIX' ],
+                                                                    $tabText,
+                                                                    $querySelectorForLinks,
+                                                                    $path );
 
     }
 
