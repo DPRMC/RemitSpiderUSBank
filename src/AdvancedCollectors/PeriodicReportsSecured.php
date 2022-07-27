@@ -60,23 +60,22 @@ class PeriodicReportsSecured extends AbstractCollector {
                 $documentId   = $this->_getDocumentIdFromHref( $href );
                 $fileType     = $this->_getFileTypeFromHref( $href );
                 $dateOfReport = Carbon::createFromFormat( 'm/d/Y', $tdValues[ self::DATE_INDEX ] );
-                $this->Debug->_debug( "clicking on (" . $dateOfReport->toDateString() . " / " . $fileType . "): " . $href );
+
 
                 $filePathWithDealIdAndDocumentId = $pathToSaveFiles . DIRECTORY_SEPARATOR .
                                                    $documentId;
                 $page->setDownloadPath( $filePathWithDealIdAndDocumentId );
 
                 if ( file_exists( $filePathWithDealIdAndDocumentId ) ):
-                    echo "\n\n";
-                    echo $filePathWithDealIdAndDocumentId;
-                    echo "\n\n";
+
+                    $this->Debug->_debug( $filePathWithDealIdAndDocumentId . " EXISTS. skip it!" );
                     continue;
                 else:
-                    echo $filePathWithDealIdAndDocumentId . " does not exist. DOWNLOAD IT!\n\n";
+                    $this->Debug->_debug( $filePathWithDealIdAndDocumentId . " does not exist. DOWNLOAD IT!" );
                 endif;
 
                 // Download the file.
-
+                $this->Debug->_debug( "clicking on (" . $dateOfReport->toDateString() . " / " . $fileType . "): " . $href . "\n" );
                 $anchorNode->click();
                 sleep( 1 );
 
