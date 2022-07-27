@@ -15,13 +15,12 @@ class PrincipalAndInterestFactors extends AbstractCollector {
     protected string $tabText = 'P & I';
     protected string $querySelector = '.download_factor';
 
-    /**
-     * @param array  $elements
-     * @param string $pathToSaveFiles
-     *
-     * @return array
-     */
-    protected function _clickElements( array $elements, string $pathToSaveFiles, Page $page, Debug $debug ): array {
+
+    protected function _clickElements( array $elements,
+                                       string $pathToSaveFiles,
+                                       Page $page,
+                                       Debug $debug,
+                                       int $dealId ): array {
         $factorLinks = [];
         foreach ( $elements as $element ):
             try {

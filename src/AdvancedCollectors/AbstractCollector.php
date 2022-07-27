@@ -39,16 +39,12 @@ abstract class AbstractCollector {
         $this->timezone = $timezone;
     }
 
-    /**
-     * @param array  $elements
-     * @param string $pathToSaveFiles
-     *
-     * @return array An array of the href's that were clicked.
-     */
-    abstract protected function _clickElements( array $elements,
+
+    abstract protected function _clickElements( array  $elements,
                                                 string $pathToSaveFiles,
-                                                Page $page,
-                                                Debug $debug ): array;
+                                                Page   $page,
+                                                Debug  $debug,
+                                                int    $dealId ): array;
 
 
     public function downloadFilesByDealSuffix( string $dealLinkSuffix,
@@ -95,7 +91,7 @@ abstract class AbstractCollector {
             $elements = $this->Page->dom()->querySelectorAll( $querySelectorForLinks );
             $this->Debug->_debug( "I found " . count( $elements ) . " links." );
 
-            $links = $this->_clickElements( $elements, $pathToDownloadedFiles, $this->Page, $this->Debug );
+            $links = $this->_clickElements( $elements, $pathToDownloadedFiles, $this->Page, $this->Debug, $dealId );
 
             $this->Debug->_debug( "I found " . count( $links ) . " " . $tabText . " sheets." );
             $this->stopTime = Carbon::now( $this->timezone );
@@ -106,8 +102,6 @@ abstract class AbstractCollector {
             throw $exception;
         }
     }
-
-
 
 
     protected function _getDealIdFromDealLinkSuffix( string $dealLinkSuffix ): string {

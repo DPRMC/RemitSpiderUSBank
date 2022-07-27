@@ -342,7 +342,7 @@ class RemitSpiderUSBankTest extends TestCase {
 
         $tabText               = PeriodicReportsSecured::TAB_TEXT;
         $querySelectorForLinks = PeriodicReportsSecured::QUERY_SELECTOR_FOR_LINKS;
-        $path                  = 'deletecontents';
+        $path                  = $_ENV['PATH_TO_SECURED_PERIODIC_REPORTS'];
 
         $spider->PeriodicReportsSecured->downloadFilesByDealSuffix( $_ENV[ 'SECURED_DEAL_SUFFIX' ],
                                                                     $tabText,

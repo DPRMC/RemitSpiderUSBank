@@ -27,8 +27,13 @@ class PeriodicReportsSecured extends AbstractCollector {
     const LABEL_DATE_OF_REPORT = 'date_of_report';
     const LABEL_REPORT_NAME    = 'report_name';
 
-    protected function _clickElements( array $elements, string $pathToSaveFiles, Page $page, Debug $debug ): array {
+    protected function _clickElements( array  $elements,
+                                       string $pathToSaveFiles,
+                                       Page   $page,
+                                       Debug  $debug,
+                                       int    $dealId ): array {
         $links = [];
+
 
         /**
          * @var \HeadlessChromium\Dom\Node $node
@@ -50,20 +55,28 @@ class PeriodicReportsSecured extends AbstractCollector {
                  */
                 $tdWithLink = $tds[ self::FILE_TYPE_INDEX ];
                 $href       = $tdWithLink->getAttribute( 'href' );
+                $documentId = $this->_getDocumentIdFromHref( $href );
+                $fileType   = $this->_getFileTypeFromHref( $href );
                 $this->Debug->_debug( "clicking on (" . $tdValues[ self::DATE_INDEX ] . " / " .
                                       $tdValues[ self::FILE_TYPE_INDEX ] . "): " . $href );
 
+                $completeFilePath = $pathToSaveFiles . DIRECTORY_SEPARATOR .
+                                    $dealId . DIRECTORY_SEPARATOR .
+                                    $documentId;
+                $page->setDownloadPath( $completeFilePath );
 
-                $filePathToTestFor          = $pathToSaveFiles . DIRECTORY_SEPARATOR . $filenameParts[ 0 ];
-
-                if ( file_exists( $filePathToTestFor ) ):
+                if ( file_exists( $completeFilePath ) ):
+                    echo "\n\n";
+                    echo $completeFilePath;
+                    echo "\n\n";
                     continue;
                 endif;
 
+                // Download the file.
+
                 $tds[ self::FILE_TYPE_INDEX ]->click();
 
-                $documentId           = $this->_getDocumentIdFromHref( $href );
-                $fileType             = $this->_getFileTypeFromHref( $href );
+
                 $dateOfReport         = Carbon::createFromFormat( 'm/d/Y', $tdValues[ self::DATE_INDEX ] );
                 $links[ $documentId ] = [
                     self::LABEL_DOCUMENT_ID    => $documentId,
