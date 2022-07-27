@@ -76,7 +76,7 @@ abstract class AbstractCollector {
 
         $this->startTime = Carbon::now( $this->timezone );
         $dealId          = $this->_getDealIdFromDealLinkSuffix( $dealLinkSuffix );
-        $filePathWithDealId        = $pathToDownloadedFiles . DIRECTORY_SEPARATOR . $dealId;
+        $filePathWithDealId        = $pathToDownloadedFiles . $dealId;
         $this->Page->setDownloadPath( $filePathWithDealId );
         $this->Debug->_debug( "Download path set to: " . $filePathWithDealId );
 
