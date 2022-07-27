@@ -27,6 +27,14 @@ class Debug {
         $this->timezone          = $timezone;
     }
 
+    public function enableDebug(): void{
+        $this->debug = true;
+    }
+
+    public function disableDebug(): void{
+        $this->debug = false;
+    }
+
 
     /**
      * This is just a little helper function to clean up some debug code.
