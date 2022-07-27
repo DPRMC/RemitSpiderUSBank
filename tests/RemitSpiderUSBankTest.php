@@ -344,11 +344,12 @@ class RemitSpiderUSBankTest extends TestCase {
         $querySelectorForLinks = PeriodicReportsSecured::QUERY_SELECTOR_FOR_LINKS;
         $path                  = $_ENV['PATH_TO_SECURED_PERIODIC_REPORTS'];
 
-        $spider->PeriodicReportsSecured->downloadFilesByDealSuffix( $_ENV[ 'SECURED_DEAL_SUFFIX' ],
+        $links = $spider->PeriodicReportsSecured->downloadFilesByDealSuffix( $_ENV[ 'SECURED_DEAL_SUFFIX' ],
                                                                     $tabText,
                                                                     $querySelectorForLinks,
                                                                     $path );
 
+        print_r($links);
     }
 
 

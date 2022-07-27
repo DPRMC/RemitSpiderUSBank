@@ -85,20 +85,6 @@ class PeriodicReportsSecured extends AbstractCollector {
                     self::LABEL_DATE_OF_REPORT => $dateOfReport,
                     self::LABEL_REPORT_NAME    => $tdValues[ self::NAME_INDEX ],
                 ];
-
-                //$this->Debug->_debug( "clicking on (" . $dateString . "): " . $href );
-                //$dateFromHref               = $this->_getDateFromHref( $href );
-                //$dateString                 = $dateFromHref->format( 'Y-m-d' );
-                //$factorLinks[ $dateString ] = $href;
-                //$filenameParts              = explode( '?', basename( $href ) );
-                //$filePathToTestFor          = $pathToSaveFiles . DIRECTORY_SEPARATOR . $filenameParts[ 0 ];
-                //
-                //if ( file_exists( $filePathToTestFor ) ):
-                //    continue;
-                //endif;
-                //
-                //$element->click(); // New
-                //sleep( 1 );
             } catch ( \Exception $exception ) {
                 $this->Debug->_debug( "EXCEPTION: " . $exception->getMessage() );
             }
