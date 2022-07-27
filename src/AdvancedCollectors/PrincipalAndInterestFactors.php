@@ -11,10 +11,8 @@ use HeadlessChromium\Page;
  */
 class PrincipalAndInterestFactors extends AbstractCollector {
 
-
     protected string $tabText = 'P & I';
-    protected string $querySelector = '.download_factor';
-
+    protected string $querySelectorForLinks = '.download_factor';
 
     protected function _clickElements( array $elements,
                                        string $pathToSaveFiles,

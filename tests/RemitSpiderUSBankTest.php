@@ -324,8 +324,6 @@ class RemitSpiderUSBankTest extends TestCase {
         $querySelectorForLinks = '.download_factor';
         $path                  = '';
         $spider->PrincipalAndInterestFactors->downloadFilesByDealSuffix( $_ENV[ 'DEAL_SUFFIX' ],
-                                                                         $tabText,
-                                                                         $querySelectorForLinks,
                                                                          $path );
 
     }
@@ -340,16 +338,12 @@ class RemitSpiderUSBankTest extends TestCase {
         $spider->Login->login();
 
 
-        $tabText               = PeriodicReportsSecured::TAB_TEXT;
-        $querySelectorForLinks = PeriodicReportsSecured::QUERY_SELECTOR_FOR_LINKS;
-        $path                  = $_ENV['PATH_TO_SECURED_PERIODIC_REPORTS'];
+        $path = $_ENV[ 'PATH_TO_SECURED_PERIODIC_REPORTS' ];
 
         $links = $spider->PeriodicReportsSecured->downloadFilesByDealSuffix( $_ENV[ 'SECURED_DEAL_SUFFIX' ],
-                                                                    $tabText,
-                                                                    $querySelectorForLinks,
-                                                                    $path );
+                                                                             $path );
 
-        print_r($links);
+        print_r( $links );
     }
 
 

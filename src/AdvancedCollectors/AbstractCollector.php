@@ -20,8 +20,8 @@ abstract class AbstractCollector {
     protected ?Carbon $startTime;
     protected ?Carbon $stopTime;
 
-    protected string $tabText;
-    protected string $querySelector;
+    protected string $tabText = '';
+    protected string $querySelectorForLinks = '';
 
     const LINK    = 'link';       // The history link.
     const DEAL_ID = 'dealId';
@@ -48,9 +48,16 @@ abstract class AbstractCollector {
 
 
     public function downloadFilesByDealSuffix( string $dealLinkSuffix,
-                                               string $tabText,
-                                               string $querySelectorForLinks,
                                                string $pathToDownloadedFiles ): array {
+
+        if(empty($this->tabText)):
+            throw new \Exception("Developer: Don't forget you need to set tabText in the child class.");
+        endif;
+
+        if(empty($this->querySelectorForLinks)):
+            throw new \Exception("Developer: Don't forget you need to set querySelectorForLinks in the child class.");
+        endif;
+
         $this->startTime = Carbon::now( $this->timezone );
         $dealId          = $this->_getDealIdFromDealLinkSuffix( $dealLinkSuffix );
         $filePathWithDealId        = $pathToDownloadedFiles . DIRECTORY_SEPARATOR . $dealId;
@@ -68,32 +75,36 @@ abstract class AbstractCollector {
 
 
             // Click the TAB with text in $tabText
-            $elements = $this->Page->dom()->search( "//a[contains(text(),'" . $tabText . "')]" );
+            $elements = $this->Page->dom()->search( "//a[contains(text(),'" . $this->tabText . "')]" );
 
             if ( !isset( $elements[ 0 ] ) ):
-                $this->Debug->_debug( "Unable to find a link with the text '" . $tabText . "' in it." );
-                throw new ExceptionUnableToTabByText( "Unable to find a link with the text '" . $tabText . "' in it.",
+                $this->Debug->_debug( "Unable to find a link with the text '" . $this->tabText . "' in it." );
+                throw new ExceptionUnableToTabByText( "Unable to find a link with the text '" . $this->tabText . "' in it.",
                                                       0,
                                                       NULL,
-                                                      $tabText,
+                                                      $this->tabText,
                                                       $dealId,
                                                       $dealLinkSuffix );
             endif;
             $element = $elements[ 0 ];
             $element->click();
             sleep( 1 );
-            $this->Debug->_debug( "Should be on the '" . $tabText . "' tab now." );
+            $this->Debug->_debug( "Should be on the '" . $this->tabText . "' tab now." );
 
             $this->Debug->_screenshot( 'tab_main_' . urlencode( $dealLinkSuffix ) );
             $this->Debug->_html( 'tab_main_' . urlencode( $dealLinkSuffix ) );
 
             // GET ELEMENTS OF INTEREST ON THAT PAGE.
-            $elements = $this->Page->dom()->querySelectorAll( $querySelectorForLinks );
+            $elements = $this->Page->dom()->querySelectorAll( $this->querySelectorForLinks );
             $this->Debug->_debug( "I found " . count( $elements ) . " links." );
 
-            $links = $this->_clickElements( $elements, $filePathWithDealId, $this->Page, $this->Debug, $dealId );
+            $links = $this->_clickElements( $elements,
+                                            $filePathWithDealId,
+                                            $this->Page,
+                                            $this->Debug,
+                                            $dealId );
 
-            $this->Debug->_debug( "I found " . count( $links ) . " " . $tabText . " sheets." );
+            $this->Debug->_debug( "I found " . count( $links ) . " " . $this->tabText . " sheets." );
             $this->stopTime = Carbon::now( $this->timezone );
 
             return $links;

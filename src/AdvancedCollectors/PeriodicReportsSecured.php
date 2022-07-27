@@ -12,9 +12,8 @@ use HeadlessChromium\Page;
  */
 class PeriodicReportsSecured extends AbstractCollector {
 
-
-    const TAB_TEXT                 = 'Periodic Reports - Secured';
-    const QUERY_SELECTOR_FOR_LINKS = '#results-table > tbody > tr';
+    protected string $tabText = 'Periodic Reports - Secured';
+    protected string $querySelectorForLinks = '#results-table > tbody > tr';
 
     const NAME_INDEX      = 0;
     const DATE_INDEX      = 1;
