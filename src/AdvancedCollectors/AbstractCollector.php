@@ -47,6 +47,22 @@ abstract class AbstractCollector {
                                                 int    $dealId ): array;
 
 
+    /**
+     * @param string $dealLinkSuffix
+     * @param string $pathToDownloadedFiles This should have a trailing slash.
+     *
+     * @return array
+     * @throws \DPRMC\RemitSpiderUSBank\Exceptions\ExceptionUnableToTabByText
+     * @throws \HeadlessChromium\Exception\CommunicationException
+     * @throws \HeadlessChromium\Exception\CommunicationException\CannotReadResponse
+     * @throws \HeadlessChromium\Exception\CommunicationException\InvalidResponse
+     * @throws \HeadlessChromium\Exception\CommunicationException\ResponseHasError
+     * @throws \HeadlessChromium\Exception\FilesystemException
+     * @throws \HeadlessChromium\Exception\NavigationExpired
+     * @throws \HeadlessChromium\Exception\NoResponseAvailable
+     * @throws \HeadlessChromium\Exception\OperationTimedOut
+     * @throws \HeadlessChromium\Exception\ScreenshotFailed
+     */
     public function downloadFilesByDealSuffix( string $dealLinkSuffix,
                                                string $pathToDownloadedFiles ): array {
 
