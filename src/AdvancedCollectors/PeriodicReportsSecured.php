@@ -54,30 +54,33 @@ class PeriodicReportsSecured extends AbstractCollector {
                  * @var \HeadlessChromium\Dom\Node $tdWithLink
                  */
                 $tdWithLink = $tds[ self::FILE_TYPE_INDEX ];
-                $href       = $tdWithLink->getAttribute( 'href' );
-                $documentId = $this->_getDocumentIdFromHref( $href );
-                $fileType   = $this->_getFileTypeFromHref( $href );
-                $this->Debug->_debug( "clicking on (" . $tdValues[ self::DATE_INDEX ] . " / " .
-                                      $tdValues[ self::FILE_TYPE_INDEX ] . "): " . $href );
+                $anchorNode = $tdWithLink->querySelector( 'a' );
+                $href       = $anchorNode->getAttribute( 'href' );
 
-                $completeFilePath = $pathToSaveFiles . DIRECTORY_SEPARATOR .
-                                    $dealId . DIRECTORY_SEPARATOR .
-                                    $documentId;
-                $page->setDownloadPath( $completeFilePath );
+                $documentId   = $this->_getDocumentIdFromHref( $href );
+                $fileType     = $this->_getFileTypeFromHref( $href );
+                $dateOfReport = Carbon::createFromFormat( 'm/d/Y', $tdValues[ self::DATE_INDEX ] );
+                $this->Debug->_debug( "clicking on (" . $dateOfReport->toDateString() . " / " . $fileType . "): " . $href );
 
-                if ( file_exists( $completeFilePath ) ):
+                $filePathWithDealIdAndDocumentId = $pathToSaveFiles . DIRECTORY_SEPARATOR .
+                                                   $documentId;
+                $page->setDownloadPath( $filePathWithDealIdAndDocumentId );
+
+                if ( file_exists( $filePathWithDealIdAndDocumentId ) ):
                     echo "\n\n";
-                    echo $completeFilePath;
+                    echo $filePathWithDealIdAndDocumentId;
                     echo "\n\n";
                     continue;
+                else:
+                    echo $filePathWithDealIdAndDocumentId . " does not exist. DOWNLOAD IT!\n\n";
                 endif;
 
                 // Download the file.
 
-                $tds[ self::FILE_TYPE_INDEX ]->click();
+                $anchorNode->click();
+                sleep( 1 );
 
 
-                $dateOfReport         = Carbon::createFromFormat( 'm/d/Y', $tdValues[ self::DATE_INDEX ] );
                 $links[ $documentId ] = [
                     self::LABEL_DOCUMENT_ID    => $documentId,
                     self::LABEL_FILE_TYPE      => $fileType,

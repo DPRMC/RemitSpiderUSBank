@@ -53,9 +53,9 @@ abstract class AbstractCollector {
                                                string $pathToDownloadedFiles ): array {
         $this->startTime = Carbon::now( $this->timezone );
         $dealId          = $this->_getDealIdFromDealLinkSuffix( $dealLinkSuffix );
-        $filePath        = $pathToDownloadedFiles . $dealId;
-        $this->Page->setDownloadPath( $filePath );
-        $this->Debug->_debug( "Download path set to: " . $filePath );
+        $filePathWithDealId        = $pathToDownloadedFiles . DIRECTORY_SEPARATOR . $dealId;
+        $this->Page->setDownloadPath( $filePathWithDealId );
+        $this->Debug->_debug( "Download path set to: " . $filePathWithDealId );
 
         try {
             // Example URL:
@@ -91,7 +91,7 @@ abstract class AbstractCollector {
             $elements = $this->Page->dom()->querySelectorAll( $querySelectorForLinks );
             $this->Debug->_debug( "I found " . count( $elements ) . " links." );
 
-            $links = $this->_clickElements( $elements, $pathToDownloadedFiles, $this->Page, $this->Debug, $dealId );
+            $links = $this->_clickElements( $elements, $filePathWithDealId, $this->Page, $this->Debug, $dealId );
 
             $this->Debug->_debug( "I found " . count( $links ) . " " . $tabText . " sheets." );
             $this->stopTime = Carbon::now( $this->timezone );
