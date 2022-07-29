@@ -27,12 +27,14 @@ class Debug {
         $this->timezone          = $timezone;
     }
 
-    public function enableDebug(): void{
-        $this->debug = true;
+    public function enableDebug(): void {
+        $this->_debug( "Debug now ENABLED. Screenshots are being saved to: " . $this->pathToScreenshots );
+        $this->debug = TRUE;
     }
 
-    public function disableDebug(): void{
-        $this->debug = false;
+    public function disableDebug(): void {
+        $this->_debug( "Debug now DISABLED. Remember to delete screenshots from: " . $this->pathToScreenshots );
+        $this->debug = FALSE;
     }
 
 
