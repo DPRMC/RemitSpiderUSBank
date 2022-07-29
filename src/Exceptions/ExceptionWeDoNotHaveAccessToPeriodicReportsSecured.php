@@ -23,8 +23,8 @@ class ExceptionWeDoNotHaveAccessToPeriodicReportsSecured extends \Exception {
                                  ?string     $html = NULL ) {
         parent::__construct( $message, $code, $previous );
 
-        $this->textToSearchFor = $textToSearchFor;
         $this->dealId          = $dealId;
+        $this->textToSearchFor = $textToSearchFor;
         $this->html            = $html;
     }
 }
