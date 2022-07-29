@@ -44,7 +44,7 @@ class PeriodicReportsSecured extends AbstractCollector {
                                                                          $alertString,
                                                                          $html);
         else:
-            $debug->_debug("We do have acccess to 'Periodic Reports - Secured' documents for Deal ID: " . $dealId);
+            $debug->_debug("We do have access to 'Periodic Reports - Secured' documents for Deal ID: " . $dealId);
         endif;
 
 
