@@ -4,6 +4,7 @@ namespace DPRMC\RemitSpiderUSBank\AdvancedCollectors;
 
 
 use Carbon\Carbon;
+use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionWeDoNotHaveAccessToPeriodicReportsSecured;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use HeadlessChromium\Page;
 
@@ -31,7 +32,24 @@ class PeriodicReportsSecured extends AbstractCollector {
                                        Page   $page,
                                        Debug  $debug,
                                        int    $dealId ): array {
+
+        // If we don't have access throw an Exception.
+        $alertString = "You do not have access to this deal or feature.";
+        $html = $page->getHtml();
+        if( str_contains($html, $alertString) ):
+            throw new ExceptionWeDoNotHaveAccessToPeriodicReportsSecured("We do not have access.",
+                                                                         null,
+                                                                         null, $dealId,
+                                                                         $alertString,
+                                                                         $html);
+        else:
+            $debug->_debug("We do have acccess to 'Periodic Reports - Secured' documents for Deal ID: " . $dealId);
+        endif;
+
+
         $links = [];
+
+
 
 
         /**
