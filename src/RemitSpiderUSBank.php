@@ -44,7 +44,7 @@ class RemitSpiderUSBank {
     protected array $portfolioIds;
     protected array $dealIds;
 
-    protected \HeadlessChromium\Page $page;
+    protected Page $page;
 
 
     const  BASE_URL                                = 'https://trustinvestorreporting.usbank.com';
