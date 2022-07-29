@@ -39,7 +39,8 @@ class PeriodicReportsSecured extends AbstractCollector {
         if( str_contains($html, $alertString) ):
             throw new ExceptionWeDoNotHaveAccessToPeriodicReportsSecured("We do not have access.",
                                                                          null,
-                                                                         null, $dealId,
+                                                                         null,
+                                                                         $dealId,
                                                                          $alertString,
                                                                          $html);
         else:
