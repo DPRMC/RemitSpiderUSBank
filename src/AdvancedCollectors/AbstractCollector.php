@@ -49,7 +49,7 @@ abstract class AbstractCollector {
 
     /**
      * @param string $dealLinkSuffix
-     * @param string $pathToDownloadedFiles This should have a trailing slash.
+     * @param string $pathToDownloadedFiles Should have a trailing slash.
      *
      * @return array
      * @throws \DPRMC\RemitSpiderUSBank\Exceptions\ExceptionUnableToTabByText
@@ -77,6 +77,7 @@ abstract class AbstractCollector {
         $this->startTime = Carbon::now( $this->timezone );
         $dealId          = $this->_getDealIdFromDealLinkSuffix( $dealLinkSuffix );
         $filePathWithDealId        = $pathToDownloadedFiles . $dealId;
+
         $this->Page->setDownloadPath( $filePathWithDealId );
         $this->Debug->_debug( "Download path set to: " . $filePathWithDealId );
 
