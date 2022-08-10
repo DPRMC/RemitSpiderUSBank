@@ -4,6 +4,7 @@ namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 
 use Carbon\Carbon;
+use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionInvalidDataInFileConstructor;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\Objects\File;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
@@ -188,6 +189,12 @@ class FileIndex extends BaseData {
         }
     }
 
+    protected function _cleanReportName(string $reportName): string {
+        $reportName = str_replace("\n", '', $reportName);
+        $reportName = str_replace("\t", '', $reportName);
+        return trim($reportName);
+    }
+
 
     /**
      * Helper function. This returns an MD5 hash used as a unique identifier (array index) for each file link.
@@ -262,9 +269,13 @@ class FileIndex extends BaseData {
         $objects = [];
         foreach ( $this->data as $dealId => $rowsForDeal ):
             foreach ( $rowsForDeal as $uniqueId => $data ):
-                $objects[ $uniqueId ] = new File( $data,
-                                                  $this->timezone,
-                                                  $this->pathToCache );
+                try {
+                    $objects[ $uniqueId ] = new File( $data,
+                                                      $this->timezone,
+                                                      $this->pathToCache );
+                } catch (ExceptionInvalidDataInFileConstructor $exception){
+                    // Skip it.
+                }
             endforeach;
         endforeach;
         return $objects;
