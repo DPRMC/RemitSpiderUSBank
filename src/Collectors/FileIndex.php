@@ -153,7 +153,7 @@ class FileIndex extends BaseData {
 
 
                     $reportNameNode = $garbageNode->previousSibling;
-                    $reportName     = trim( $reportNameNode->nodeValue );
+                    $reportName     = $this->_cleanReportName( $reportNameNode->nodeValue );
                     $this->Debug->_debug( "reportName: " . $reportName );
 
                     $uniqueId = $this->_getMyUniqueId( $href );
@@ -189,10 +189,10 @@ class FileIndex extends BaseData {
         }
     }
 
-    protected function _cleanReportName(string $reportName): string {
-        $reportName = str_replace("\n", '', $reportName);
-        $reportName = str_replace("\t", '', $reportName);
-        return trim($reportName);
+    protected function _cleanReportName( string $reportName ): string {
+        $reportName = str_replace( "\n", '', $reportName );
+        $reportName = str_replace( "\t", '', $reportName );
+        return trim( $reportName );
     }
 
 
@@ -273,7 +273,7 @@ class FileIndex extends BaseData {
                     $objects[ $uniqueId ] = new File( $data,
                                                       $this->timezone,
                                                       $this->pathToCache );
-                } catch (ExceptionInvalidDataInFileConstructor $exception){
+                } catch ( ExceptionInvalidDataInFileConstructor $exception ) {
                     // Skip it.
                 }
             endforeach;
