@@ -20,7 +20,7 @@ abstract class AbstractCollector {
     protected ?Carbon $startTime;
     protected ?Carbon $stopTime;
 
-    protected string $tabText = '';
+    protected string $tabText               = '';
     protected string $querySelectorForLinks = '';
 
     const LINK    = 'link';       // The history link.
@@ -40,11 +40,24 @@ abstract class AbstractCollector {
     }
 
 
+    /**
+     * I added the $misc parameter in the case I need additional resources passed into a particular
+     * implementation of this abstract method.
+     * @param array                                  $elements
+     * @param string                                 $pathToSaveFiles
+     * @param \HeadlessChromium\Page                 $page
+     * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $debug
+     * @param int                                    $dealId
+     * @param array                                  $misc I am cheating here. See notes above.
+     *
+     * @return array
+     */
     abstract protected function _clickElements( array  $elements,
                                                 string $pathToSaveFiles,
                                                 Page   $page,
                                                 Debug  $debug,
-                                                int    $dealId ): array;
+                                                int    $dealId,
+                                                array  $misc = [] ): array;
 
 
     /**
@@ -66,17 +79,17 @@ abstract class AbstractCollector {
     public function downloadFilesByDealSuffix( string $dealLinkSuffix,
                                                string $pathToDownloadedFiles ): array {
 
-        if(empty($this->tabText)):
-            throw new \Exception("Developer: Don't forget you need to set tabText in the child class.");
+        if ( empty( $this->tabText ) ):
+            throw new \Exception( "Developer: Don't forget you need to set tabText in the child class." );
         endif;
 
-        if(empty($this->querySelectorForLinks)):
-            throw new \Exception("Developer: Don't forget you need to set querySelectorForLinks in the child class.");
+        if ( empty( $this->querySelectorForLinks ) ):
+            throw new \Exception( "Developer: Don't forget you need to set querySelectorForLinks in the child class." );
         endif;
 
-        $this->startTime = Carbon::now( $this->timezone );
-        $dealId          = $this->_getDealIdFromDealLinkSuffix( $dealLinkSuffix );
-        $filePathWithDealId        = $pathToDownloadedFiles . $dealId;
+        $this->startTime    = Carbon::now( $this->timezone );
+        $dealId             = $this->_getDealIdFromDealLinkSuffix( $dealLinkSuffix );
+        $filePathWithDealId = $pathToDownloadedFiles . $dealId;
 
         $this->Page->setDownloadPath( $filePathWithDealId );
         $this->Debug->_debug( "Download path set to: " . $filePathWithDealId );

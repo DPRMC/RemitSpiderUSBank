@@ -4,8 +4,10 @@ namespace DPRMC\RemitSpiderUSBank\AdvancedCollectors;
 
 
 use Carbon\Carbon;
+use DPRMC\FIMS\API\V1\Console\Commands\Custodians\USBank\V2\USBankSpider;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionWeDoNotHaveAccessToPeriodicReportsSecured;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
+use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Page;
 
 /**
@@ -13,7 +15,7 @@ use HeadlessChromium\Page;
  */
 class PeriodicReportsSecured extends AbstractCollector {
 
-    protected string $tabText = 'Periodic Reports - Secured';
+    protected string $tabText               = 'Periodic Reports - Secured';
     protected string $querySelectorForLinks = '#results-table > tbody > tr';
 
     const NAME_INDEX      = 0;
@@ -27,30 +29,35 @@ class PeriodicReportsSecured extends AbstractCollector {
     const LABEL_DATE_OF_REPORT = 'date_of_report';
     const LABEL_REPORT_NAME    = 'report_name';
 
+    // For get contents via get
+    const BODY     = 'body';
+    const FILENAME = 'filename';
+    const HEADERS  = 'headers';
+
+
     protected function _clickElements( array  $elements,
                                        string $pathToSaveFiles,
                                        Page   $page,
                                        Debug  $debug,
-                                       int    $dealId ): array {
+                                       int    $dealId,
+                                       array  $misc = [] ): array {
 
         // If we don't have access throw an Exception.
         $alertString = "You do not have access to this deal or feature.";
-        $html = $page->getHtml();
-        if( str_contains($html, $alertString) ):
-            throw new ExceptionWeDoNotHaveAccessToPeriodicReportsSecured("We do not have access.",
-                                                                         0,
-                                                                         null,
-                                                                         $dealId,
-                                                                         $alertString,
-                                                                         $html);
+        $html        = $page->getHtml();
+        if ( str_contains( $html, $alertString ) ):
+            throw new ExceptionWeDoNotHaveAccessToPeriodicReportsSecured( "We do not have access.",
+                                                                          0,
+                                                                          NULL,
+                                                                          $dealId,
+                                                                          $alertString,
+                                                                          $html );
         else:
-            $debug->_debug("We do have access to 'Periodic Reports - Secured' documents for Deal ID: " . $dealId);
+            $debug->_debug( "We do have access to 'Periodic Reports - Secured' documents for Deal ID: " . $dealId );
         endif;
 
 
         $links = [];
-
-
 
 
         /**
@@ -79,24 +86,28 @@ class PeriodicReportsSecured extends AbstractCollector {
                 $fileType     = $this->_getFileTypeFromHref( $href );
                 $dateOfReport = Carbon::createFromFormat( 'm/d/Y', $tdValues[ self::DATE_INDEX ] );
 
-
                 $filePathWithDealIdAndDocumentId = $pathToSaveFiles . DIRECTORY_SEPARATOR .
                                                    $documentId;
                 $page->setDownloadPath( $filePathWithDealIdAndDocumentId );
 
                 if ( file_exists( $filePathWithDealIdAndDocumentId ) ):
-
                     $this->Debug->_debug( $filePathWithDealIdAndDocumentId . " EXISTS. skip it!" );
                     continue;
                 else:
                     $this->Debug->_debug( $filePathWithDealIdAndDocumentId . " does not exist. DOWNLOAD IT!" );
                 endif;
 
-                // Download the file.
-                $this->Debug->_debug( "clicking on (" . $dateOfReport->toDateString() . " / " . $fileType . "): " . $href . "\n" );
-                $anchorNode->click();
-                sleep( 1 );
+                $absoluteHREF = RemitSpiderUSBank::BASE_URL . $href;
+                $contents     = file_get_contents( $absoluteHREF );
+                $pathToStore  = $pathToSaveFiles . DIRECTORY_SEPARATOR . $dealId . '_' . $tdValues[ self::NAME_INDEX ];
 
+                $bytesWritten = file_put_contents( $pathToStore, $contents );
+
+                if ( FALSE === $bytesWritten ):
+                    throw new \Exception( "Unable to write file to " . $pathToStore );
+                endif;
+
+                sleep( 1 );
 
                 $links[ $documentId ] = [
                     self::LABEL_DOCUMENT_ID    => $documentId,
@@ -105,6 +116,7 @@ class PeriodicReportsSecured extends AbstractCollector {
                     self::LABEL_DATE_OF_REPORT => $dateOfReport,
                     self::LABEL_REPORT_NAME    => $tdValues[ self::NAME_INDEX ],
                 ];
+
             } catch ( \Exception $exception ) {
                 $this->Debug->_debug( "EXCEPTION: " . $exception->getMessage() );
             }
