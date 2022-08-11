@@ -161,8 +161,13 @@ class PeriodicReportsSecured extends AbstractCollector {
      */
     protected function _getCleanReportName( string $reportName ): string {
         $reportName = strtolower( $reportName );
-        $reportName = str_replace( '  ', ' ', $reportName );
+
+        $pattern = '/\s{2,}/';
+        $reportName = preg_replace($pattern,' ', $reportName);
+
         $reportName = str_replace( ' ', '-', $reportName );
+        $reportName = str_replace( "\t", '', $reportName );
+        $reportName = str_replace( "\n", '', $reportName );
         return $reportName;
     }
 
