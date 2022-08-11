@@ -4,6 +4,8 @@ namespace DPRMC\RemitSpiderUSBank\AdvancedCollectors;
 
 
 use Carbon\Carbon;
+use DPRMC\FIMS\API\V1\Console\Commands\Custodians\USBank\USBankDownloadDeals;
+use DPRMC\FIMS\API\V1\Modules\Custodians\USBank\Models\USBankDeal;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionUnableToTabByText;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
@@ -43,6 +45,7 @@ abstract class AbstractCollector {
     /**
      * I added the $misc parameter in the case I need additional resources passed into a particular
      * implementation of this abstract method.
+     *
      * @param array                                  $elements
      * @param string                                 $pathToSaveFiles
      * @param \HeadlessChromium\Page                 $page
@@ -160,5 +163,7 @@ abstract class AbstractCollector {
         endif;
         return $parts[ 1 ];
     }
+
+
 
 }

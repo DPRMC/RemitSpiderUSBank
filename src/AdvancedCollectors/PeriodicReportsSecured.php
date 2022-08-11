@@ -4,7 +4,6 @@ namespace DPRMC\RemitSpiderUSBank\AdvancedCollectors;
 
 
 use Carbon\Carbon;
-use DPRMC\FIMS\API\V1\Console\Commands\Custodians\USBank\V2\USBankSpider;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionWeDoNotHaveAccessToPeriodicReportsSecured;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
@@ -99,7 +98,10 @@ class PeriodicReportsSecured extends AbstractCollector {
 
                 $absoluteHREF = RemitSpiderUSBank::BASE_URL . $href;
                 $contents     = file_get_contents( $absoluteHREF );
-                $pathToStore  = $pathToSaveFiles . DIRECTORY_SEPARATOR . $dealId . '_' . $tdValues[ self::NAME_INDEX ];
+
+                $finalReportName = $this->_getFinalFileName( $dealId, $dateOfReport->toDateString(), $tdValues[ self::NAME_INDEX ], $documentId, $fileType );
+
+                $pathToStore = $pathToSaveFiles . DIRECTORY_SEPARATOR . $documentId . DIRECTORY_SEPARATOR . $finalReportName;
 
                 $bytesWritten = file_put_contents( $pathToStore, $contents );
 
@@ -144,6 +146,40 @@ class PeriodicReportsSecured extends AbstractCollector {
         endif;
 
         return $matches[ 1 ];
+    }
+
+
+    /**
+     *
+     * @param string $reportName
+     *
+     * @return string
+     */
+    protected function _getCleanReportName( string $reportName ): string {
+        $reportName = strtolower( $reportName );
+        $reportName = str_replace( ' ', '-', $reportName );
+        return $reportName;
+    }
+
+
+    /**
+     * dealid-date-name-document-id.filetype
+     *
+     * @param int    $dealId
+     * @param string $dateOfReport
+     * @param string $dirtyFilename
+     * @param int    $documentId
+     * @param string $fileType
+     *
+     * @return string
+     */
+    protected function _getFinalFileName( int $dealId, string $dateOfReport, string $dirtyFilename, int $documentId, string $fileType ): string {
+        $cleanReportName = $this->_getCleanReportName( $dirtyFilename );
+
+        $finalReportName = $dealId . '-' . $dateOfReport . '-' . $cleanReportName . '_' . $documentId . '.' . $fileType;
+        $finalReportName = strtolower( $finalReportName );
+
+        return $finalReportName;
     }
 
 
