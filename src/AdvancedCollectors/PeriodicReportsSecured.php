@@ -85,28 +85,32 @@ class PeriodicReportsSecured extends AbstractCollector {
                 $fileType     = $this->_getFileTypeFromHref( $href );
                 $dateOfReport = Carbon::createFromFormat( 'm/d/Y', $tdValues[ self::DATE_INDEX ] );
 
-                $filePathWithDealIdAndDocumentId = $pathToSaveFiles . DIRECTORY_SEPARATOR .
-                                                   $documentId;
-                $page->setDownloadPath( $filePathWithDealIdAndDocumentId );
+                //$filePathWithDealIdAndDocumentId = $pathToSaveFiles . DIRECTORY_SEPARATOR .
+                //                                   $documentId;
 
-                if ( file_exists( $filePathWithDealIdAndDocumentId ) ):
-                    $this->Debug->_debug( $filePathWithDealIdAndDocumentId . " EXISTS. skip it!" );
+                $finalReportName = $this->_getFinalFileName( $dealId, $dateOfReport->toDateString(), $tdValues[ self::NAME_INDEX ], $documentId, $fileType );
+
+                $absolutePathToStoreFile = $pathToSaveFiles . DIRECTORY_SEPARATOR . $finalReportName;
+
+
+                $page->setDownloadPath( $absolutePathToStoreFile );
+
+                if ( file_exists( $absolutePathToStoreFile ) ):
+                    $this->Debug->_debug( $absolutePathToStoreFile . " EXISTS. skip it!" );
                     continue;
                 else:
-                    $this->Debug->_debug( $filePathWithDealIdAndDocumentId . " does not exist. DOWNLOAD IT!" );
+                    $this->Debug->_debug( $absolutePathToStoreFile . " does not exist. DOWNLOAD IT!" );
                 endif;
 
                 $absoluteHREF = RemitSpiderUSBank::BASE_URL . $href;
                 $contents     = file_get_contents( $absoluteHREF );
 
-                $finalReportName = $this->_getFinalFileName( $dealId, $dateOfReport->toDateString(), $tdValues[ self::NAME_INDEX ], $documentId, $fileType );
 
-                $pathToStore = $pathToSaveFiles . DIRECTORY_SEPARATOR . $documentId . DIRECTORY_SEPARATOR . $finalReportName;
 
-                $bytesWritten = file_put_contents( $pathToStore, $contents );
+                $bytesWritten = file_put_contents( $absolutePathToStoreFile, $contents );
 
                 if ( FALSE === $bytesWritten ):
-                    throw new \Exception( "Unable to write file to " . $pathToStore );
+                    throw new \Exception( "Unable to write file to " . $absolutePathToStoreFile );
                 endif;
 
                 sleep( 1 );
@@ -157,6 +161,7 @@ class PeriodicReportsSecured extends AbstractCollector {
      */
     protected function _getCleanReportName( string $reportName ): string {
         $reportName = strtolower( $reportName );
+        $reportName = str_replace( '  ', ' ', $reportName );
         $reportName = str_replace( ' ', '-', $reportName );
         return $reportName;
     }
