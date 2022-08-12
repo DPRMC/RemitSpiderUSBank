@@ -100,25 +100,25 @@ class PeriodicReportsSecured extends AbstractCollector {
                 // After the download, there should be only one file in there.
                 // Get the name of that file, and munge it as I see fit.
                 $md5OfHREF               = md5( $href );                                        // This should always be unique.
-                $absolutePathToStoreFile = $pathToSaveFiles . DIRECTORY_SEPARATOR . $md5OfHREF; // This DIR will end up having one file.
+                $absolutePathToStoreTempFile = $pathToSaveFiles . DIRECTORY_SEPARATOR . $md5OfHREF; // This DIR will end up having one file.
 
-                if ( Storage::exists( $absolutePathToStoreFile ) ):
-                    $directoryDeleted = Storage::deleteDirectory( $absolutePathToStoreFile );
-                    if ( FALSE == $directoryDeleted ):
-                        throw new \Exception( "EXCEPTION: Unable to delete the temp directory: " . $absolutePathToStoreFile );
+                if ( Storage::exists( $absolutePathToStoreTempFile ) ):
+                    $directoryDeleted = Storage::deleteDirectory( $absolutePathToStoreTempFile );
+                    if ( FALSE === $directoryDeleted ):
+                        throw new \Exception( "EXCEPTION: Unable to delete the temp directory: " . $absolutePathToStoreTempFile );
                     endif;
                 endif;
 
-                $directoryCreated = Storage::makeDirectory( $absolutePathToStoreFile );
-                if ( FALSE == $directoryCreated ):
-                    throw new \Exception( "EXCEPTION: Unable to create the temp directory: " . $absolutePathToStoreFile );
+                $directoryCreated = Storage::makeDirectory( $absolutePathToStoreTempFile );
+                if ( FALSE === $directoryCreated ):
+                    throw new \Exception( "EXCEPTION: Unable to create the temp directory: " . $absolutePathToStoreTempFile );
                 endif;
-                $this->Debug->_debug( "  " . $absolutePathToStoreFile . " was JUST made! Download the file and leave it there!" );
+                $this->Debug->_debug( "  " . $absolutePathToStoreTempFile . " was JUST made! Download the file and leave it there!" );
 
 
                 // SET THE DOWNLOAD PATH
-                $this->Debug->_debug( "  Setting download path to our new directory at: " . $absolutePathToStoreFile );
-                $page->setDownloadPath( $absolutePathToStoreFile );
+                $this->Debug->_debug( "  Setting download path to our new directory at: " . $absolutePathToStoreTempFile );
+                $page->setDownloadPath( $absolutePathToStoreTempFile );
 
 
                 // This downloads a file from $absoluteHREF into $absolutePathToStoreFile
@@ -131,28 +131,28 @@ class PeriodicReportsSecured extends AbstractCollector {
                     $checkCount++;
                     $this->Debug->_debug( "  Checking for the " . $checkCount . " time." );
                     sleep( 1 );
-                    $files = scandir( $absolutePathToStoreFile );
+                    $files = scandir( $absolutePathToStoreTempFile );
                 } while ( count( $files ) < 3 );
 
                 array_shift( $files ); // Remove .
                 array_shift( $files ); // Remove ..
 
                 if ( !isset( $files[ 0 ] ) ):
-                    throw new \Exception( "  A secured doc was NOT placed in: " . $absolutePathToStoreFile );
+                    throw new \Exception( "  A secured doc was NOT placed in: " . $absolutePathToStoreTempFile );
                 endif;
                 $fileName = $files[ 0 ];
                 $this->Debug->_debug( "  Done checking. I found the file: " . $fileName );
 
-                $contents = file_get_contents( $absolutePathToStoreFile . DIRECTORY_SEPARATOR . $fileName );
+                $contents = file_get_contents( $absolutePathToStoreTempFile . DIRECTORY_SEPARATOR . $fileName );
 
-
-                $bytesWritten = file_put_contents( $pathToSaveFiles . DIRECTORY_SEPARATOR . $finalReportName, $contents );
-                Storage::deleteDirectory( $absolutePathToStoreFile );
+                $absolutePathToStoreFinalFile = $pathToSaveFiles . DIRECTORY_SEPARATOR . $finalReportName;
+                $bytesWritten = file_put_contents($absolutePathToStoreFinalFile , $contents );
+                Storage::deleteDirectory( $absolutePathToStoreTempFile );
 
                 if ( FALSE === $bytesWritten ):
-                    throw new \Exception( "  Unable to write file to " . $absolutePathToStoreFile );
+                    throw new \Exception( "  Unable to write file to " . $absolutePathToStoreFinalFile );
                 else:
-                    $this->Debug->_debug( "  " . $bytesWritten . " bytes written into " . $pathToSaveFiles . DIRECTORY_SEPARATOR . $finalReportName );
+                    $this->Debug->_debug( "  " . $bytesWritten . " bytes written into " . $absolutePathToStoreFinalFile );
                 endif;
 
                 sleep( 1 );
