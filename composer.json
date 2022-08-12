@@ -18,8 +18,7 @@
     "guzzlehttp/guzzle": "^7.4",
     "chrome-php/chrome": "^1",
     "ext-dom": "*",
-    "nesbot/carbon": "^2.57",
-    "illuminate/support": "^9.24"
+    "nesbot/carbon": "^2.57"
   },
   "autoload": {
     "classmap": [

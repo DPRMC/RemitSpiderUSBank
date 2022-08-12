@@ -27,8 +27,7 @@ class PeriodicReportsSecured extends AbstractCollector {
     const LABEL_URL            = 'url';
     const LABEL_DATE_OF_REPORT = 'date_of_report';
     const LABEL_REPORT_NAME    = 'report_name';
-
-    const LABEL_RELATIVE_LOCAL_PATH = 'relative_local_path'; // TODO add this tomorrow.
+    const LABEL_RELATIVE_LOCAL_PATH = 'relative_local_path';
     const LABEL_BYTES               = 'bytes';
 
     // For get contents via get
@@ -142,13 +141,13 @@ class PeriodicReportsSecured extends AbstractCollector {
                 $this->_deleteTempDirectoryAndFile( $absolutePathToStoreTempFile );
 
                 $links[ $documentId ] = [
-                    self::LABEL_DOCUMENT_ID    => $documentId,
-                    self::LABEL_FILE_TYPE      => $fileType,
-                    self::LABEL_URL            => $href,
-                    self::LABEL_DATE_OF_REPORT => $dateOfReport,
-                    self::LABEL_REPORT_NAME    => $tdValues[ self::NAME_INDEX ],
-                    self::LABEL_BYTES => $bytesWritten,
-                    self::LABEL_RELATIVE_LOCAL_PATH => $this->_getRelativeLocalFilePath($absolutePathToStoreFinalFile)
+                    self::LABEL_DOCUMENT_ID         => $documentId,
+                    self::LABEL_FILE_TYPE           => $fileType,
+                    self::LABEL_URL                 => $href,
+                    self::LABEL_DATE_OF_REPORT      => $dateOfReport,
+                    self::LABEL_REPORT_NAME         => $tdValues[ self::NAME_INDEX ],
+                    self::LABEL_BYTES               => $bytesWritten,
+                    self::LABEL_RELATIVE_LOCAL_PATH => $this->_getRelativeLocalFilePath( $absolutePathToStoreFinalFile ),
                 ];
 
             } catch ( \Exception $exception ) {
@@ -312,9 +311,9 @@ class PeriodicReportsSecured extends AbstractCollector {
         return $files[ 0 ];
     }
 
-    protected function _getRelativeLocalFilePath(string $absolutePathToStoreFinalFile): string {
+    protected function _getRelativeLocalFilePath( string $absolutePathToStoreFinalFile ): string {
         $pattern = '/(.*\/custodians\/usbank\/periodic_reports_secured\/)/';
-        return preg_replace($pattern,'',$absolutePathToStoreFinalFile);
+        return preg_replace( $pattern, '', $absolutePathToStoreFinalFile );
     }
 
 }
