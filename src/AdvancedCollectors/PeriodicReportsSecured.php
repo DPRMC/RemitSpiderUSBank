@@ -99,22 +99,11 @@ class PeriodicReportsSecured extends AbstractCollector {
                 // My solution is to create a temporary unique directory to set as the download path for Headless Chromium.
                 // After the download, there should be only one file in there.
                 // Get the name of that file, and munge it as I see fit.
-                $md5OfHREF               = md5( $href );                                        // This should always be unique.
+                $md5OfHREF                   = md5( $href );                                        // This should always be unique.
                 $absolutePathToStoreTempFile = $pathToSaveFiles . DIRECTORY_SEPARATOR . $md5OfHREF; // This DIR will end up having one file.
 
-                if ( Storage::exists( $absolutePathToStoreTempFile ) ):
-                    $directoryDeleted = Storage::deleteDirectory( $absolutePathToStoreTempFile );
-                    if ( FALSE === $directoryDeleted ):
-                        throw new \Exception( "EXCEPTION: Unable to delete the temp directory: " . $absolutePathToStoreTempFile );
-                    endif;
-                endif;
-
-                $directoryCreated = Storage::makeDirectory( $absolutePathToStoreTempFile );
-                if ( FALSE === $directoryCreated ):
-                    throw new \Exception( "EXCEPTION: Unable to create the temp directory: " . $absolutePathToStoreTempFile );
-                endif;
+                $this->_createTempDirectoryForDownloadedFile($absolutePathToStoreTempFile);
                 $this->Debug->_debug( "  " . $absolutePathToStoreTempFile . " was JUST made! Download the file and leave it there!" );
-
 
                 // SET THE DOWNLOAD PATH
                 $this->Debug->_debug( "  Setting download path to our new directory at: " . $absolutePathToStoreTempFile );
@@ -132,21 +121,15 @@ class PeriodicReportsSecured extends AbstractCollector {
                     $this->Debug->_debug( "  Checking for the " . $checkCount . " time." );
                     sleep( 1 );
                     $files = scandir( $absolutePathToStoreTempFile );
-                } while ( count( $files ) < 3 );
+                } while ( ! $this->_downloadComplete($files) );
 
-                array_shift( $files ); // Remove .
-                array_shift( $files ); // Remove ..
-
-                if ( !isset( $files[ 0 ] ) ):
-                    throw new \Exception( "  A secured doc was NOT placed in: " . $absolutePathToStoreTempFile );
-                endif;
-                $fileName = $files[ 0 ];
+                $fileName = $this->_getFilenameFromFiles($files);
                 $this->Debug->_debug( "  Done checking. I found the file: " . $fileName );
 
                 $contents = file_get_contents( $absolutePathToStoreTempFile . DIRECTORY_SEPARATOR . $fileName );
 
                 $absolutePathToStoreFinalFile = $pathToSaveFiles . DIRECTORY_SEPARATOR . $finalReportName;
-                $bytesWritten = file_put_contents($absolutePathToStoreFinalFile , $contents );
+                $bytesWritten                 = file_put_contents( $absolutePathToStoreFinalFile, $contents );
                 Storage::deleteDirectory( $absolutePathToStoreTempFile );
 
                 if ( FALSE === $bytesWritten ):
@@ -243,5 +226,68 @@ class PeriodicReportsSecured extends AbstractCollector {
         return $reportName;
     }
 
+
+    /**
+     * @param string $absolutePathToStoreTempFile
+     *
+     * @return void
+     * @throws \Exception
+     */
+    protected function _createTempDirectoryForDownloadedFile(string $absolutePathToStoreTempFile): void {
+        if ( Storage::exists( $absolutePathToStoreTempFile ) ):
+            $directoryDeleted = Storage::deleteDirectory( $absolutePathToStoreTempFile );
+            if ( FALSE === $directoryDeleted ):
+                throw new \Exception( "EXCEPTION: Unable to delete the temp directory: " . $absolutePathToStoreTempFile );
+            endif;
+        endif;
+
+        $directoryCreated = Storage::makeDirectory( $absolutePathToStoreTempFile );
+        if ( FALSE === $directoryCreated ):
+            throw new \Exception( "EXCEPTION: Unable to create the temp directory: " . $absolutePathToStoreTempFile );
+        endif;
+    }
+
+
+    /**
+     * Headless Chromium creates a temp file ending with '.crdownload' that it streams the data into.
+     * Don't count that file.
+     * If the download is not complete, then set the $files var to an empty array to force
+     * the code to stay in the DoWhile loop.
+     *
+     * @param array $files
+     *
+     * @return bool
+     */
+    private function _downloadComplete( array $files ):bool {
+        array_shift( $files ); // Remove .
+        array_shift( $files ); // Remove ..
+
+        if ( !isset( $files[ 0 ] ) ):
+            return FALSE;
+        endif;
+        $fileName = $files[ 0 ];
+
+        $needle = '.crdownload';
+        if ( str_ends_with( $fileName, $needle ) ):
+            return FALSE;
+        endif;
+        return TRUE;
+    }
+
+    /**
+     * @param array $files An array of files from the scandir() call above.
+     *
+     * @return string The filename of the downloaded file from US Bank.
+     * @throws \Exception This should never happen because of error checking above where this method is called.
+     */
+    protected function _getFilenameFromFiles(array $files): string {
+        array_shift( $files ); // Remove .
+        array_shift( $files ); // Remove ..
+        if(! isset($files[0])):
+            throw new \Exception("Unable to find the downloaded file in the files array.");
+        endif;
+
+        return $files[ 0 ];
+    }
 
 }
