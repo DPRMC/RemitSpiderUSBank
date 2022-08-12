@@ -8,7 +8,6 @@ use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionWeDoNotHaveAccessToPeriodicRepor
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Page;
-use Illuminate\Support\Facades\Storage;
 
 /**
  *
@@ -29,7 +28,8 @@ class PeriodicReportsSecured extends AbstractCollector {
     const LABEL_DATE_OF_REPORT = 'date_of_report';
     const LABEL_REPORT_NAME    = 'report_name';
 
-    const LABEL_LOCAL_PATH = 'local_path'; // TODO add this tomorrow.
+    const LABEL_RELATIVE_LOCAL_PATH = 'relative_local_path'; // TODO add this tomorrow.
+    const LABEL_BYTES               = 'bytes';
 
     // For get contents via get
     const BODY     = 'body';
@@ -102,7 +102,7 @@ class PeriodicReportsSecured extends AbstractCollector {
                 $md5OfHREF                   = md5( $href );                                        // This should always be unique.
                 $absolutePathToStoreTempFile = $pathToSaveFiles . DIRECTORY_SEPARATOR . $md5OfHREF; // This DIR will end up having one file.
 
-                $this->_createTempDirectoryForDownloadedFile($absolutePathToStoreTempFile);
+                $this->_createTempDirectoryForDownloadedFile( $absolutePathToStoreTempFile );
                 $this->Debug->_debug( "  " . $absolutePathToStoreTempFile . " was JUST made! Download the file and leave it there!" );
 
                 // SET THE DOWNLOAD PATH
@@ -121,16 +121,16 @@ class PeriodicReportsSecured extends AbstractCollector {
                     $this->Debug->_debug( "  Checking for the " . $checkCount . " time." );
                     sleep( 1 );
                     $files = scandir( $absolutePathToStoreTempFile );
-                } while ( ! $this->_downloadComplete($files) );
+                } while ( !$this->_downloadComplete( $files ) );
 
-                $fileName = $this->_getFilenameFromFiles($files);
+                $fileName = $this->_getFilenameFromFiles( $files );
                 $this->Debug->_debug( "  Done checking. I found the file: " . $fileName );
 
                 $contents = file_get_contents( $absolutePathToStoreTempFile . DIRECTORY_SEPARATOR . $fileName );
 
                 $absolutePathToStoreFinalFile = $pathToSaveFiles . DIRECTORY_SEPARATOR . $finalReportName;
                 $bytesWritten                 = file_put_contents( $absolutePathToStoreFinalFile, $contents );
-                Storage::deleteDirectory( $absolutePathToStoreTempFile );
+
 
                 if ( FALSE === $bytesWritten ):
                     throw new \Exception( "  Unable to write file to " . $absolutePathToStoreFinalFile );
@@ -138,7 +138,8 @@ class PeriodicReportsSecured extends AbstractCollector {
                     $this->Debug->_debug( "  " . $bytesWritten . " bytes written into " . $absolutePathToStoreFinalFile );
                 endif;
 
-                sleep( 1 );
+                $this->Debug->_debug( "  Attempting to delete the TEMP directory and file at: " . $absolutePathToStoreTempFile );
+                $this->_deleteTempDirectoryAndFile( $absolutePathToStoreTempFile );
 
                 $links[ $documentId ] = [
                     self::LABEL_DOCUMENT_ID    => $documentId,
@@ -146,6 +147,8 @@ class PeriodicReportsSecured extends AbstractCollector {
                     self::LABEL_URL            => $href,
                     self::LABEL_DATE_OF_REPORT => $dateOfReport,
                     self::LABEL_REPORT_NAME    => $tdValues[ self::NAME_INDEX ],
+                    self::LABEL_BYTES => $bytesWritten,
+                    self::LABEL_RELATIVE_LOCAL_PATH => $this->_getRelativeLocalFilePath($absolutePathToStoreFinalFile)
                 ];
 
             } catch ( \Exception $exception ) {
@@ -223,6 +226,11 @@ class PeriodicReportsSecured extends AbstractCollector {
         // Any single spaces that are left, replace with a dash.
         $reportName = str_replace( ' ', '-', $reportName );
 
+        // CREFC Property File - Secured
+        // becomes
+        // 8722_2019-02-19_crefc-property-file---secured_24234677.zip
+        // So let's remove the triple -
+        $reportName = str_replace( '---', '-', $reportName );
         return $reportName;
     }
 
@@ -233,18 +241,32 @@ class PeriodicReportsSecured extends AbstractCollector {
      * @return void
      * @throws \Exception
      */
-    protected function _createTempDirectoryForDownloadedFile(string $absolutePathToStoreTempFile): void {
-        if ( Storage::exists( $absolutePathToStoreTempFile ) ):
-            $directoryDeleted = Storage::deleteDirectory( $absolutePathToStoreTempFile );
-            if ( FALSE === $directoryDeleted ):
-                throw new \Exception( "EXCEPTION: Unable to delete the temp directory: " . $absolutePathToStoreTempFile );
-            endif;
+    protected function _createTempDirectoryForDownloadedFile( string $absolutePathToStoreTempFile ): void {
+
+        if ( file_exists( $absolutePathToStoreTempFile ) ):
+            $this->_deleteTempDirectoryAndFile( $absolutePathToStoreTempFile );
         endif;
 
-        $directoryCreated = Storage::makeDirectory( $absolutePathToStoreTempFile );
-        if ( FALSE === $directoryCreated ):
-            throw new \Exception( "EXCEPTION: Unable to create the temp directory: " . $absolutePathToStoreTempFile );
+
+        mkdir( $absolutePathToStoreTempFile,
+               0777,
+               TRUE );
+    }
+
+
+    protected function _deleteTempDirectoryAndFile( string $absolutePathToStoreTempFile ): void {
+        if ( !file_exists( $absolutePathToStoreTempFile ) ):
+            return;
         endif;
+
+        $filesInTempDir = scandir( $absolutePathToStoreTempFile );
+        array_shift( $filesInTempDir ); // Remove .
+        array_shift( $filesInTempDir ); // Remove ..
+        foreach ( $filesInTempDir as $filename ):
+            unlink( $absolutePathToStoreTempFile . DIRECTORY_SEPARATOR . $filename );
+        endforeach;
+
+        rmdir( $absolutePathToStoreTempFile );
     }
 
 
@@ -258,7 +280,7 @@ class PeriodicReportsSecured extends AbstractCollector {
      *
      * @return bool
      */
-    private function _downloadComplete( array $files ):bool {
+    private function _downloadComplete( array $files ): bool {
         array_shift( $files ); // Remove .
         array_shift( $files ); // Remove ..
 
@@ -280,14 +302,19 @@ class PeriodicReportsSecured extends AbstractCollector {
      * @return string The filename of the downloaded file from US Bank.
      * @throws \Exception This should never happen because of error checking above where this method is called.
      */
-    protected function _getFilenameFromFiles(array $files): string {
+    protected function _getFilenameFromFiles( array $files ): string {
         array_shift( $files ); // Remove .
         array_shift( $files ); // Remove ..
-        if(! isset($files[0])):
-            throw new \Exception("Unable to find the downloaded file in the files array.");
+        if ( !isset( $files[ 0 ] ) ):
+            throw new \Exception( "Unable to find the downloaded file in the files array." );
         endif;
 
         return $files[ 0 ];
+    }
+
+    protected function _getRelativeLocalFilePath(string $absolutePathToStoreFinalFile): string {
+        $pattern = '/(.*\/custodians\/usbank\/periodic_reports_secured\/)/';
+        return preg_replace($pattern,'',$absolutePathToStoreFinalFile);
     }
 
 }
