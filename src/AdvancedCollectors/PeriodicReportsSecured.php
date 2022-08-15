@@ -17,16 +17,18 @@ class PeriodicReportsSecured extends AbstractCollector {
     protected string $tabText               = 'Periodic Reports - Secured';
     protected string $querySelectorForLinks = '#results-table > tbody > tr';
 
+    const MAX_TIMES_TO_CHECK_FOR_DOWNLOAD_BEFORE_GIVING_UP = 10;
+
     const NAME_INDEX      = 0;
     const DATE_INDEX      = 1;
     const FILE_TYPE_INDEX = 2; // This one has the link.
     const HISTORY_LINK    = 3; // Not used
 
-    const LABEL_DOCUMENT_ID    = 'document_id';
-    const LABEL_FILE_TYPE      = 'file_type';
-    const LABEL_URL            = 'url';
-    const LABEL_DATE_OF_REPORT = 'date_of_report';
-    const LABEL_REPORT_NAME    = 'report_name';
+    const LABEL_DOCUMENT_ID         = 'document_id';
+    const LABEL_FILE_TYPE           = 'file_type';
+    const LABEL_URL                 = 'url';
+    const LABEL_DATE_OF_REPORT      = 'date_of_report';
+    const LABEL_REPORT_NAME         = 'report_name';
     const LABEL_RELATIVE_LOCAL_PATH = 'relative_local_path';
     const LABEL_BYTES               = 'bytes';
 
@@ -120,7 +122,12 @@ class PeriodicReportsSecured extends AbstractCollector {
                     $this->Debug->_debug( "  Checking for the " . $checkCount . " time." );
                     sleep( 1 );
                     $files = scandir( $absolutePathToStoreTempFile );
+
+                    if ( $checkCount <= self::MAX_TIMES_TO_CHECK_FOR_DOWNLOAD_BEFORE_GIVING_UP ):
+                        continue 2;
+                    endif;
                 } while ( !$this->_downloadComplete( $files ) );
+
 
                 $fileName = $this->_getFilenameFromFiles( $files );
                 $this->Debug->_debug( "  Done checking. I found the file: " . $fileName );
