@@ -122,7 +122,7 @@ class PeriodicReportsSecured extends AbstractCollector {
                     $checkCount++;
 
                     $locale            = 'en_US';
-                    $nf                = new \NumberFormatter( $locale, NumberFormatter::ORDINAL );
+                    $nf                = new \NumberFormatter( $locale, \NumberFormatter::ORDINAL );
                     $ordinalCheckCount = $nf->format( $checkCount );
 
                     $this->Debug->_debug( "  Checking for the " . $ordinalCheckCount . " time." );
