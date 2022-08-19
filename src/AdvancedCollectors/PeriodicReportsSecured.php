@@ -2,7 +2,6 @@
 
 namespace DPRMC\RemitSpiderUSBank\AdvancedCollectors;
 
-
 use Carbon\Carbon;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionWeDoNotHaveAccessToPeriodicReportsSecured;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
@@ -100,8 +99,10 @@ class PeriodicReportsSecured extends AbstractCollector {
                 // My solution is to create a temporary unique directory to set as the download path for Headless Chromium.
                 // After the download, there should be only one file in there.
                 // Get the name of that file, and munge it as I see fit.
-                $md5OfHREF                   = md5( $href );                                        // This should always be unique.
-                $absolutePathToStoreTempFile = $pathToSaveFiles . DIRECTORY_SEPARATOR . $md5OfHREF; // This DIR will end up having one file.
+                $md5OfHREF                   =
+                    md5( $href );                                        // This should always be unique.
+                $absolutePathToStoreTempFile =
+                    $pathToSaveFiles . DIRECTORY_SEPARATOR . $md5OfHREF; // This DIR will end up having one file.
 
                 $this->_createTempDirectoryForDownloadedFile( $absolutePathToStoreTempFile );
                 $this->Debug->_debug( "  " . $absolutePathToStoreTempFile . " was JUST made! Download the file and leave it there!" );
@@ -119,14 +120,19 @@ class PeriodicReportsSecured extends AbstractCollector {
                 $checkCount = 0;
                 do {
                     $checkCount++;
-                    $this->Debug->_debug( "  Checking for the " . $checkCount . " time." );
+
+                    $locale            = 'en_US';
+                    $nf                = new \NumberFormatter( $locale, NumberFormatter::ORDINAL );
+                    $ordinalCheckCount = $nf->format( $checkCount );
+
+                    $this->Debug->_debug( "  Checking for the " . $ordinalCheckCount . " time." );
                     sleep( 1 );
                     $files = scandir( $absolutePathToStoreTempFile );
 
                     if ( $checkCount <= self::MAX_TIMES_TO_CHECK_FOR_DOWNLOAD_BEFORE_GIVING_UP ):
                         continue 2;
                     endif;
-                } while ( !$this->_downloadComplete( $files ) );
+                } while ( ! $this->_downloadComplete( $files ) );
 
 
                 $fileName = $this->_getFilenameFromFiles( $files );
@@ -189,10 +195,10 @@ class PeriodicReportsSecured extends AbstractCollector {
     /**
      * dealid-date-name-document-id.filetype
      *
-     * @param int    $dealId
+     * @param int $dealId
      * @param string $dateOfReport
      * @param string $dirtyFilename
-     * @param int    $documentId
+     * @param int $documentId
      * @param string $fileType
      *
      * @return string
@@ -261,7 +267,7 @@ class PeriodicReportsSecured extends AbstractCollector {
 
 
     protected function _deleteTempDirectoryAndFile( string $absolutePathToStoreTempFile ): void {
-        if ( !file_exists( $absolutePathToStoreTempFile ) ):
+        if ( ! file_exists( $absolutePathToStoreTempFile ) ):
             return;
         endif;
 
@@ -290,7 +296,7 @@ class PeriodicReportsSecured extends AbstractCollector {
         array_shift( $files ); // Remove .
         array_shift( $files ); // Remove ..
 
-        if ( !isset( $files[ 0 ] ) ):
+        if ( ! isset( $files[ 0 ] ) ):
             return FALSE;
         endif;
         $fileName = $files[ 0 ];
@@ -311,7 +317,7 @@ class PeriodicReportsSecured extends AbstractCollector {
     protected function _getFilenameFromFiles( array $files ): string {
         array_shift( $files ); // Remove .
         array_shift( $files ); // Remove ..
-        if ( !isset( $files[ 0 ] ) ):
+        if ( ! isset( $files[ 0 ] ) ):
             throw new \Exception( "Unable to find the downloaded file in the files array." );
         endif;
 
