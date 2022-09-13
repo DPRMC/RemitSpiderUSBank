@@ -129,7 +129,8 @@ class PeriodicReportsSecured extends AbstractCollector {
                     sleep( 1 );
                     $files = scandir( $absolutePathToStoreTempFile );
 
-                    if ( $checkCount <= self::MAX_TIMES_TO_CHECK_FOR_DOWNLOAD_BEFORE_GIVING_UP ):
+                    if ( $checkCount >= self::MAX_TIMES_TO_CHECK_FOR_DOWNLOAD_BEFORE_GIVING_UP ):
+                        $this->Debug->_debug( "  I have already checked " . $checkCount . " times. Enough is enough. Skipping it." );
                         continue 2;
                     endif;
                 } while ( ! $this->_downloadComplete( $files ) );
@@ -243,6 +244,15 @@ class PeriodicReportsSecured extends AbstractCollector {
         // 8722_2019-02-19_crefc-property-file---secured_24234677.zip
         // So let's remove the triple -
         $reportName = str_replace( '---', '-', $reportName );
+
+        // 9644_2018-02-20_cmbs-collateral-report-(revised-02/21/2018)_18243372.zip
+        // 9644_2018-02-20_cmbs-collateral-report--revised-02-21-2018_18243372.zip
+
+        $reportName = str_replace( '(', '', $reportName );
+        $reportName = str_replace( ')', '', $reportName );
+        $reportName = str_replace( '/', '-', $reportName );
+        $reportName = str_replace( '\\', '-', $reportName );
+
         return $reportName;
     }
 
