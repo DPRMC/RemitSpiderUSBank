@@ -4,8 +4,8 @@ namespace DPRMC\RemitSpiderUSBank\AdvancedCollectors;
 
 
 use Carbon\Carbon;
-use DPRMC\FIMS\API\V1\Console\Commands\Custodians\USBank\USBankDownloadDeals;
-use DPRMC\FIMS\API\V1\Modules\Custodians\USBank\Models\USBankDeal;
+//use DPRMC\FIMS\API\V1\Console\Commands\Custodians\USBank\USBankDownloadDeals;
+//use DPRMC\FIMS\API\V1\Modules\Custodians\USBank\Models\USBankDeal;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionUnableToTabByText;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;

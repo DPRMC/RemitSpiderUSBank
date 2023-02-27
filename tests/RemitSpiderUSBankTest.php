@@ -1,5 +1,6 @@
 <?php
 
+use DPRMC\FIMS\API\V1\Console\Commands\Custodians\USBank\V2\USBankSpider;
 use PHPUnit\Framework\TestCase;
 use \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use DPRMC\RemitSpiderUSBank\AdvancedCollectors\PeriodicReportsSecured;
@@ -16,6 +17,15 @@ class RemitSpiderUSBankTest extends TestCase {
     protected static bool $debug = TRUE;
 
     const TIMEZONE = 'America/New_York';
+
+
+    private function _getNewSpider(){
+//        $this->spider = new USBankSpider\( $this->debug,
+//                                          $storagePath,
+//                                          $this->timezone );
+    }
+
+
 
     private function _getSpider(): RemitSpiderUSBank {
         return new DPRMC\RemitSpiderUSBank\RemitSpiderUSBank( $_ENV[ 'CHROME_PATH' ],
