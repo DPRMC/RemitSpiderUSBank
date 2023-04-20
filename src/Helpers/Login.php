@@ -32,10 +32,10 @@ class Login {
 
 
     /**
-     * @param \HeadlessChromium\Page                 $Page
+     * @param \HeadlessChromium\Page $Page
      * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
-     * @param string                                 $user
-     * @param string                                 $pass
+     * @param string $user
+     * @param string $pass
      */
     public function __construct( Page   &$Page,
                                  Debug  &$Debug,
@@ -86,7 +86,8 @@ class Login {
 
         $this->Debug->_screenshot( 'am_i_logged_in' );
 
-        $this->Page->navigate( self::URL_INTERFACE )->waitForNavigation( Page::NETWORK_IDLE, 5000 );
+//        $this->Page->navigate( self::URL_INTERFACE )->waitForNavigation( Page::NETWORK_IDLE, 5000 );
+        $this->Page->navigate( self::URL_INTERFACE )->waitForNavigation(); // It was timing out. And this code works.
         $this->Debug->_screenshot( 'should_be_the_main_interface' );
         $this->cookies = $this->Page->getAllCookies();
         $postLoginHTML = $this->Page->getHtml();
