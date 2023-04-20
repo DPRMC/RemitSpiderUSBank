@@ -17,7 +17,7 @@ class USBankBrowser {
     protected ProcessAwareBrowser $browser;
 
     public Page $page;
-    const NETWORK_IDLE_MS_TO_WAIT    = 4000;
+    const NETWORK_IDLE_MS_TO_WAIT    = 4000; // This was too short. So I removed it from usage.
     const BROWSER_WINDOW_SIZE_WIDTH  = 1000;
     const BROWSER_WINDOW_SIZE_HEIGHT = 5000;
     const BROWSER_ENABLE_IMAGES      = TRUE;

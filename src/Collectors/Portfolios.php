@@ -34,10 +34,10 @@ class Portfolios extends BaseData {
     const PORTFOLIO_ID = 'portfolioId';
 
     /**
-     * @param \HeadlessChromium\Page                 $Page
+     * @param \HeadlessChromium\Page $Page
      * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
-     * @param string                                 $pathToPortfolioIds
-     * @param string                                 $timezone
+     * @param string $pathToPortfolioIds
+     * @param string $timezone
      */
     public function __construct( Page   &$Page,
                                  Debug  &$Debug,
@@ -67,8 +67,8 @@ class Portfolios extends BaseData {
             // Example:
             // https://trustinvestorreporting.usbank.com/TIR/portfolios?layout=layout&OWASP_CSRFTOKEN=1111-2222-3333-4444-5555-6666-7777-8888
             $this->Page->navigate( self::URL_BASE_PORTFOLIOS . $csrf )
-                       ->waitForNavigation( Page::NETWORK_IDLE,
-                                            USBankBrowser::NETWORK_IDLE_MS_TO_WAIT );
+//                       ->waitForNavigation( Page::NETWORK_IDLE, USBankBrowser::NETWORK_IDLE_MS_TO_WAIT );
+                       ->waitForNavigation(); // Was timing out and this code works.
 
             $portfolioHTML = $this->Page->getHtml();
             Errors::is404( self::URL_BASE_PORTFOLIOS . $csrf, $portfolioHTML );

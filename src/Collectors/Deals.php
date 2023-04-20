@@ -45,10 +45,10 @@ class Deals extends BaseData {
     protected int $y_all;
 
     /**
-     * @param \HeadlessChromium\Page                 $Page
+     * @param \HeadlessChromium\Page $Page
      * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
-     * @param string                                 $pathToDealLinkSuffixes
-     * @param string                                 $timezone
+     * @param string $pathToDealLinkSuffixes
+     * @param string $timezone
      */
     public function __construct( Page   &$Page,
                                  Debug  &$Debug,
@@ -60,10 +60,10 @@ class Deals extends BaseData {
 
 
     /**
-     * @param string                                     $usBankPortfolioId
+     * @param string $usBankPortfolioId
      * @param \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank $spider
-     * @param int                                        $x_all Different versions of the Chromium browser have different fonts. Moves the links.
-     * @param int                                        $y_all
+     * @param int $x_all Different versions of the Chromium browser have different fonts. Moves the links.
+     * @param int $y_all
      *
      * @return array
      * @throws \DPRMC\RemitSpiderUSBank\Exceptions\Exception404Returned
@@ -91,8 +91,8 @@ class Deals extends BaseData {
 
             // Start on Portfolios page
             $this->Page->navigate( Portfolios::URL_BASE_PORTFOLIOS )
-                       ->waitForNavigation( Page::NETWORK_IDLE,
-                                            USBankBrowser::NETWORK_IDLE_MS_TO_WAIT );
+//                       ->waitForNavigation( Page::NETWORK_IDLE,USBankBrowser::NETWORK_IDLE_MS_TO_WAIT );
+                       ->waitForNavigation(); // Was timing out, and this code works.
 
             $this->Debug->_screenshot( 'portfolios_page_' . $usBankPortfolioId );
             $this->Debug->_html( 'portfolios_page_' . $usBankPortfolioId );
@@ -125,7 +125,7 @@ class Deals extends BaseData {
             $this->_setDataToCache( $this->dealLinkSuffixes );
             $this->_cacheData();
 
-            $this->notifyParentPullWasSuccessful($spider, $usBankPortfolioId);
+            $this->notifyParentPullWasSuccessful( $spider, $usBankPortfolioId );
 
             $this->Debug->_debug( "Writing the Deal Link Suffixes to cache." );
 
@@ -265,9 +265,9 @@ class Deals extends BaseData {
      * @return void
      * @throws \Exception
      */
-    public function notifyParentPullWasSuccessful( RemitSpiderUSBank $spider, $parentId): void {
+    public function notifyParentPullWasSuccessful( RemitSpiderUSBank $spider, $parentId ): void {
         $spider->Portfolios->loadFromCache();
-        $spider->Portfolios->data[$parentId][BaseData::CHILDREN_LAST_PULLED] = Carbon::now($this->timezone);
+        $spider->Portfolios->data[ $parentId ][ BaseData::CHILDREN_LAST_PULLED ] = Carbon::now( $this->timezone );
         $spider->Portfolios->_cacheData();
     }
 }
