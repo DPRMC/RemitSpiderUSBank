@@ -136,7 +136,8 @@ class HistoryLinks extends BaseData {
             // Example URL:
             // https://trustinvestorreporting.usbank.com/TIR/public/deals/detail/1234/abc-defg-2001-1
             $this->Page->navigate( self::BASE_DEAL_URL . $dealLinkSuffix )
-                       ->waitForNavigation( Page::NETWORK_IDLE, 5000 );
+//                       ->waitForNavigation( Page::NETWORK_IDLE, 5000 );
+                       ->waitForNavigation();
 
             $this->Debug->_screenshot( 'deal_page_' . urlencode( $dealLinkSuffix ) );
             $this->Debug->_html( 'deal_page_' . urlencode( $dealLinkSuffix ) );
@@ -161,8 +162,8 @@ class HistoryLinks extends BaseData {
             $this->Debug->_debug( "I found " . count( $newHistoryLinks ) . " History Links." );
             $this->stopTime = Carbon::now( $this->timezone );
 
-            $mostRecentReportDate = $this->_getMostRecentReportDate($dom);
-            $this->mostRecentReportDates[$this->dealId] = $mostRecentReportDate;
+            $mostRecentReportDate                         = $this->_getMostRecentReportDate( $dom );
+            $this->mostRecentReportDates[ $this->dealId ] = $mostRecentReportDate;
 
             $this->_setDataToCache( $newHistoryLinks );
 

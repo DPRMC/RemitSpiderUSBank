@@ -41,10 +41,10 @@ class FileIndex extends BaseData {
     const HTTP_RESPONSE_CODE = 'httpResponseCode';
 
     /**
-     * @param \HeadlessChromium\Page                 $Page
+     * @param \HeadlessChromium\Page $Page
      * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
-     * @param string                                 $pathToFileIndex
-     * @param string                                 $timezone
+     * @param string $pathToFileIndex
+     * @param string $timezone
      */
     public function __construct( Page   &$Page,
                                  Debug  &$Debug,
@@ -71,7 +71,7 @@ class FileIndex extends BaseData {
 
 
     /**
-     * @param string                                     $historyLinkSuffix
+     * @param string $historyLinkSuffix
      * @param \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank $spider
      *
      * @return array
@@ -103,7 +103,8 @@ class FileIndex extends BaseData {
 
             // Example URL:
             $this->Page->navigate( HistoryLinks::HISTORY_LINK . $historyLinkSuffix )
-                       ->waitForNavigation( Page::NETWORK_IDLE, 5000 );
+//                       ->waitForNavigation( Page::NETWORK_IDLE, 5000 );
+                       ->waitForNavigation();
 
             $this->Debug->_screenshot( 'historic_files_page_' . urlencode( $historyLinkSuffix ) );
             $this->Debug->_html( 'historic_files_page_' . urlencode( $historyLinkSuffix ) );
@@ -317,7 +318,7 @@ class FileIndex extends BaseData {
 
         // I believe this was writing new rows into the cache, when a previous file index for a deal id didn't already exist.
         // Not entirely sure how that could happen. Probably in debugging.
-        if ( !isset( $spider->FileIndex->data[ $dealId ][ $uniqueId ] ) ):
+        if ( ! isset( $spider->FileIndex->data[ $dealId ][ $uniqueId ] ) ):
             throw new \Exception( "The FileIndex record for Deal ID: " . $dealId . " does not exist. So how did I try to download a file without a file index?" );
         endif;
 
@@ -351,7 +352,7 @@ class FileIndex extends BaseData {
 
     /**
      * @param \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank $spider
-     * @param string                                     $url
+     * @param string $url
      *
      * @return array
      * @throws \GuzzleHttp\Exception\GuzzleException
@@ -407,7 +408,7 @@ class FileIndex extends BaseData {
 
     /**
      * @param \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank $spider
-     * @param string                                     $url
+     * @param string $url
      *
      * @return array
      * @throws \GuzzleHttp\Exception\GuzzleException

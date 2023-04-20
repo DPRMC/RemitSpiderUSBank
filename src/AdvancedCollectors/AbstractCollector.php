@@ -4,6 +4,7 @@ namespace DPRMC\RemitSpiderUSBank\AdvancedCollectors;
 
 
 use Carbon\Carbon;
+
 //use DPRMC\FIMS\API\V1\Console\Commands\Custodians\USBank\USBankDownloadDeals;
 //use DPRMC\FIMS\API\V1\Modules\Custodians\USBank\Models\USBankDeal;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionUnableToTabByText;
@@ -46,12 +47,12 @@ abstract class AbstractCollector {
      * I added the $misc parameter in the case I need additional resources passed into a particular
      * implementation of this abstract method.
      *
-     * @param array                                  $elements
-     * @param string                                 $pathToSaveFiles
-     * @param \HeadlessChromium\Page                 $page
+     * @param array $elements
+     * @param string $pathToSaveFiles
+     * @param \HeadlessChromium\Page $page
      * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $debug
-     * @param int                                    $dealId
-     * @param array                                  $misc I am cheating here. See notes above.
+     * @param int $dealId
+     * @param array $misc I am cheating here. See notes above.
      *
      * @return array
      */
@@ -101,7 +102,8 @@ abstract class AbstractCollector {
             // Example URL:
             // https://trustinvestorreporting.usbank.com/TIR/public/deals/detail/1234/abc-defg-2001-1
             $this->Page->navigate( self::BASE_DEAL_URL . $dealLinkSuffix )
-                       ->waitForNavigation( Page::NETWORK_IDLE, 5000 );
+//                       ->waitForNavigation( Page::NETWORK_IDLE, 5000 );
+                       ->waitForNavigation();
 
             $this->Debug->_screenshot( 'the_deal_page_' . urlencode( $dealLinkSuffix ) );
             $this->Debug->_html( 'the_deal_page_' . urlencode( $dealLinkSuffix ) );
@@ -110,7 +112,7 @@ abstract class AbstractCollector {
             // Click the TAB with text in $tabText
             $elements = $this->Page->dom()->search( "//a[contains(text(),'" . $this->tabText . "')]" );
 
-            if ( !isset( $elements[ 0 ] ) ):
+            if ( ! isset( $elements[ 0 ] ) ):
                 $this->Debug->_debug( "Unable to find a link with the text '" . $this->tabText . "' in it." );
                 throw new ExceptionUnableToTabByText( "Unable to find a link with the text '" . $this->tabText . "' in it.",
                                                       0,
@@ -163,7 +165,6 @@ abstract class AbstractCollector {
         endif;
         return $parts[ 1 ];
     }
-
 
 
 }
