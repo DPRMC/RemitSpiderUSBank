@@ -79,12 +79,6 @@ class RemitSpiderUSBankTest extends TestCase {
         $downloadable                 = $crefcLoanSetupFilesCollector->getDownloadable( $dealLinkSuffix );
 
 
-
-
-
-        $contents = file_get_contents($downloadable->downloadableUrl);
-        $bytesWritten = file_put_contents($downloadable->dealName . '.csv', $contents);
-        $spider->Debug->_debug($bytesWritten . " bytes written.");
     }
 
     /**

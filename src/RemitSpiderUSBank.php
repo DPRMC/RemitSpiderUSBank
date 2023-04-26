@@ -151,4 +151,23 @@ class RemitSpiderUSBank {
     }
 
 
+    /**
+     * A little helper function to turn on debugging from the top level object.
+     * @return void
+     */
+    public function enableDebug(): void {
+        $this->debug = TRUE;
+        $this->Debug->enableDebug();
+        $this->Debug->_debug( "Debug has been enabled." );
+    }
+
+
+    /**
+     * @return void
+     */
+    public function disableDebug(): void {
+        $this->debug = FALSE;
+        $this->Debug->disableDebug();
+        $this->Debug->_debug( "Debug has been disabled." );
+    }
 }
