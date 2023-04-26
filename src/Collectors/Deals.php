@@ -34,7 +34,6 @@ class Deals extends BaseData {
     const X_ALL_DEFAULT = 220;
     const Y_ALL_DEFAULT = 3915;
 
-
     // CACHE
     const DEAL_LINK_SUFFIX = 'dealLinkSuffix';
     const PORTFOLIO_ID     = 'portfolioId';

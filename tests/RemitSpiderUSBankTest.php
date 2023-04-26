@@ -1,6 +1,5 @@
 <?php
 
-use DPRMC\FIMS\API\V1\Console\Commands\Custodians\USBank\V2\USBankSpider;
 use PHPUnit\Framework\TestCase;
 use \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use DPRMC\RemitSpiderUSBank\AdvancedCollectors\PeriodicReportsSecured;
@@ -19,12 +18,11 @@ class RemitSpiderUSBankTest extends TestCase {
     const TIMEZONE = 'America/New_York';
 
 
-    private function _getNewSpider(){
+    private function _getNewSpider() {
 //        $this->spider = new USBankSpider\( $this->debug,
 //                                          $storagePath,
 //                                          $this->timezone );
     }
-
 
 
     private function _getSpider(): RemitSpiderUSBank {
@@ -60,6 +58,34 @@ class RemitSpiderUSBankTest extends TestCase {
                                  $spider );
     }
 
+
+    /**
+     * @test
+     * @group crefc
+     */
+    public function testCrefcLoanSetupFile() {
+
+        // https://trustinvestorreporting.usbank.com/TIR/public/deals/detail/11601/ubs-2012-c2
+        // https://trustinvestorreporting.usbank.com/TIR/public/deals/detail/11601/ubs-2012-c2
+        $dealId                = $_ENV[ 'DEAL_ID' ];
+        $dealLinkSuffix        = $_ENV[ 'DEAL_LINK_SUFFIX' ];
+        $pathToDownloadedFiles = $_ENV[ 'PATH_TO_IDS' ];
+        $spider                = $this->_getSpider();
+        $spider->Login->login();
+        $crefcLoanSetupFilesCollector = new \DPRMC\RemitSpiderUSBank\AdvancedCollectors\CrefcLoanSetupFiles( $spider->Login,
+                                                                                                             $spider->USBankBrowser->page,
+                                                                                                             $spider->Debug,
+                                                                                                             'America/New_York' );
+        $downloadable                 = $crefcLoanSetupFilesCollector->getDownloadable( $dealLinkSuffix );
+
+
+
+
+
+        $contents = file_get_contents($downloadable->downloadableUrl);
+        $bytesWritten = file_put_contents($downloadable->dealName . '.csv', $contents);
+        $spider->Debug->_debug($bytesWritten . " bytes written.");
+    }
 
     /**
      * @test

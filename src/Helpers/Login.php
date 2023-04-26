@@ -19,7 +19,10 @@ class Login {
 
     const LOGIN_BUTTON_X = 80;
     const LOGIN_BUTTON_Y = 260;
-    const URL_INTERFACE  = RemitSpiderUSBank::BASE_URL . '/TIR/portfolios';
+
+    //const URL_INTERFACE  = RemitSpiderUSBank::BASE_URL . '/TIR/portfolios';
+    // https://trustinvestorreporting.usbank.com/TIR/public/deals/
+    const URL_INTERFACE = RemitSpiderUSBank::BASE_URL . '/TIR/public/deals';
 
     protected Page   $Page;
     protected Debug  $Debug;
@@ -32,10 +35,11 @@ class Login {
 
 
     /**
-     * @param \HeadlessChromium\Page $Page
-     * @param \DPRMC\RemitSpiderUSBank\Helpers\Debug $Debug
+     * @param Page $Page
+     * @param Debug $Debug
      * @param string $user
      * @param string $pass
+     * @param string $timezone
      */
     public function __construct( Page   &$Page,
                                  Debug  &$Debug,
@@ -85,10 +89,41 @@ class Login {
         $this->Page->waitForReload();
 
         $this->Debug->_screenshot( 'am_i_logged_in' );
+        $this->Debug->_html( 'am_i_logged_in' );
 
-//        $this->Page->navigate( self::URL_INTERFACE )->waitForNavigation( Page::NETWORK_IDLE, 5000 );
-        $this->Page->navigate( self::URL_INTERFACE )->waitForNavigation(); // It was timing out. And this code works.
+        $currentUrl = $this->Page->getCurrentUrl();
+        $this->Debug->_debug("Currently at: " . $currentUrl);
+
+
+
+        $this->Debug->_debug( "Navigating to the main interface at " . self::URL_INTERFACE );
+
+        //$this->Page->navigate( self::URL_INTERFACE )->waitForNavigation( Page::NETWORK_IDLE, 5000 );
+//        $this->Page->navigate( self::URL_INTERFACE )->waitForNavigation( Page::NETWORK_IDLE ); // It was timing out. And this code works.
+        // I now need to click on the actual link. Instead of navigating directly to the interface.
+        // 'TIR-Ext','https://trustinvestorreporting.usbank.com/TIR/portal/','TrustInvestorReporting
+        //$openApplicationLink = RemitSpiderUSBank::BASE_URL . '/portal/public/openApplication.do?appName=TIR-Ext&appUrl=https://trustinvestorreporting.usbank.com/TIR/portal/';
+        //$this->Page->navigate( $openApplicationLink )->waitForNavigation(Page::NETWORK_IDLE);
+
+        $applicationsX = 90;
+        $applicationsY = 130;
+
+        $trustInvestorReportingX = 90;
+        $trustInvestorReportingY = 164;
+        $this->Page->mouse()->move($applicationsX,$applicationsY );
+        $this->Debug->_screenshot( 'first_mouse_move', new Clip( 0, 0, $applicationsX, $applicationsY ) );
+        sleep(1);
+
+        $this->Page->navigate( 'https://trustinvestorreporting.usbank.com/TIR/portal/' )->waitForNavigation(Page::NETWORK_IDLE);
+
+//        $this->Page->evaluate(
+//            "window.location='/portal/public/openApplication.do?appName=TIR-Ext&appUrl=https://trustinvestorreporting.usbank.com/TIR/portal/';"
+//        );
+//        // This loads a page with additional javascript.
+//        sleep(4);
+
         $this->Debug->_screenshot( 'should_be_the_main_interface' );
+        $this->Debug->_html( 'should_be_the_main_interface' );
         $this->cookies = $this->Page->getAllCookies();
         $postLoginHTML = $this->Page->getHtml();
 
@@ -96,10 +131,12 @@ class Login {
             throw new \Exception( "US Bank returned Forbidden: Access is denied", 403 );
         endif;
 
-
         $this->csrf = $this->getCSRF( $postLoginHTML );
+
+
+        $this->Debug->_screenshot( "post_login" );
         $this->Debug->_html( "post_login" );
-        $this->Debug->_debug( "CSRF saved to Login object." );
+        $this->Debug->_debug( "CSRF saved to Login object: " . $this->csrf );
         return $postLoginHTML;
     }
 
