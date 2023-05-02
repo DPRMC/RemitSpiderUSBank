@@ -75,10 +75,10 @@ class RemitSpiderUSBankTest extends TestCase {
         $crefcLoanSetupFilesCollector = new \DPRMC\RemitSpiderUSBank\AdvancedCollectors\CrefcLoanSetupFiles( $spider->Login,
                                                                                                              $spider->USBankBrowser->page,
                                                                                                              $spider->Debug,
-                                                                                                             'America/New_York' );
+                                                                                                             self::TIMEZONE );
         $downloadable                 = $crefcLoanSetupFilesCollector->getDownloadable( $dealLinkSuffix );
 
-
+        $this->assertInstanceOf(\DPRMC\RemitSpiderUSBank\Downloadables\CrefcLoanSetupFileDownloadable::class, $downloadable);
     }
 
     /**

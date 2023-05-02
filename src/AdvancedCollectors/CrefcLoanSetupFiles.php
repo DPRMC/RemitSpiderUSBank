@@ -108,7 +108,7 @@ class CrefcLoanSetupFiles {
                                                                $textOfLabel,
                                                                $urlToCrefcLoanSetupFile,
                                                                $dateOfLoanSetupFile,
-                                                               'America/New_York' );
+                                                               $this->timezone );
                 endif;
             endif;
         endforeach;
