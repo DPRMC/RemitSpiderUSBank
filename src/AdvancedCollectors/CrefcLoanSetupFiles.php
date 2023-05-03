@@ -5,6 +5,7 @@ namespace DPRMC\RemitSpiderUSBank\AdvancedCollectors;
 use Carbon\Carbon;
 use DPRMC\RemitSpiderUSBank\Collectors\Login;
 use DPRMC\RemitSpiderUSBank\Downloadables\CrefcLoanSetupFileDownloadable;
+use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionUnableToFindLinkToCrefcLoanSetupFile;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionUnableToTabByText;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
@@ -39,6 +40,21 @@ class CrefcLoanSetupFiles {
     }
 
 
+    /**
+     * @param string $dealLinkSuffix
+     * @return CrefcLoanSetupFileDownloadable
+     * @throws ExceptionUnableToFindLinkToCrefcLoanSetupFile
+     * @throws \HeadlessChromium\Exception\CommunicationException
+     * @throws \HeadlessChromium\Exception\CommunicationException\CannotReadResponse
+     * @throws \HeadlessChromium\Exception\CommunicationException\InvalidResponse
+     * @throws \HeadlessChromium\Exception\CommunicationException\ResponseHasError
+     * @throws \HeadlessChromium\Exception\ElementNotFoundException
+     * @throws \HeadlessChromium\Exception\FilesystemException
+     * @throws \HeadlessChromium\Exception\NavigationExpired
+     * @throws \HeadlessChromium\Exception\NoResponseAvailable
+     * @throws \HeadlessChromium\Exception\OperationTimedOut
+     * @throws \HeadlessChromium\Exception\ScreenshotFailed
+     */
     public function getDownloadable( string $dealLinkSuffix ): CrefcLoanSetupFileDownloadable {
         $dealId = $this->getDealIdFromDealLinkSuffix( $dealLinkSuffix );
         $this->Debug->_screenshot( 'start_page_' . $dealId );
@@ -67,7 +83,7 @@ class CrefcLoanSetupFiles {
         $tds        = $dom->getElementsByTagName( 'td' );
         $trimmedTds = [];
         foreach ( $tds as $i => $td ):
-            $tdText = $td->nodeValue;
+            $tdText           = $td->nodeValue;
             $trimmedTds[ $i ] = trim( $tdText );
         endforeach;
 
@@ -83,7 +99,10 @@ class CrefcLoanSetupFiles {
         if ( is_null( $indexOfLabel ) ):
             // report the td values to Bugsnag,so I can adjust this code.
             // Probably need to change the str_contains above.
-            throw new \Exception( "TODO I need to record the lables to Bugsnag or whereever to add them to the str_contains above" );
+            throw new ExceptionUnableToFindLinkToCrefcLoanSetupFile( "Unable to find the index of the label to the CREFC Loan Setup file.",
+                                                                     0,
+                                                                     NULL,
+                                                                     $trimmedTds );
         endif;
 
         $textOfLabel         = trim( $tds[ $indexOfLabel ]->nodeValue );
@@ -92,7 +111,7 @@ class CrefcLoanSetupFiles {
         /**
          * @var \DOMElement $tdWithLink
          */
-        $tdWithLink = $tds[ $indexOfLabel + 2 ];
+        $tdWithLink         = $tds[ $indexOfLabel + 2 ];
         $tdWithLinkChildren = $tdWithLink->childNodes;
 
         /**
