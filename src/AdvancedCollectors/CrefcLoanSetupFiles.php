@@ -5,6 +5,7 @@ namespace DPRMC\RemitSpiderUSBank\AdvancedCollectors;
 use Carbon\Carbon;
 use DPRMC\RemitSpiderUSBank\Collectors\Login;
 use DPRMC\RemitSpiderUSBank\Downloadables\CrefcLoanSetupFileDownloadable;
+use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionDoNotHaveAccessToThisDeal;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionUnableToFindLinkToCrefcLoanSetupFile;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionUnableToTabByText;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
@@ -43,6 +44,7 @@ class CrefcLoanSetupFiles {
     /**
      * @param string $dealLinkSuffix
      * @return CrefcLoanSetupFileDownloadable
+     * @throws ExceptionDoNotHaveAccessToThisDeal
      * @throws ExceptionUnableToFindLinkToCrefcLoanSetupFile
      * @throws \HeadlessChromium\Exception\CommunicationException
      * @throws \HeadlessChromium\Exception\CommunicationException\CannotReadResponse
@@ -76,6 +78,13 @@ class CrefcLoanSetupFiles {
         $this->Debug->_html( 'periodic_reports_secured_' . $dealId );
 
         $htmlOfSecuredReports = $this->Page->getHtml();
+
+        if(str_contains($htmlOfSecuredReports,'You do not have access to this deal')):
+            throw new ExceptionDoNotHaveAccessToThisDeal("You don't have access to this deal.",
+                                                         0,
+                                                         null,
+                                                         $dealLinkSuffix);
+        endif;
 
         $dom = new \DOMDocument();
         @$dom->loadHTML( $htmlOfSecuredReports );
