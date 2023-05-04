@@ -105,6 +105,9 @@ class CrefcLoanSetupFiles {
             if ( str_contains( $trimmedTd, 'Loan Setup' ) ):
                 $indexOfLabel = $i;
                 break;
+            elseif(str_contains( $trimmedTd, 'Electronic Data File' )):
+                $indexOfLabel = $i;
+                break;
             endif;
         endforeach;
 
