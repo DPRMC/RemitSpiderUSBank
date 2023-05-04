@@ -66,28 +66,31 @@ class CrefcLoanSetupFiles {
         $this->Debug->_screenshot( 'the_deal_page_' . $dealId );
         $this->Debug->_html( 'the_deal_page_' . $dealId );
 
+//        $querySelector = "//a[contains(., 'Periodic Reports - Secured')]";
+//        $selector      = new XPathSelector( $querySelector );
+//        $position      = $this->Page->mouse()->findElement( $selector )->getPosition();
+//        $this->Debug->_screenshot( 'the_position_of_periodic_reports_secured', new Clip( 0, 0, $position[ 'x' ], $position[ 'y' ] ) );
+//        $this->Page->mouse()->move( $position[ 'x' ], $position[ 'y' ] )->click();
+//        sleep( 2 );
+//        $this->Debug->_screenshot( 'periodic_reports_secured_' . $dealId );
+//        $this->Debug->_html( 'periodic_reports_secured_' . $dealId );
+//        $htmlOfSecuredReports = $this->Page->getHtml();
 
-        $querySelector = "//a[contains(., 'Periodic Reports - Secured')]";
-        $selector      = new XPathSelector( $querySelector );
-        $position      = $this->Page->mouse()->findElement( $selector )->getPosition();
+        $htmlOfPeriodicReportsSecuredReports = $this->_getPeriodicReportsSecuredHtml( $dealId );
+        $htmlOfPeriodicReports               = $this->_getPeriodicReportsHtml( $dealId );
 
-        $this->Debug->_screenshot( 'the_position_of_periodic_reports_secured', new Clip( 0, 0, $position[ 'x' ], $position[ 'y' ] ) );
-        $this->Page->mouse()->move( $position[ 'x' ], $position[ 'y' ] )->click();
-        sleep( 2 );
-        $this->Debug->_screenshot( 'periodic_reports_secured_' . $dealId );
-        $this->Debug->_html( 'periodic_reports_secured_' . $dealId );
+        $combinedHTML = $htmlOfPeriodicReportsSecuredReports . $htmlOfPeriodicReports;
 
-        $htmlOfSecuredReports = $this->Page->getHtml();
-
-        if(str_contains($htmlOfSecuredReports,'You do not have access to this deal')):
-            throw new ExceptionDoNotHaveAccessToThisDeal("You don't have access to this deal.",
-                                                         0,
-                                                         null,
-                                                         $dealLinkSuffix);
+        if ( str_contains( $combinedHTML, 'You do not have access to this deal' ) ):
+            throw new ExceptionDoNotHaveAccessToThisDeal( "You don't have access to this deal.",
+                                                          0,
+                                                          NULL,
+                                                          $dealLinkSuffix );
         endif;
 
         $dom = new \DOMDocument();
-        @$dom->loadHTML( $htmlOfSecuredReports );
+        //@$dom->loadHTML( $htmlOfPeriodicReportsSecuredReports );
+        @$dom->loadHTML( $combinedHTML );
 
         $tds        = $dom->getElementsByTagName( 'td' );
         $trimmedTds = [];
@@ -147,6 +150,34 @@ class CrefcLoanSetupFiles {
     protected function getDealIdFromDealLinkSuffix( string $dealLinkSuffix ): string {
         $dealLinkSuffixParts = explode( '/', $dealLinkSuffix );
         return $dealLinkSuffixParts[ 0 ];
+    }
+
+
+    protected function _getPeriodicReportsSecuredHtml( string $dealId ): string {
+
+        $querySelector = "//a[contains(., 'Periodic Reports - Secured')]";
+        $selector      = new XPathSelector( $querySelector );
+        $position      = $this->Page->mouse()->findElement( $selector )->getPosition();
+        $this->Debug->_screenshot( 'the_position_of_periodic_reports_secured', new Clip( 0, 0, $position[ 'x' ], $position[ 'y' ] ) );
+        $this->Page->mouse()->move( $position[ 'x' ], $position[ 'y' ] )->click();
+        sleep( 2 );
+        $this->Debug->_screenshot( 'periodic_reports_secured_' . $dealId );
+        $this->Debug->_html( 'periodic_reports_secured_' . $dealId );
+        $htmlOfSecuredReports = $this->Page->getHtml();
+        return $htmlOfSecuredReports;
+    }
+
+    protected function _getPeriodicReportsHtml( string $dealId ): string {
+        $querySelector = "//a[contains(., 'Periodic Reports')]";
+        $selector      = new XPathSelector( $querySelector );
+        $position      = $this->Page->mouse()->findElement( $selector )->getPosition();
+        $this->Debug->_screenshot( 'the_position_of_periodic_reports_unsecured', new Clip( 0, 0, $position[ 'x' ], $position[ 'y' ] ) );
+        $this->Page->mouse()->move( $position[ 'x' ], $position[ 'y' ] )->click();
+        sleep( 2 );
+        $this->Debug->_screenshot( 'periodic_reports_unsecured_' . $dealId );
+        $this->Debug->_html( 'periodic_reports_unsecured_' . $dealId );
+        $htmlOfSecuredReports = $this->Page->getHtml();
+        return $htmlOfSecuredReports;
     }
 
 

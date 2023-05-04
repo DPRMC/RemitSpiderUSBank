@@ -1,5 +1,7 @@
 <?php
 
+use HeadlessChromium\Clip;
+use HeadlessChromium\Dom\Selector\XPathSelector;
 use PHPUnit\Framework\TestCase;
 use \DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use DPRMC\RemitSpiderUSBank\AdvancedCollectors\PeriodicReportsSecured;
@@ -61,6 +63,28 @@ class RemitSpiderUSBankTest extends TestCase {
 
     /**
      * @test
+     * @group xpath
+     */
+    public function testXPath() {
+        $url = 'https://fims2.deerparkrd.com/lasudflasdjhflasdhflaskdhlfkashjdf.html';
+        $spider = $this->_getSpider();
+        $spider->USBankBrowser->page->navigate($url)->waitForNavigation();
+        $spider->Debug->_screenshot( 'deal_page');
+        $querySelector = "//a[contains(., 'Periodic Reports - Secured')]";
+        $querySelector = "//a[contains(., 'Periodic Reports')][2]";
+        $selector      = new XPathSelector( $querySelector );
+        $position      = $spider->USBankBrowser->page->mouse()->findElement( $selector )->getPosition();
+        $spider->Debug->_screenshot( 'the_position_of_periodic_reports_secured', new Clip( 0, 0, $position[ 'x' ], $position[ 'y' ] ) );
+        $spider->USBankBrowser->page->mouse()->move( $position[ 'x' ], $position[ 'y' ] )->click();
+
+
+
+
+    }
+
+
+    /**
+     * @test
      * @group crefc
      */
     public function testCrefcLoanSetupFile() {
@@ -78,7 +102,9 @@ class RemitSpiderUSBankTest extends TestCase {
                                                                                                              self::TIMEZONE );
         $downloadable                 = $crefcLoanSetupFilesCollector->getDownloadable( $dealLinkSuffix );
 
-        $this->assertInstanceOf(\DPRMC\RemitSpiderUSBank\Downloadables\CrefcLoanSetupFileDownloadable::class, $downloadable);
+        $this->assertInstanceOf( \DPRMC\RemitSpiderUSBank\Downloadables\CrefcLoanSetupFileDownloadable::class, $downloadable );
+
+        print_r($downloadable);
     }
 
     /**
