@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use DPRMC\RemitSpiderUSBank\Collectors\Login;
 use DPRMC\RemitSpiderUSBank\Downloadables\CrefcLoanSetupFileDownloadable;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionDoNotHaveAccessToThisDeal;
+use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionOurAccessToThisPeriodicReportSecuredIsPending;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionUnableToFindLinkToCrefcLoanSetupFile;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionUnableToTabByText;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
@@ -83,6 +84,15 @@ class CrefcLoanSetupFiles {
 
         if ( str_contains( $combinedHTML, 'You do not have access to this deal' ) ):
             throw new ExceptionDoNotHaveAccessToThisDeal( "You don't have access to this deal.",
+                                                          0,
+                                                          NULL,
+                                                          $dealLinkSuffix );
+        endif;
+
+
+
+        if ( str_contains( $combinedHTML, 'request to access this deal or feature is pending' ) ):
+            throw new ExceptionOurAccessToThisPeriodicReportSecuredIsPending( "Access to this deal is pending",
                                                           0,
                                                           NULL,
                                                           $dealLinkSuffix );
