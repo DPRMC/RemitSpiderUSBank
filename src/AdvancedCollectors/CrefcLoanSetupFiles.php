@@ -7,6 +7,7 @@ use DPRMC\RemitSpiderUSBank\Collectors\Login;
 use DPRMC\RemitSpiderUSBank\Downloadables\CrefcLoanSetupFileDownloadable;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionDoNotHaveAccessToThisDeal;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionOurAccessToThisPeriodicReportSecuredIsPending;
+use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionTimedOutWaitingForClickToLoad;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionUnableToFindLinkToCrefcLoanSetupFile;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionUnableToTabByText;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
@@ -30,6 +31,8 @@ class CrefcLoanSetupFiles {
     protected ?Carbon $stopTime;
 
     const BASE_DETAIL_URL = RemitSpiderUSBank::BASE_URL . '/TIR/public/deals/detail/';
+
+    const MAX_CYCLES_TO_WAIT_AFTER_CLICK_TO_LOAD = 10;
 
     public function __construct( Login  &$Login,
                                  Page   &$Page,
@@ -90,12 +93,11 @@ class CrefcLoanSetupFiles {
         endif;
 
 
-
         if ( str_contains( $combinedHTML, 'request to access this deal or feature is pending' ) ):
             throw new ExceptionOurAccessToThisPeriodicReportSecuredIsPending( "Access to this deal is pending",
-                                                          0,
-                                                          NULL,
-                                                          $dealLinkSuffix );
+                                                                              0,
+                                                                              NULL,
+                                                                              $dealLinkSuffix );
         endif;
 
         $dom = new \DOMDocument();
@@ -115,7 +117,7 @@ class CrefcLoanSetupFiles {
             if ( str_contains( $trimmedTd, 'Loan Setup' ) ):
                 $indexOfLabel = $i;
                 break;
-            elseif(str_contains( $trimmedTd, 'Electronic Data File' )):
+            elseif ( str_contains( $trimmedTd, 'Electronic Data File' ) ):
                 $indexOfLabel = $i;
                 break;
             endif;
@@ -167,6 +169,7 @@ class CrefcLoanSetupFiles {
 
 
     protected function _getPeriodicReportsSecuredHtml( string $dealId ): string {
+        $cycles = 0;
 
         $querySelector = "//a[contains(., 'Periodic Reports - Secured')]";
         $selector      = new XPathSelector( $querySelector );
@@ -174,23 +177,45 @@ class CrefcLoanSetupFiles {
         $this->Debug->_screenshot( 'the_position_of_periodic_reports_secured', new Clip( 0, 0, $position[ 'x' ], $position[ 'y' ] ) );
         $this->Page->mouse()->move( $position[ 'x' ], $position[ 'y' ] )->click();
         sleep( 2 );
-        $this->Debug->_screenshot( 'periodic_reports_secured_' . $dealId );
-        $this->Debug->_html( 'periodic_reports_secured_' . $dealId );
-        $htmlOfSecuredReports = $this->Page->getHtml();
-        return $htmlOfSecuredReports;
+
+        do {
+            $htmlOfSecuredReports = $this->Page->getHtml();
+            if ( ! str_contains( $htmlOfSecuredReports, 'Loading Contents' ) ):
+                $this->Debug->_screenshot( 'periodic_reports_secured_LOADED_' . $dealId );
+                $this->Debug->_html( 'periodic_reports_secured_LOADED_' . $dealId );
+                return $htmlOfSecuredReports;
+            endif;
+            sleep( 1 );
+        } while ( $cycles <= self::MAX_CYCLES_TO_WAIT_AFTER_CLICK_TO_LOAD );
+
+        $this->Debug->_screenshot( 'periodic_reports_secured_TIMEDOUT_' . $dealId );
+        $this->Debug->_html( 'periodic_reports_secured_TIMEDOUT_' . $dealId );
+        throw new ExceptionTimedOutWaitingForClickToLoad( "I waited over " . self::MAX_CYCLES_TO_WAIT_AFTER_CLICK_TO_LOAD . " seconds for the Secured Periodic Reports to Load.",0,null, $dealId );
     }
 
     protected function _getPeriodicReportsHtml( string $dealId ): string {
+        $cycles = 0;
+
         $querySelector = "//a[contains(., 'Periodic Reports')]";
         $selector      = new XPathSelector( $querySelector );
         $position      = $this->Page->mouse()->findElement( $selector )->getPosition();
         $this->Debug->_screenshot( 'the_position_of_periodic_reports_unsecured', new Clip( 0, 0, $position[ 'x' ], $position[ 'y' ] ) );
         $this->Page->mouse()->move( $position[ 'x' ], $position[ 'y' ] )->click();
         sleep( 2 );
-        $this->Debug->_screenshot( 'periodic_reports_unsecured_' . $dealId );
-        $this->Debug->_html( 'periodic_reports_unsecured_' . $dealId );
-        $htmlOfSecuredReports = $this->Page->getHtml();
-        return $htmlOfSecuredReports;
+
+        do {
+            $htmlOfSecuredReports = $this->Page->getHtml();
+            if ( ! str_contains( $htmlOfSecuredReports, 'Loading Contents' ) ):
+                $this->Debug->_screenshot( 'periodic_reports_unsecured_LOADED_' . $dealId );
+                $this->Debug->_html( 'periodic_reports_unsecured_LOADED_' . $dealId );
+                return $htmlOfSecuredReports;
+            endif;
+            sleep( 1 );
+        } while ( $cycles <= self::MAX_CYCLES_TO_WAIT_AFTER_CLICK_TO_LOAD );
+
+        $this->Debug->_screenshot( 'periodic_reports_unsecured_TIMEDOUT_' . $dealId );
+        $this->Debug->_html( 'periodic_reports_unsecured_TIMEDOUT_' . $dealId );
+        throw new ExceptionTimedOutWaitingForClickToLoad( "I waited over " . self::MAX_CYCLES_TO_WAIT_AFTER_CLICK_TO_LOAD . " seconds for the Unsecured Periodic Reports to Load.",0,null, $dealId );
     }
 
 
