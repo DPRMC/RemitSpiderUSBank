@@ -83,6 +83,32 @@ class RemitSpiderUSBankTest extends TestCase {
     }
 
 
+
+    /**
+     * @test
+     * @group crefc2
+     */
+    public function testCrefcLoanSetupFileWithCurl() {
+
+        // https://trustinvestorreporting.usbank.com/TIR/public/deals/detail/11601/ubs-2012-c2
+        // https://trustinvestorreporting.usbank.com/TIR/public/deals/detail/11601/ubs-2012-c2
+        $dealId                = $_ENV[ 'DEAL_ID' ];
+        $dealLinkSuffix        = $_ENV[ 'DEAL_LINK_SUFFIX' ];
+        $pathToDownloadedFiles = $_ENV[ 'PATH_TO_IDS' ];
+        $spider                = $this->_getSpider();
+        $spider->Login->login();
+        $crefcLoanSetupFilesCollector = new \DPRMC\RemitSpiderUSBank\AdvancedCollectors\CrefcLoanSetupFiles( $spider->Login,
+                                                                                                             $spider->USBankBrowser->page,
+                                                                                                             $spider->Debug,
+                                                                                                             self::TIMEZONE );
+        $downloadable                 = $crefcLoanSetupFilesCollector->getDownloadableWithCurl( $dealLinkSuffix );
+
+        $this->assertInstanceOf( \DPRMC\RemitSpiderUSBank\Downloadables\CrefcLoanSetupFileDownloadable::class, $downloadable );
+
+        print_r($downloadable);
+    }
+
+
     /**
      * @test
      * @group crefc

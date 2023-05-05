@@ -72,7 +72,7 @@ class Debug {
         $time  = $now->timestamp;
         $micro = $now->microsecond;
         if ( $this->debug ):
-            $html = $this->page->getHtml();
+            $html = @$this->page->getHtml();
             file_put_contents( $this->pathToScreenshots . $time . '_' . $micro . '_' . $filename . '.html', $html );
         endif;
     }

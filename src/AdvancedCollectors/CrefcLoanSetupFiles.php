@@ -14,6 +14,7 @@ use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionUnableToTabByText;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Clip;
+use HeadlessChromium\Communication\Message;
 use HeadlessChromium\Cookies\Cookie;
 use HeadlessChromium\Dom\Selector\XPathSelector;
 use HeadlessChromium\Page;
@@ -46,24 +47,6 @@ class CrefcLoanSetupFiles {
     }
 
 
-    /**
-     * @param string $dealLinkSuffix
-     * @return CrefcLoanSetupFileDownloadable
-     * @throws ExceptionDoNotHaveAccessToThisDeal
-     * @throws ExceptionNotLoggedIn
-     * @throws ExceptionOurAccessToThisPeriodicReportSecuredIsPending
-     * @throws ExceptionTimedOutWaitingForClickToLoad
-     * @throws ExceptionUnableToFindLinkToCrefcLoanSetupFile
-     * @throws \HeadlessChromium\Exception\CommunicationException
-     * @throws \HeadlessChromium\Exception\CommunicationException\CannotReadResponse
-     * @throws \HeadlessChromium\Exception\CommunicationException\InvalidResponse
-     * @throws \HeadlessChromium\Exception\CommunicationException\ResponseHasError
-     * @throws \HeadlessChromium\Exception\FilesystemException
-     * @throws \HeadlessChromium\Exception\NavigationExpired
-     * @throws \HeadlessChromium\Exception\NoResponseAvailable
-     * @throws \HeadlessChromium\Exception\OperationTimedOut
-     * @throws \HeadlessChromium\Exception\ScreenshotFailed
-     */
     public function getDownloadable( string $dealLinkSuffix ): CrefcLoanSetupFileDownloadable {
         $dealId = $this->getDealIdFromDealLinkSuffix( $dealLinkSuffix );
         $this->Debug->_screenshot( 'start_page_' . $dealId );
@@ -73,28 +56,40 @@ class CrefcLoanSetupFiles {
         $this->Debug->_screenshot( 'the_deal_page_' . $dealId );
         $this->Debug->_html( 'the_deal_page_' . $dealId );
 
-//        $querySelector = "//a[contains(., 'Periodic Reports - Secured')]";
-//        $selector      = new XPathSelector( $querySelector );
-//        $position      = $this->Page->mouse()->findElement( $selector )->getPosition();
-//        $this->Debug->_screenshot( 'the_position_of_periodic_reports_secured', new Clip( 0, 0, $position[ 'x' ], $position[ 'y' ] ) );
-//        $this->Page->mouse()->move( $position[ 'x' ], $position[ 'y' ] )->click();
-//        sleep( 2 );
-//        $this->Debug->_screenshot( 'periodic_reports_secured_' . $dealId );
-//        $this->Debug->_html( 'periodic_reports_secured_' . $dealId );
-//        $htmlOfSecuredReports = $this->Page->getHtml();
+        $csrf       = $this->Login->csrf;
+        $currentUrl = $this->Page->getCurrentUrl();
 
-        $htmlOfPeriodicReportsSecuredReports = $this->_getPeriodicReportsSecuredHtml( $dealId );
-        $htmlOfPeriodicReports               = $this->_getPeriodicReportsHtml( $dealId );
 
-        $combinedHTML = $htmlOfPeriodicReportsSecuredReports . $htmlOfPeriodicReports;
+        $this->Page->getSession()->sendMessageSync( new Message( 'Network.setExtraHTTPHeaders', [
+            'headers' => [
+                'ADRUM'              => 'isAjax:true',
+                'Accept'             => '*/*',
+                'Accept-Language'    => 'en-US,en;q=0.9',
+                'Connection'         => 'keep-alive',
+                'DNT'                => '1',
+                'OWASP_CSRFTOKEN'    => $csrf,
+                'Referer'            => $currentUrl,
+                'Sec-Fetch-Dest'     => 'empty',
+                'Sec-Fetch-Mode'     => 'cors',
+                'Sec-Fetch-Site'     => 'same-origin',
+                'User-Agent'         => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36',
+                'X-Requested-With'   => 'XMLHttpRequest',
+                'sec-ch-ua'          => '"Chromium";v="112", "Google Chrome";v="112", "Not:A-Brand";v="99"',
+                'sec-ch-ua-mobile'   => '?0',
+                'sec-ch-ua-platform' => 'macOS',
+            ],
+        ] ) );
 
-        if ( str_contains( $combinedHTML, 'Guest' ) ):
-            throw new ExceptionNotLoggedIn( "You are not logged in.",
-                                            0,
-                                            NULL );
-        endif;
 
-        if ( str_contains( $combinedHTML, 'You do not have access to this deal' ) ):
+        $asyncUrl = 'https://trustinvestorreporting.usbank.com/TIR/public/deals/periodicreport/' . $dealId . '/16';
+        $this->Debug->_debug( "Async URL: " . $asyncUrl );
+        $this->Page->navigate( $asyncUrl )->waitForNavigation(Page::NETWORK_IDLE);
+        $this->Debug->_screenshot( 'async_16_' . $dealId );
+        $this->Debug->_html( 'async_16_' . $dealId );
+
+        $html = $this->Page->getHtml();
+
+        if ( str_contains( $html, 'You do not have access to this deal' ) ):
             throw new ExceptionDoNotHaveAccessToThisDeal( "You don't have access to this deal.",
                                                           0,
                                                           NULL,
@@ -102,7 +97,7 @@ class CrefcLoanSetupFiles {
         endif;
 
 
-        if ( str_contains( $combinedHTML, 'request to access this deal or feature is pending' ) ):
+        if ( str_contains( $html, 'request to access this deal or feature is pending' ) ):
             throw new ExceptionOurAccessToThisPeriodicReportSecuredIsPending( "Access to this deal is pending",
                                                                               0,
                                                                               NULL,
@@ -111,7 +106,7 @@ class CrefcLoanSetupFiles {
 
         $dom = new \DOMDocument();
         //@$dom->loadHTML( $htmlOfPeriodicReportsSecuredReports );
-        @$dom->loadHTML( $combinedHTML );
+        @$dom->loadHTML( $html );
 
         $tds        = $dom->getElementsByTagName( 'td' );
         $trimmedTds = [];
@@ -170,6 +165,132 @@ class CrefcLoanSetupFiles {
 
         throw new \Exception( "Unable to find yada yada yada." );
     }
+
+
+    /**
+     * @param string $dealLinkSuffix
+     * @return CrefcLoanSetupFileDownloadable
+     * @throws ExceptionDoNotHaveAccessToThisDeal
+     * @throws ExceptionNotLoggedIn
+     * @throws ExceptionOurAccessToThisPeriodicReportSecuredIsPending
+     * @throws ExceptionTimedOutWaitingForClickToLoad
+     * @throws ExceptionUnableToFindLinkToCrefcLoanSetupFile
+     * @throws \HeadlessChromium\Exception\CommunicationException
+     * @throws \HeadlessChromium\Exception\CommunicationException\CannotReadResponse
+     * @throws \HeadlessChromium\Exception\CommunicationException\InvalidResponse
+     * @throws \HeadlessChromium\Exception\CommunicationException\ResponseHasError
+     * @throws \HeadlessChromium\Exception\FilesystemException
+     * @throws \HeadlessChromium\Exception\NavigationExpired
+     * @throws \HeadlessChromium\Exception\NoResponseAvailable
+     * @throws \HeadlessChromium\Exception\OperationTimedOut
+     * @throws \HeadlessChromium\Exception\ScreenshotFailed
+     */
+//    public function getDownloadable( string $dealLinkSuffix ): CrefcLoanSetupFileDownloadable {
+//        $dealId = $this->getDealIdFromDealLinkSuffix( $dealLinkSuffix );
+//        $this->Debug->_screenshot( 'start_page_' . $dealId );
+//        $dealPageLink = self::BASE_DETAIL_URL . $dealLinkSuffix;
+//        $this->Debug->_debug( "Navigating to deal page link: " . $dealPageLink );
+//        $this->Page->navigate( $dealPageLink )->waitForNavigation();
+//        $this->Debug->_screenshot( 'the_deal_page_' . $dealId );
+//        $this->Debug->_html( 'the_deal_page_' . $dealId );
+//
+////        $querySelector = "//a[contains(., 'Periodic Reports - Secured')]";
+////        $selector      = new XPathSelector( $querySelector );
+////        $position      = $this->Page->mouse()->findElement( $selector )->getPosition();
+////        $this->Debug->_screenshot( 'the_position_of_periodic_reports_secured', new Clip( 0, 0, $position[ 'x' ], $position[ 'y' ] ) );
+////        $this->Page->mouse()->move( $position[ 'x' ], $position[ 'y' ] )->click();
+////        sleep( 2 );
+////        $this->Debug->_screenshot( 'periodic_reports_secured_' . $dealId );
+////        $this->Debug->_html( 'periodic_reports_secured_' . $dealId );
+////        $htmlOfSecuredReports = $this->Page->getHtml();
+//
+//        $htmlOfPeriodicReportsSecuredReports = $this->_getPeriodicReportsSecuredHtml( $dealId );
+//        $htmlOfPeriodicReports               = $this->_getPeriodicReportsHtml( $dealId );
+//
+//        $combinedHTML = $htmlOfPeriodicReportsSecuredReports . $htmlOfPeriodicReports;
+//
+//        if ( str_contains( $combinedHTML, 'Guest' ) ):
+//            throw new ExceptionNotLoggedIn( "You are not logged in.",
+//                                            0,
+//                                            NULL );
+//        endif;
+//
+//        if ( str_contains( $combinedHTML, 'You do not have access to this deal' ) ):
+//            throw new ExceptionDoNotHaveAccessToThisDeal( "You don't have access to this deal.",
+//                                                          0,
+//                                                          NULL,
+//                                                          $dealLinkSuffix );
+//        endif;
+//
+//
+//        if ( str_contains( $combinedHTML, 'request to access this deal or feature is pending' ) ):
+//            throw new ExceptionOurAccessToThisPeriodicReportSecuredIsPending( "Access to this deal is pending",
+//                                                                              0,
+//                                                                              NULL,
+//                                                                              $dealLinkSuffix );
+//        endif;
+//
+//        $dom = new \DOMDocument();
+//        //@$dom->loadHTML( $htmlOfPeriodicReportsSecuredReports );
+//        @$dom->loadHTML( $combinedHTML );
+//
+//        $tds        = $dom->getElementsByTagName( 'td' );
+//        $trimmedTds = [];
+//        foreach ( $tds as $i => $td ):
+//            $tdText           = $td->nodeValue;
+//            $trimmedTds[ $i ] = trim( $tdText );
+//        endforeach;
+//
+//
+//        $indexOfLabel = NULL;
+//        foreach ( $trimmedTds as $i => $trimmedTd ):
+//            if ( str_contains( $trimmedTd, 'Loan Setup' ) ):
+//                $indexOfLabel = $i;
+//                break;
+//            elseif ( str_contains( $trimmedTd, 'Electronic Data File' ) ):
+//                $indexOfLabel = $i;
+//                break;
+//            endif;
+//        endforeach;
+//
+//        if ( is_null( $indexOfLabel ) ):
+//            // report the td values to Bugsnag,so I can adjust this code.
+//            // Probably need to change the str_contains above.
+//            throw new ExceptionUnableToFindLinkToCrefcLoanSetupFile( "Unable to find the index of the label to the CREFC Loan Setup file.",
+//                                                                     0,
+//                                                                     NULL,
+//                                                                     $trimmedTds );
+//        endif;
+//
+//        $textOfLabel         = trim( $tds[ $indexOfLabel ]->nodeValue );
+//        $dateOfLoanSetupFile = trim( $tds[ $indexOfLabel + 1 ]->nodeValue );
+//
+//        /**
+//         * @var \DOMElement $tdWithLink
+//         */
+//        $tdWithLink         = $tds[ $indexOfLabel + 2 ];
+//        $tdWithLinkChildren = $tdWithLink->childNodes;
+//
+//        /**
+//         * @var \DOMElement|\DOMText $child
+//         */
+//        foreach ( $tdWithLinkChildren as $child ):
+//
+//            if ( is_a( $child, \DOMElement::class ) ):
+//                $href = trim( $child->getAttribute( 'href' ) );
+//                if ( ! empty( $href ) ):
+//                    $urlToCrefcLoanSetupFile = RemitSpiderUSBank::BASE_URL . $href;
+//                    return new CrefcLoanSetupFileDownloadable( $dealLinkSuffix,
+//                                                               $textOfLabel,
+//                                                               $urlToCrefcLoanSetupFile,
+//                                                               $dateOfLoanSetupFile,
+//                                                               $this->timezone );
+//                endif;
+//            endif;
+//        endforeach;
+//
+//        throw new \Exception( "Unable to find yada yada yada." );
+//    }
 
     protected function getDealIdFromDealLinkSuffix( string $dealLinkSuffix ): string {
         $dealLinkSuffixParts = explode( '/', $dealLinkSuffix );
