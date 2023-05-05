@@ -81,15 +81,26 @@ class CrefcLoanSetupFiles {
         ] ) );
 
 
+        // PERIODIC REPORTS - SECURED
         $asyncUrl = 'https://trustinvestorreporting.usbank.com/TIR/public/deals/periodicreport/' . $dealId . '/16';
         $this->Debug->_debug( "Async URL: " . $asyncUrl );
         $this->Page->navigate( $asyncUrl )->waitForNavigation(Page::NETWORK_IDLE);
         $this->Debug->_screenshot( 'async_16_' . $dealId );
         $this->Debug->_html( 'async_16_' . $dealId );
+        $html16 = $this->Page->getHtml();
 
-        $html = $this->Page->getHtml();
 
-        if ( str_contains( $html, 'You do not have access to this deal' ) ):
+        // PERIODIC_REPORTS
+        $asyncUrl = 'https://trustinvestorreporting.usbank.com/TIR/public/deals/periodicreport/' . $dealId . '/2';
+        $this->Debug->_debug( "Async URL: " . $asyncUrl );
+        $this->Page->navigate( $asyncUrl )->waitForNavigation(Page::NETWORK_IDLE);
+        $this->Debug->_screenshot( 'async_2_' . $dealId );
+        $this->Debug->_html( 'async_2_' . $dealId );
+        $html2 = $this->Page->getHtml();
+
+        $combinedHtml = $html16 . $html2;
+
+        if ( str_contains( $combinedHtml, 'You do not have access to this deal' ) ):
             throw new ExceptionDoNotHaveAccessToThisDeal( "You don't have access to this deal.",
                                                           0,
                                                           NULL,
@@ -97,7 +108,7 @@ class CrefcLoanSetupFiles {
         endif;
 
 
-        if ( str_contains( $html, 'request to access this deal or feature is pending' ) ):
+        if ( str_contains( $combinedHtml, 'request to access this deal or feature is pending' ) ):
             throw new ExceptionOurAccessToThisPeriodicReportSecuredIsPending( "Access to this deal is pending",
                                                                               0,
                                                                               NULL,
@@ -106,7 +117,7 @@ class CrefcLoanSetupFiles {
 
         $dom = new \DOMDocument();
         //@$dom->loadHTML( $htmlOfPeriodicReportsSecuredReports );
-        @$dom->loadHTML( $html );
+        @$dom->loadHTML( $combinedHtml );
 
         $tds        = $dom->getElementsByTagName( 'td' );
         $trimmedTds = [];
