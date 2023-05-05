@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use DPRMC\RemitSpiderUSBank\Collectors\Login;
 use DPRMC\RemitSpiderUSBank\Downloadables\CrefcLoanSetupFileDownloadable;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionDoNotHaveAccessToThisDeal;
+use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionNotLoggedIn;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionOurAccessToThisPeriodicReportSecuredIsPending;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionTimedOutWaitingForClickToLoad;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionUnableToFindLinkToCrefcLoanSetupFile;
@@ -49,12 +50,14 @@ class CrefcLoanSetupFiles {
      * @param string $dealLinkSuffix
      * @return CrefcLoanSetupFileDownloadable
      * @throws ExceptionDoNotHaveAccessToThisDeal
+     * @throws ExceptionNotLoggedIn
+     * @throws ExceptionOurAccessToThisPeriodicReportSecuredIsPending
+     * @throws ExceptionTimedOutWaitingForClickToLoad
      * @throws ExceptionUnableToFindLinkToCrefcLoanSetupFile
      * @throws \HeadlessChromium\Exception\CommunicationException
      * @throws \HeadlessChromium\Exception\CommunicationException\CannotReadResponse
      * @throws \HeadlessChromium\Exception\CommunicationException\InvalidResponse
      * @throws \HeadlessChromium\Exception\CommunicationException\ResponseHasError
-     * @throws \HeadlessChromium\Exception\ElementNotFoundException
      * @throws \HeadlessChromium\Exception\FilesystemException
      * @throws \HeadlessChromium\Exception\NavigationExpired
      * @throws \HeadlessChromium\Exception\NoResponseAvailable
@@ -84,6 +87,12 @@ class CrefcLoanSetupFiles {
         $htmlOfPeriodicReports               = $this->_getPeriodicReportsHtml( $dealId );
 
         $combinedHTML = $htmlOfPeriodicReportsSecuredReports . $htmlOfPeriodicReports;
+
+        if ( str_contains( $combinedHTML, 'Guest' ) ):
+            throw new ExceptionNotLoggedIn( "You are not logged in.",
+                                            0,
+                                            NULL );
+        endif;
 
         if ( str_contains( $combinedHTML, 'You do not have access to this deal' ) ):
             throw new ExceptionDoNotHaveAccessToThisDeal( "You don't have access to this deal.",
@@ -190,7 +199,7 @@ class CrefcLoanSetupFiles {
 
         $this->Debug->_screenshot( 'periodic_reports_secured_TIMEDOUT_' . $dealId );
         $this->Debug->_html( 'periodic_reports_secured_TIMEDOUT_' . $dealId );
-        throw new ExceptionTimedOutWaitingForClickToLoad( "I waited over " . self::MAX_CYCLES_TO_WAIT_AFTER_CLICK_TO_LOAD . " seconds for the Secured Periodic Reports to Load.",0,null, $dealId );
+        throw new ExceptionTimedOutWaitingForClickToLoad( "I waited over " . self::MAX_CYCLES_TO_WAIT_AFTER_CLICK_TO_LOAD . " seconds for the Secured Periodic Reports to Load.", 0, NULL, $dealId );
     }
 
     protected function _getPeriodicReportsHtml( string $dealId ): string {
@@ -215,7 +224,7 @@ class CrefcLoanSetupFiles {
 
         $this->Debug->_screenshot( 'periodic_reports_unsecured_TIMEDOUT_' . $dealId );
         $this->Debug->_html( 'periodic_reports_unsecured_TIMEDOUT_' . $dealId );
-        throw new ExceptionTimedOutWaitingForClickToLoad( "I waited over " . self::MAX_CYCLES_TO_WAIT_AFTER_CLICK_TO_LOAD . " seconds for the Unsecured Periodic Reports to Load.",0,null, $dealId );
+        throw new ExceptionTimedOutWaitingForClickToLoad( "I waited over " . self::MAX_CYCLES_TO_WAIT_AFTER_CLICK_TO_LOAD . " seconds for the Unsecured Periodic Reports to Load.", 0, NULL, $dealId );
     }
 
 
