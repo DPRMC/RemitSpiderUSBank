@@ -329,7 +329,12 @@ class HistoryLinks extends BaseData {
     }
 
 
-    protected function _getProductTypeToDealRecord( string $dealLinkSuffix, string $html ): void {
+    /**
+     * @param string $dealLinkSuffix
+     * @param string $html
+     * @return string
+     */
+    protected function _getProductTypeToDealRecord( string $dealLinkSuffix, string $html ): string {
         $dom = new \DOMDocument();
         @$dom->loadHTML( $html );
         /**
@@ -347,6 +352,6 @@ class HistoryLinks extends BaseData {
             endif;
         endfor;
 
-
+        return $productType;
     }
 }
