@@ -63,8 +63,9 @@ class HistoryLinks extends BaseData {
 
 
     // CACHE
-    const LINK    = 'link';       // The history link.
-    const DEAL_ID = 'dealId';
+    const LINK         = 'link';       // The history link.
+    const DEAL_ID      = 'dealId';
+    const PRODUCT_TYPE = 'productType';
 
 
     public function __construct( Page   &$Page,
@@ -144,6 +145,10 @@ class HistoryLinks extends BaseData {
 
             $html = $this->Page->getHtml();
 
+
+            $productType = $this->_getProductTypeToDealRecord( $dealLinkSuffix, $html );
+
+
             $dom = new \DOMDocument();
             @$dom->loadHTML( $html );
             $elements = $dom->getElementsByTagName( 'a' );
@@ -165,7 +170,7 @@ class HistoryLinks extends BaseData {
             $mostRecentReportDate                         = $this->_getMostRecentReportDate( $dom );
             $this->mostRecentReportDates[ $this->dealId ] = $mostRecentReportDate;
 
-            $this->_setDataToCache( $newHistoryLinks );
+            $this->_setDataToCache( $newHistoryLinks, $productType );
 
             $this->_cacheData();
 
@@ -182,10 +187,10 @@ class HistoryLinks extends BaseData {
 
     /**
      * @param array $data
-     *
+     * @param string $productType
      * @return void
      */
-    protected function _setDataToCache( array $data ) {
+    protected function _setDataToCache( array $data, string $productType = '' ) {
         // Init the Security Index of the array if it does not exist.
         if ( FALSE == array_key_exists( $this->dealId, $this->historyLinks ) ):
             $this->historyLinks[ $this->dealId ] = [];
@@ -201,6 +206,7 @@ class HistoryLinks extends BaseData {
                 $this->historyLinks[ $this->dealId ][ $myKey ] = [
                     self::DEAL_ID                  => $this->dealId,
                     self::LINK                     => $historyLink,
+                    self::PRODUCT_TYPE             => $productType,
                     BaseData::ADDED_AT             => Carbon::now( $this->timezone ),
                     BaseData::CHILDREN_LAST_PULLED => NULL,
                 ];
@@ -208,6 +214,7 @@ class HistoryLinks extends BaseData {
                 $this->historyLinks[ $this->dealId ][ $myKey ] = [
                     self::DEAL_ID                  => $this->dealId,
                     self::LINK                     => $historyLink,
+                    self::PRODUCT_TYPE             => $productType,
                     BaseData::ADDED_AT             => Carbon::now( $this->timezone ),
                     BaseData::CHILDREN_LAST_PULLED => NULL,
                 ];
@@ -319,5 +326,27 @@ class HistoryLinks extends BaseData {
         endif;
 
         return $mostRecentDate;
+    }
+
+
+    protected function _getProductTypeToDealRecord( string $dealLinkSuffix, string $html ): void {
+        $dom = new \DOMDocument();
+        @$dom->loadHTML( $html );
+        /**
+         * @var \DOMNodeList $elements
+         */
+        $elements    = $dom->getElementsByTagName( 'label' );
+        $numElements = $elements->count();
+        $productType = '';
+        for ( $i = 0; $i < $numElements; $i++ ):
+            $text = trim( $elements->item( $i )->textContent );
+            echo "\n\n" . $text;
+            if ( str_contains( $text, 'Product Type:' ) ):
+                $productType = trim( $elements->item( $i + 1 )->textContent );
+                break;
+            endif;
+        endfor;
+
+
     }
 }

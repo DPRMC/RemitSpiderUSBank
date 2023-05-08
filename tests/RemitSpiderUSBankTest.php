@@ -76,12 +76,22 @@ class RemitSpiderUSBankTest extends TestCase {
         $position      = $spider->USBankBrowser->page->mouse()->findElement( $selector )->getPosition();
         $spider->Debug->_screenshot( 'the_position_of_periodic_reports_secured', new Clip( 0, 0, $position[ 'x' ], $position[ 'y' ] ) );
         $spider->USBankBrowser->page->mouse()->move( $position[ 'x' ], $position[ 'y' ] )->click();
+    }
 
 
+    /**
+     * @test
+     * @group pt
+     */
+    public function testGetProductType(){
+        $spider = $this->_getSpider();
+        $spider->HistoryLinks->deleteCache();
+        $spider->Login->login();
+
+        $historyLinks = $spider->HistoryLinks->getAllByDeal( $_ENV[ 'DEAL_LINK_SUFFIX' ] );
 
 
     }
-
 
 
     /**
