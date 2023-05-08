@@ -345,7 +345,6 @@ class HistoryLinks extends BaseData {
         $productType = '';
         for ( $i = 0; $i < $numElements; $i++ ):
             $text = trim( $elements->item( $i )->textContent );
-            echo "\n\n" . $text;
             if ( str_contains( $text, 'Product Type:' ) ):
                 $productType = trim( $elements->item( $i + 1 )->textContent );
                 break;
