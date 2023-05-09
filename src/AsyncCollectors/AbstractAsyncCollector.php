@@ -25,9 +25,12 @@ abstract class AbstractAsyncCollector {
     protected ?Carbon $startTime;
     protected ?Carbon $stopTime;
 
-    const BASE_DETAIL_URL = RemitSpiderUSBank::BASE_URL . '/TIR/public/deals/detail/';
+    const BASE_DETAIL_URL = RemitSpiderUSBank::BASE_URL . '/TIR/public/deals/periodicReportHistory/';
 
     const MAX_CYCLES_TO_WAIT_AFTER_CLICK_TO_LOAD = 10;
+
+
+    public string $productType;
 
     public function __construct( Login  &$Login,
                                  Page   &$Page,
@@ -51,6 +54,8 @@ abstract class AbstractAsyncCollector {
 
         $csrf       = $this->Login->csrf;
         $currentUrl = $this->Page->getCurrentUrl();
+
+        $this->setProductType($this->Page->getHtml());
 
 
         $this->Page->getSession()->sendMessageSync( new Message( 'Network.setExtraHTTPHeaders', [
@@ -128,5 +133,30 @@ abstract class AbstractAsyncCollector {
         endif;
 
         return $html;
+    }
+
+
+    /**
+     * @param string $html
+     * @return void
+     */
+    public function setProductType(string $html ): void {
+        $dom = new \DOMDocument();
+        @$dom->loadHTML( $html );
+        /**
+         * @var \DOMNodeList $elements
+         */
+        $elements    = $dom->getElementsByTagName( 'label' );
+        $numElements = $elements->count();
+        $productType = '';
+        for ( $i = 0; $i < $numElements; $i++ ):
+            $text = trim( $elements->item( $i )->textContent );
+            if ( str_contains( $text, 'Product Type:' ) ):
+                $productType = trim( $elements->item( $i + 1 )->textContent );
+                break;
+            endif;
+        endfor;
+
+        $this->productType = $productType;
     }
 }

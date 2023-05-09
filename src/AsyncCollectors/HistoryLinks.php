@@ -49,6 +49,8 @@ class HistoryLinks extends AbstractAsyncCollector {
     }
 
 
+
+
     /**
      * @param string $html
      * @param int $tabSuffix
@@ -88,7 +90,7 @@ class HistoryLinks extends AbstractAsyncCollector {
                  * @var \DOMElement $anchorElement
                  */
                 $anchorElement = $anchorElements->item( 0 );
-                $href          = trim( $anchorElement->getAttribute( 'href' ) );
+                $href          = str_replace( self::HISTORY_LINK_PREFIX, '', trim( $anchorElement->getAttribute( 'href' ) ) );
 
                 $this->Debug->_debug( $reportName );
                 $this->Debug->_debug( $mostRecentDate );
