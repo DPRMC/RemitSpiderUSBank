@@ -25,7 +25,7 @@ abstract class AbstractAsyncCollector {
     protected ?Carbon $startTime;
     protected ?Carbon $stopTime;
 
-    const BASE_DETAIL_URL = RemitSpiderUSBank::BASE_URL . '/TIR/public/deals/periodicReportHistory/';
+    const BASE_DETAIL_URL = RemitSpiderUSBank::BASE_URL . '/TIR/public/deals/detail/';
 
     const MAX_CYCLES_TO_WAIT_AFTER_CLICK_TO_LOAD = 10;
 
