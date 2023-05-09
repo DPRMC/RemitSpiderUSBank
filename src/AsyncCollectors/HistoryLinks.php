@@ -74,8 +74,9 @@ class HistoryLinks extends AbstractAsyncCollector {
                 $mostRecentDate = Carbon::parse( trim( $tdElements->item( 1 )->textContent ), $this->timezone );
                 $fileTypeString = trim( $tdElements->item( 2 )->textContent );
                 $fileTypes      = explode( ' ', $fileTypeString );
-                $fileTypes      = array_map( 'trim', $fileTypes );
-                $fileTypes      = array_filter( $fileTypes );
+                $fileTypes      = array_map( 'trim', $fileTypes ); // Remove starting and ending whitespace.
+                $fileTypes      = array_filter( $fileTypes );      // Remove empty array elements.
+                $fileTypes      = array_values( $fileTypes );      // Reindex the keys at zero.
 
                 /**
                  * @var \DOMElement $historyLinkElement
