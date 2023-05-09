@@ -135,7 +135,8 @@ class HistoryLinks extends BaseData {
             $newHistoryLinkData = [];
 
             // Example URL:
-            // https://trustinvestorreporting.usbank.com/TIR/public/deals/detail/1234/abc-defg-2001-1
+            // https://trustinvestorreporting.usbank.com/TIR/public/deals/detail/1234/abc-defg-2001-1 Not a good example.
+            // https://trustinvestorreporting.usbank.com/TIR/public/deals/detail/11601/ubs-2012-c2 CMBS
             $this->Page->navigate( self::BASE_DEAL_URL . $dealLinkSuffix )
 //                       ->waitForNavigation( Page::NETWORK_IDLE, 5000 );
                        ->waitForNavigation();

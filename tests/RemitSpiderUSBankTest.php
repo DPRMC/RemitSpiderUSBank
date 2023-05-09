@@ -81,6 +81,28 @@ class RemitSpiderUSBankTest extends TestCase {
 
     /**
      * @test
+     * @group ahl
+     */
+    public function testAsyncHistoryLinks(){
+        $spider = $this->_getSpider();
+        $spider->Login->login();
+        $Login = $spider->Login;
+        $Page = $spider->USBankBrowser->page;
+        $Debug = $spider->Debug;
+        $asyncHistoryLinks = new \DPRMC\RemitSpiderUSBank\AsyncCollectors\HistoryLinks($Login,
+                                                                                       $Page,
+                                                                                       $Debug,
+                                                                                       self::TIMEZONE);
+
+        $dealLinkSuffix = '11601/ubs-2012-c2';
+        $historyLinks = $asyncHistoryLinks->getHistoryLinks($dealLinkSuffix);
+
+        print_r($historyLinks);
+    }
+
+
+    /**
+     * @test
      * @group pt
      */
     public function testGetProductType(){
