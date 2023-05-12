@@ -49,14 +49,20 @@ class HistoryLinks extends AbstractAsyncCollector {
     }
 
 
-
-
     /**
      * @param string $html
      * @param int $tabSuffix
      * @return array
      */
-    protected function _getHistoryLinkDataFromHtml( string $html, int $dealId ): array {
+    protected function _getHistoryLinkDataFromHtml( string $html = '', int $dealId = NULL ): array {
+
+        // Not every Deal will have every tab. If I ask for a tab that doesn't exist for this
+        // Deal then the HTML passed in will be empty.
+        if ( empty( $html ) ):
+            return [];
+        endif;
+
+
         $historyLinkData = [];
         $dom             = new \DOMDocument();
         @$dom->loadHTML( $html );
