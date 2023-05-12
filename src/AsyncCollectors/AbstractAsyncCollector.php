@@ -108,31 +108,36 @@ abstract class AbstractAsyncCollector {
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
      */
     protected function _getHtml(string $asyncUrl, string $screenshotTag): string {
-        $this->Debug->_debug( "Async URL: " . $asyncUrl );
-        $this->Page->navigate( $asyncUrl )->waitForNavigation(Page::NETWORK_IDLE);
-        $this->Debug->_screenshot( 'async_' . $screenshotTag );
-        $this->Debug->_html( 'async_' . $screenshotTag );
-        $html = $this->Page->getHtml();
+        try {
+            $this->Debug->_debug( "Async URL: " . $asyncUrl );
+            $this->Page->navigate( $asyncUrl )->waitForNavigation(Page::NETWORK_IDLE);
+            $this->Debug->_screenshot( 'async_' . $screenshotTag );
+            $this->Debug->_html( 'async_' . $screenshotTag );
+            $html = $this->Page->getHtml();
 
 
 
 
-        if ( str_contains( $html, 'You do not have access to this deal' ) ):
-            throw new ExceptionDoNotHaveAccessToThisDeal( "You don't have access to this deal.",
-                                                          0,
-                                                          NULL,
-                                                          $asyncUrl );
-        endif;
+            if ( str_contains( $html, 'You do not have access to this deal' ) ):
+                throw new ExceptionDoNotHaveAccessToThisDeal( "You don't have access to this deal.",
+                                                              0,
+                                                              NULL,
+                                                              $asyncUrl );
+            endif;
 
 
-        if ( str_contains( $html, 'request to access this deal or feature is pending' ) ):
-            throw new ExceptionOurAccessToThisPeriodicReportSecuredIsPending( "Access to this deal is pending",
-                                                                              0,
-                                                                              NULL,
-                                                                              $asyncUrl );
-        endif;
+            if ( str_contains( $html, 'request to access this deal or feature is pending' ) ):
+                throw new ExceptionOurAccessToThisPeriodicReportSecuredIsPending( "Access to this deal is pending",
+                                                                                  0,
+                                                                                  NULL,
+                                                                                  $asyncUrl );
+            endif;
 
-        return $html;
+            return $html;
+        } catch (\Exception $exception) {
+            return '';
+        }
+
     }
 
 
