@@ -21,6 +21,8 @@ class CustodianUsBankCmbsCrefc extends Model {
     const shelf      = 'shelf';
     const series     = 'series';
 
+    const deal_id = 'deal_id';
+
     const transaction_id                              = 'transaction_id';
     const group_id                                    = 'group_id';
     const loan_id                                     = 'loan_id';
@@ -117,6 +119,7 @@ class CustodianUsBankCmbsCrefc extends Model {
     const valuation_source_at_contribution            = 'valuation_source_at_contribution';
 
     protected $casts = [
+        self::deal_id => 'string',
         self::shelf                                       => 'string',
         self::series                                      => 'string',
         self::transaction_id                              => 'string',
@@ -216,6 +219,7 @@ class CustodianUsBankCmbsCrefc extends Model {
     ];
 
     protected $fillable = [
+        self::deal_id,
         self::shelf,
         self::series,
         self::transaction_id,
