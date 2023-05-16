@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class CustodianUsBankCmbsCrefc extends Model {
 
-    public $table        = 'custodian_cts_cmbs_crefcs';
+    public $table        = 'custodian_usbank_cmbs_crefcs';
     public $primaryKey   = self::id;
     public $keyType      = 'integer';
     public $incrementing = TRUE;
