@@ -168,6 +168,15 @@ class HistoryLinks extends BaseData {
             $this->stopTime = Carbon::now( $this->timezone );
 
             $mostRecentReportDate                         = $this->_getMostRecentReportDate( $dom );
+
+            if( isset($mostRecentReportDate)):
+                $this->Debug->_debug(" most recent report date set to: " . $mostRecentReportDate->toDateString() . " for " . $dealLinkSuffix);
+            else:
+                $this->Debug->_debug(" most recent report not found: " . $dealLinkSuffix);
+                $this->Debug->_html('missing_most_recent_date_' . $dealLinkSuffix);
+                $this->Debug->_screenshot('missing_most_recent_date_' . $dealLinkSuffix);
+            endif;
+
             $this->mostRecentReportDates[ $this->dealId ] = $mostRecentReportDate;
 
             $this->_setDataToCache( $newHistoryLinks, $productType );
