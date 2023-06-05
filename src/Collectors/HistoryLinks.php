@@ -146,8 +146,6 @@ class HistoryLinks extends BaseData {
 
             $html = $this->Page->getHtml();
 
-            Storage::disk( 's3' )->put( $dealLinkSuffix . '.html', $html );
-
             $productType = $this->_getProductTypeToDealRecord( $dealLinkSuffix, $html );
 
 
