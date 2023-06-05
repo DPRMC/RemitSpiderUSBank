@@ -2,12 +2,12 @@
 
 namespace DPRMC\RemitSpiderUSBank\Collectors;
 
-
 use Carbon\Carbon;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\Objects\HistoryLink;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Page;
+use Illuminate\Support\Facades\Storage;
 
 /**
  *
@@ -139,13 +139,14 @@ class HistoryLinks extends BaseData {
             // https://trustinvestorreporting.usbank.com/TIR/public/deals/detail/11601/ubs-2012-c2 CMBS
             $this->Page->navigate( self::BASE_DEAL_URL . $dealLinkSuffix )
 //                       ->waitForNavigation( Page::NETWORK_IDLE, 5000 );
-                       ->waitForNavigation();
+                       ->waitForNavigation( Page::NETWORK_IDLE );
 
             $this->Debug->_screenshot( 'deal_page_' . urlencode( $dealLinkSuffix ) );
             $this->Debug->_html( 'deal_page_' . urlencode( $dealLinkSuffix ) );
 
             $html = $this->Page->getHtml();
 
+            Storage::disk( 's3' )->put( $dealLinkSuffix . '.html', $html );
 
             $productType = $this->_getProductTypeToDealRecord( $dealLinkSuffix, $html );
 
@@ -300,31 +301,55 @@ class HistoryLinks extends BaseData {
 
     /**
      * I am going to save this in the Deal record, so I can easily display Deals that have new data added to them.
-     * @param $dom
+     * @param \DOMDocument $dom
      *
      * @return \Carbon\Carbon|null
      */
-    protected function _getMostRecentReportDate( $dom ): ?Carbon {
+    protected function _getMostRecentReportDate( \DOMDocument $dom ): ?Carbon {
         $mostRecentDate = Carbon::today()->addYear();
         $xpath          = new \DOMXPath( $dom );
-        $query          = "//table//tbody//tr//td[@width='20%']/text()";
+//        $query          = "//table//tbody//tr//td[@width='20%']/text()";
+//
+//        $dateElements = $xpath->query( $query );
+//        $dom->saveHTMLFile('deleteme.html');
+//        /**
+//         * @var \DOMNode $element
+//         */
+//        foreach ( $dateElements as $element ):
+//            $stringDate = trim( $element->nodeValue );
+//
+//            $carbonDate = Carbon::parse( $stringDate );
+//            if ( $carbonDate->lte( $mostRecentDate ) ):
+//                $mostRecentDate = $carbonDate;
+//            endif;
+//        endforeach;
+//
+//        if ( $mostRecentDate->isFuture() ):
+//            return NULL;
+//        endif;
+//
+//        return $mostRecentDate;
 
-        $dateElements = $xpath->query( $query );
+        $elements = $dom->getElementsByTagName( 'label' );
+
+        $labels = [];
         /**
-         * @var \DOMNode $element
+         * @var \DOMElement $element
          */
-        foreach ( $dateElements as $element ):
-            $stringDate = trim( $element->nodeValue );
+        foreach ( $elements as $element ):
+            //dump( trim( $element->textContent ) );
+            $labels[] = trim( $element->textContent );
+        endforeach;
 
-            $carbonDate = Carbon::parse( $stringDate );
-            if ( $carbonDate->lte( $mostRecentDate ) ):
-                $mostRecentDate = $carbonDate;
+        foreach ( $labels as $i => $label ):
+            if ( 'Recent Report Date:' == $label ):
+                break;
             endif;
         endforeach;
 
-        if ( $mostRecentDate->isFuture() ):
-            return NULL;
-        endif;
+        $dateIndex = $i + 1;
+
+        $mostRecentDate = Carbon::parse($labels[$dateIndex], $this->timezone);
 
         return $mostRecentDate;
     }
