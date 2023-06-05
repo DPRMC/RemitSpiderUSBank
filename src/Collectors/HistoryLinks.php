@@ -7,7 +7,6 @@ use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\Objects\HistoryLink;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Page;
-use Illuminate\Support\Facades\Storage;
 
 /**
  *
@@ -45,6 +44,11 @@ class HistoryLinks extends BaseData {
      * @var array
      */
     public array $mostRecentReportDates = [];
+
+    /**
+     * @var array
+     */
+    public array $terminationDates = [];
 
     /**
      *
@@ -164,20 +168,31 @@ class HistoryLinks extends BaseData {
                     $newHistoryLinks[] = $minSuffix;
                 endif;
             endforeach;
-            $this->Debug->_debug( "I found " . count( $newHistoryLinks ) . " History Links." );
+            $this->Debug->_debug( "I found " . count( $newHistoryLinks ) . " History Links for " . $dealLinkSuffix );
             $this->stopTime = Carbon::now( $this->timezone );
 
             $mostRecentReportDate                         = $this->_getMostRecentReportDate( $dom );
-
             if( isset($mostRecentReportDate)):
                 $this->Debug->_debug(" most recent report date set to: " . $mostRecentReportDate->toDateString() . " for " . $dealLinkSuffix);
+                $this->mostRecentReportDates[ $this->dealId ] = $mostRecentReportDate;
             else:
                 $this->Debug->_debug(" most recent report not found: " . $dealLinkSuffix);
                 $this->Debug->_html('missing_most_recent_date_' . $dealLinkSuffix);
                 $this->Debug->_screenshot('missing_most_recent_date_' . $dealLinkSuffix);
             endif;
 
-            $this->mostRecentReportDates[ $this->dealId ] = $mostRecentReportDate;
+
+            $terminationDate = $this->_getTerminationDate( $dom );
+            if( isset($terminationDate)):
+                $this->Debug->_debug(" termination date set to: " . $terminationDate->toDateString() . " for " . $dealLinkSuffix);
+                $this->terminationDates[ $this->dealId ] = $terminationDate;
+            else:
+                $this->Debug->_debug(" termination date not found: " . $dealLinkSuffix);
+                $this->Debug->_html('missing_termination_date_' . $dealLinkSuffix);
+                $this->Debug->_screenshot('missing_termination_date_' . $dealLinkSuffix);
+            endif;
+
+
 
             $this->_setDataToCache( $newHistoryLinks, $productType );
 
@@ -345,6 +360,36 @@ class HistoryLinks extends BaseData {
          */
         foreach ( $elements as $element ):
             //dump( trim( $element->textContent ) );
+            $labels[] = trim( $element->textContent );
+        endforeach;
+
+        foreach ( $labels as $i => $label ):
+            if ( 'Recent Report Date:' == $label ):
+                break;
+            endif;
+        endforeach;
+
+        $dateIndex = $i + 1;
+
+        $mostRecentDate = Carbon::parse($labels[$dateIndex], $this->timezone);
+
+        return $mostRecentDate;
+    }
+
+
+    protected function _getTerminationDate( \DOMDocument $dom ): ?Carbon {
+        $mostRecentDate = Carbon::today()->addYear();
+        $xpath          = new \DOMXPath( $dom );
+
+
+        $elements = $dom->getElementsByTagName( 'label' );
+
+        $labels = [];
+        /**
+         * @var \DOMElement $element
+         */
+        foreach ( $elements as $element ):
+            dump( trim( $element->textContent ) );
             $labels[] = trim( $element->textContent );
         endforeach;
 
