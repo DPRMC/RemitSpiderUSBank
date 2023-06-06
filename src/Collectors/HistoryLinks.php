@@ -377,11 +377,11 @@ class HistoryLinks extends BaseData {
     }
 
 
+    /**
+     * @param \DOMDocument $dom
+     * @return Carbon|null
+     */
     protected function _getTerminationDate( \DOMDocument $dom ): ?Carbon {
-        $mostRecentDate = Carbon::today()->addYear();
-        $xpath          = new \DOMXPath( $dom );
-
-
         $elements = $dom->getElementsByTagName( 'label' );
 
         $labels = [];
@@ -389,21 +389,20 @@ class HistoryLinks extends BaseData {
          * @var \DOMElement $element
          */
         foreach ( $elements as $element ):
-            dump( trim( $element->textContent ) );
             $labels[] = trim( $element->textContent );
         endforeach;
 
         foreach ( $labels as $i => $label ):
-            if ( 'Recent Report Date:' == $label ):
+            if ( 'Termination Date:' == $label ):
                 break;
             endif;
         endforeach;
 
         $dateIndex = $i + 1;
 
-        $mostRecentDate = Carbon::parse($labels[$dateIndex], $this->timezone);
+        $terminationDate = Carbon::parse($labels[$dateIndex], $this->timezone);
 
-        return $mostRecentDate;
+        return $terminationDate;
     }
 
 
