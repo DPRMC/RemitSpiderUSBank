@@ -188,8 +188,8 @@ class HistoryLinks extends BaseData {
                 $this->terminationDates[ $this->dealId ] = $terminationDate;
             else:
                 $this->Debug->_debug( " termination date not found: " . $dealLinkSuffix );
-                $this->Debug->_html( 'missing_termination_date_' . $dealLinkSuffix );
-                $this->Debug->_screenshot( 'missing_termination_date_' . $dealLinkSuffix );
+                $this->Debug->_html( 'missing_termination_date_' . md5($dealLinkSuffix) );
+                $this->Debug->_screenshot( 'missing_termination_date_' . md5($dealLinkSuffix) );
             endif;
 
 
