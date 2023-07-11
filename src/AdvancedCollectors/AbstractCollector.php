@@ -99,6 +99,7 @@ abstract class AbstractCollector {
         $this->Debug->_debug( "Download path set to: " . $filePathWithDealId );
 
         try {
+            $this->Debug->_debug( "Navigating to: " . self::BASE_DEAL_URL . $dealLinkSuffix );
             // Example URL:
             // https://trustinvestorreporting.usbank.com/TIR/public/deals/detail/1234/abc-defg-2001-1
             $this->Page->navigate( self::BASE_DEAL_URL . $dealLinkSuffix )
@@ -110,6 +111,7 @@ abstract class AbstractCollector {
 
 
             // Click the TAB with text in $tabText
+            $this->Debug->_debug( "Searching for a tab with the text: " . $this->tabText );
             $elements = $this->Page->dom()->search( "//a[contains(text(),'" . $this->tabText . "')]" );
 
             if ( ! isset( $elements[ 0 ] ) ):
@@ -123,7 +125,7 @@ abstract class AbstractCollector {
             endif;
             $element = $elements[ 0 ];
             $element->click();
-            sleep( 1 );
+            sleep( 5 );
             $this->Debug->_debug( "Should be on the '" . $this->tabText . "' tab now." );
 
             $this->Debug->_screenshot( 'tab_main_' . urlencode( $dealLinkSuffix ) );
@@ -131,7 +133,7 @@ abstract class AbstractCollector {
 
             // GET ELEMENTS OF INTEREST ON THAT PAGE.
             $elements = $this->Page->dom()->querySelectorAll( $this->querySelectorForLinks );
-            $this->Debug->_debug( "I found " . count( $elements ) . " links." );
+            $this->Debug->_debug( "I found " . count( $elements ) . " links with this query selector: " . $this->querySelectorForLinks );
 
             $links = $this->_clickElements( $elements,
                                             $filePathWithDealId,
