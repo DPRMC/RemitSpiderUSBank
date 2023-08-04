@@ -5,6 +5,7 @@ namespace DPRMC\RemitSpiderUSBank\AdvancedCollectors;
 use Carbon\Carbon;
 use DPRMC\RemitSpiderUSBank\Collectors\Login;
 use DPRMC\RemitSpiderUSBank\Downloadables\CrefcLoanSetupFileDownloadable;
+use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionAccessDenied;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionDoNotHaveAccessToThisDeal;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionNotLoggedIn;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionOurAccessToThisPeriodicReportSecuredIsPending;
@@ -47,6 +48,25 @@ class CrefcLoanSetupFiles {
     }
 
 
+    /**
+     * @param string $dealLinkSuffix
+     * @return CrefcLoanSetupFileDownloadable
+     * @throws ExceptionAccessDenied
+     * @throws ExceptionDoNotHaveAccessToThisDeal
+     * @throws ExceptionNotLoggedIn
+     * @throws ExceptionOurAccessToThisPeriodicReportSecuredIsPending
+     * @throws ExceptionTimedOutWaitingForClickToLoad
+     * @throws ExceptionUnableToFindLinkToCrefcLoanSetupFile
+     * @throws \HeadlessChromium\Exception\CommunicationException
+     * @throws \HeadlessChromium\Exception\CommunicationException\CannotReadResponse
+     * @throws \HeadlessChromium\Exception\CommunicationException\InvalidResponse
+     * @throws \HeadlessChromium\Exception\CommunicationException\ResponseHasError
+     * @throws \HeadlessChromium\Exception\FilesystemException
+     * @throws \HeadlessChromium\Exception\NavigationExpired
+     * @throws \HeadlessChromium\Exception\NoResponseAvailable
+     * @throws \HeadlessChromium\Exception\OperationTimedOut
+     * @throws \HeadlessChromium\Exception\ScreenshotFailed
+     */
     public function getDownloadable( string $dealLinkSuffix ): CrefcLoanSetupFileDownloadable {
         $dealId = $this->getDealIdFromDealLinkSuffix( $dealLinkSuffix );
         $this->Debug->_screenshot( 'start_page_' . $dealId );
@@ -84,7 +104,7 @@ class CrefcLoanSetupFiles {
         // PERIODIC REPORTS - SECURED
         $asyncUrl = 'https://trustinvestorreporting.usbank.com/TIR/public/deals/periodicreport/' . $dealId . '/16';
         $this->Debug->_debug( "Async URL: " . $asyncUrl );
-        $this->Page->navigate( $asyncUrl )->waitForNavigation(Page::NETWORK_IDLE);
+        $this->Page->navigate( $asyncUrl )->waitForNavigation( Page::NETWORK_IDLE );
         $this->Debug->_screenshot( 'async_16_' . $dealId );
         $this->Debug->_html( 'async_16_' . $dealId );
         $html16 = $this->Page->getHtml();
@@ -93,7 +113,7 @@ class CrefcLoanSetupFiles {
         // PERIODIC_REPORTS
         $asyncUrl = 'https://trustinvestorreporting.usbank.com/TIR/public/deals/periodicreport/' . $dealId . '/2';
         $this->Debug->_debug( "Async URL: " . $asyncUrl );
-        $this->Page->navigate( $asyncUrl )->waitForNavigation(Page::NETWORK_IDLE);
+        $this->Page->navigate( $asyncUrl )->waitForNavigation( Page::NETWORK_IDLE );
         $this->Debug->_screenshot( 'async_2_' . $dealId );
         $this->Debug->_html( 'async_2_' . $dealId );
         $html2 = $this->Page->getHtml();
@@ -114,6 +134,16 @@ class CrefcLoanSetupFiles {
                                                                               NULL,
                                                                               $dealLinkSuffix );
         endif;
+
+
+        if ( str_contains( $combinedHtml, '403 - Forbidden: Access is denied.' ) ):
+            throw new ExceptionAccessDenied( "403 - Forbidden: Access is denied.",
+                                             0,
+                                             NULL,
+                                             $dealLinkSuffix,
+                                             $combinedHtml );
+        endif;
+
 
         $dom = new \DOMDocument();
         //@$dom->loadHTML( $htmlOfPeriodicReportsSecuredReports );
