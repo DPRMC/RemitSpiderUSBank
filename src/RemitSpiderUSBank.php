@@ -34,6 +34,7 @@ class RemitSpiderUSBank {
 
     protected bool   $debug;
     protected string $pathToScreenshots;
+    protected string $proxyServerAddress;
 
     protected string $pathToPortfolioIds;
     protected string $pathToDealLinkSuffixes;
@@ -47,11 +48,11 @@ class RemitSpiderUSBank {
     protected Page $page;
 
 
-    const  BASE_URL                                = 'https://trustinvestorreporting.usbank.com';
-    const  PORTFOLIO_IDS_FILENAME                  = '_portfolio_ids.json';
-    const  DEAL_LINK_SUFFIXES_FILENAME             = '_deal_link_suffixes.json';
-    const  HISTORY_LINKS_FILENAME                  = '_history_links.json';
-    const  FILE_INDEX_FILENAME                     = '_file_index.json';
+    const  BASE_URL                    = 'https://trustinvestorreporting.usbank.com';
+    const  PORTFOLIO_IDS_FILENAME      = '_portfolio_ids.json';
+    const  DEAL_LINK_SUFFIXES_FILENAME = '_deal_link_suffixes.json';
+    const  HISTORY_LINKS_FILENAME      = '_history_links.json';
+    const  FILE_INDEX_FILENAME         = '_file_index.json';
 
     const DEFAULT_TIMEZONE = 'America/New_York';
 
@@ -78,19 +79,21 @@ class RemitSpiderUSBank {
                                  string $pathToHistoryLinks = '',
                                  string $pathToFileIndex = '',
                                  string $pathToFileDownloads = '',
-                                 string $timezone = self::DEFAULT_TIMEZONE
+                                 string $timezone = self::DEFAULT_TIMEZONE,
+                                 string $proxyServerAddress = NULL
     ) {
 
-        $this->debug                             = $debug;
-        $this->pathToScreenshots                 = $pathToScreenshots;
-        $this->pathToPortfolioIds                = $pathToPortfolioIds . self::PORTFOLIO_IDS_FILENAME;
-        $this->pathToDealLinkSuffixes            = $pathToDealLinkSuffixes . self::DEAL_LINK_SUFFIXES_FILENAME;
-        $this->pathToHistoryLinks                = $pathToHistoryLinks . self::HISTORY_LINKS_FILENAME;
-        $this->pathToFileIndex                   = $pathToFileIndex . self::FILE_INDEX_FILENAME;
+        $this->debug                  = $debug;
+        $this->pathToScreenshots      = $pathToScreenshots;
+        $this->pathToPortfolioIds     = $pathToPortfolioIds . self::PORTFOLIO_IDS_FILENAME;
+        $this->pathToDealLinkSuffixes = $pathToDealLinkSuffixes . self::DEAL_LINK_SUFFIXES_FILENAME;
+        $this->pathToHistoryLinks     = $pathToHistoryLinks . self::HISTORY_LINKS_FILENAME;
+        $this->pathToFileIndex        = $pathToFileIndex . self::FILE_INDEX_FILENAME;
 
-        $this->timezone = $timezone;
+        $this->timezone           = $timezone;
+        $this->proxyServerAddress = $proxyServerAddress;
 
-        $this->USBankBrowser = new USBankBrowser( $chromePath );
+        $this->USBankBrowser = new USBankBrowser( $chromePath, $proxyServerAddress );
         $this->USBankBrowser->page->setDownloadPath( $pathToFileDownloads );
 
         $this->Debug = new Debug( $this->USBankBrowser->page,
