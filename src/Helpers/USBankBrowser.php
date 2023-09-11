@@ -28,21 +28,32 @@ class USBankBrowser {
      */
     const BROWSER_CONNECTION_DELAY = 1;
 
-    public function __construct( string $chromePath ) {
+    public function __construct( string $chromePath, string $proxyServerAddress = NULL ) {
         $this->cookies    = new CookiesCollection();
         $this->chromePath = $chromePath;
 
         $browserFactory = new BrowserFactory( $this->chromePath );
         // starts headless chrome
-        $this->browser = $browserFactory->createBrowser( [
-                                                             'headless'        => TRUE,         // disable headless mode
-                                                             'connectionDelay' => self::BROWSER_CONNECTION_DELAY,
-                                                             //'debugLogger'     => 'php://stdout', // will enable verbose mode
-                                                             'windowSize'      => [ self::BROWSER_WINDOW_SIZE_WIDTH,
-                                                                                    self::BROWSER_WINDOW_SIZE_HEIGHT ],
-                                                             'enableImages'    => self::BROWSER_ENABLE_IMAGES,
-                                                             'customFlags'     => [ '--disable-web-security' ],
-                                                         ] );
+
+        $options = [
+            'headless'        => TRUE,         // disable headless mode
+            'connectionDelay' => self::BROWSER_CONNECTION_DELAY,
+            //'debugLogger'     => 'php://stdout', // will enable verbose mode
+            'windowSize'      => [ self::BROWSER_WINDOW_SIZE_WIDTH,
+                                   self::BROWSER_WINDOW_SIZE_HEIGHT ],
+            'enableImages'    => self::BROWSER_ENABLE_IMAGES,
+            'customFlags'     => [
+                '--disable-web-security',
+            ],
+        ];
+
+        if ( $proxyServerAddress ):
+            $options[ 'customFlags' ] = [
+                '--disable-web-security',
+                '--proxy-server=https=' . $proxyServerAddress,
+            ];
+        endif;
+        $this->browser = $browserFactory->createBrowser( $options );
 
         $this->createPage();
     }
