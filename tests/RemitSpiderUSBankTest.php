@@ -38,7 +38,8 @@ class RemitSpiderUSBankTest extends TestCase {
                                                               '',
                                                               '',
                                                               '/Users/michaeldrennen/Desktop/files',
-                                                              self::TIMEZONE );
+                                                              self::TIMEZONE,
+                                                              $_ENV[ 'PROXY' ] );
     }
 
     public static function setUpBeforeClass(): void {
@@ -66,10 +67,10 @@ class RemitSpiderUSBankTest extends TestCase {
      * @group xpath
      */
     public function testXPath() {
-        $url = 'https://fims2.deerparkrd.com/lasudflasdjhflasdhflaskdhlfkashjdf.html';
+        $url    = 'https://fims2.deerparkrd.com/lasudflasdjhflasdhflaskdhlfkashjdf.html';
         $spider = $this->_getSpider();
-        $spider->USBankBrowser->page->navigate($url)->waitForNavigation();
-        $spider->Debug->_screenshot( 'deal_page');
+        $spider->USBankBrowser->page->navigate( $url )->waitForNavigation();
+        $spider->Debug->_screenshot( 'deal_page' );
         $querySelector = "//a[contains(., 'Periodic Reports - Secured')]";
         $querySelector = "//a[contains(., 'Periodic Reports')][2]";
         $selector      = new XPathSelector( $querySelector );
@@ -83,21 +84,21 @@ class RemitSpiderUSBankTest extends TestCase {
      * @test
      * @group ahl
      */
-    public function testAsyncHistoryLinks(){
+    public function testAsyncHistoryLinks() {
         $spider = $this->_getSpider();
         $spider->Login->login();
-        $Login = $spider->Login;
-        $Page = $spider->USBankBrowser->page;
-        $Debug = $spider->Debug;
-        $asyncHistoryLinks = new \DPRMC\RemitSpiderUSBank\AsyncCollectors\HistoryLinks($Login,
-                                                                                       $Page,
-                                                                                       $Debug,
-                                                                                       self::TIMEZONE);
+        $Login             = $spider->Login;
+        $Page              = $spider->USBankBrowser->page;
+        $Debug             = $spider->Debug;
+        $asyncHistoryLinks = new \DPRMC\RemitSpiderUSBank\AsyncCollectors\HistoryLinks( $Login,
+                                                                                        $Page,
+                                                                                        $Debug,
+                                                                                        self::TIMEZONE );
 
         $dealLinkSuffix = '11601/ubs-2012-c2';
-        $historyLinks = $asyncHistoryLinks->getHistoryLinks($dealLinkSuffix);
+        $historyLinks   = $asyncHistoryLinks->getHistoryLinks( $dealLinkSuffix );
 
-        print_r($historyLinks);
+        print_r( $historyLinks );
     }
 
 
@@ -105,7 +106,7 @@ class RemitSpiderUSBankTest extends TestCase {
      * @test
      * @group pt
      */
-    public function testGetProductType(){
+    public function testGetProductType() {
         $spider = $this->_getSpider();
         $spider->HistoryLinks->deleteCache();
         $spider->Login->login();
@@ -137,7 +138,7 @@ class RemitSpiderUSBankTest extends TestCase {
 
         $this->assertInstanceOf( \DPRMC\RemitSpiderUSBank\Downloadables\CrefcLoanSetupFileDownloadable::class, $downloadable );
 
-        print_r($downloadable);
+        print_r( $downloadable );
     }
 
 
@@ -162,7 +163,7 @@ class RemitSpiderUSBankTest extends TestCase {
 
         $this->assertInstanceOf( \DPRMC\RemitSpiderUSBank\Downloadables\CrefcLoanSetupFileDownloadable::class, $downloadable );
 
-        print_r($downloadable);
+        print_r( $downloadable );
     }
 
     /**
