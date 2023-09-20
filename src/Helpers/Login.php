@@ -77,8 +77,8 @@ class Login {
         $this->Debug->_html( 'first_page' );
 
         $testAccessDeniedHtml = $this->Page->getHtml();
-        if( str_contains($testAccessDeniedHtml, 'Access Denied')):
-            throw new ExceptionIpHasBeenBlocked("Access denied. HALT PROCESSING");
+        if ( str_contains( $testAccessDeniedHtml, 'Access Denied' ) ):
+            throw new ExceptionIpHasBeenBlocked( "Access denied. HALT PROCESSING", 0, NULL, $testAccessDeniedHtml );
         endif;
 
 
@@ -102,8 +102,7 @@ class Login {
         $this->Debug->_html( 'am_i_logged_in' );
 
         $currentUrl = $this->Page->getCurrentUrl();
-        $this->Debug->_debug("Currently at: " . $currentUrl);
-
+        $this->Debug->_debug( "Currently at: " . $currentUrl );
 
 
         $this->Debug->_debug( "Navigating to the main interface at " . self::URL_INTERFACE );
@@ -120,11 +119,11 @@ class Login {
 
         $trustInvestorReportingX = 90;
         $trustInvestorReportingY = 164;
-        $this->Page->mouse()->move($applicationsX,$applicationsY );
+        $this->Page->mouse()->move( $applicationsX, $applicationsY );
         $this->Debug->_screenshot( 'first_mouse_move', new Clip( 0, 0, $applicationsX, $applicationsY ) );
-        sleep(1);
+        sleep( 1 );
 
-        $this->Page->navigate( 'https://trustinvestorreporting.usbank.com/TIR/portal/' )->waitForNavigation(Page::NETWORK_IDLE);
+        $this->Page->navigate( 'https://trustinvestorreporting.usbank.com/TIR/portal/' )->waitForNavigation( Page::NETWORK_IDLE );
 
 //        $this->Page->evaluate(
 //            "window.location='/portal/public/openApplication.do?appName=TIR-Ext&appUrl=https://trustinvestorreporting.usbank.com/TIR/portal/';"
