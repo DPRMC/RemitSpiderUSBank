@@ -7,17 +7,14 @@ namespace DPRMC\RemitSpiderUSBank\Exceptions;
  */
 class ExceptionIpHasBeenBlocked extends \Exception {
 
-    public int    $dealId;
     public string $html;
 
     public function __construct( string      $message = "",
                                  int         $code = 0,
                                  ?\Throwable $previous = NULL,
-                                 ?int        $dealId = NULL,
                                  ?string     $html = NULL ) {
         parent::__construct( $message, $code, $previous );
 
-        $this->dealId          = $dealId;
         $this->html            = $html;
     }
 }
