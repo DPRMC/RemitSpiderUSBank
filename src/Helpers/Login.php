@@ -3,6 +3,7 @@
 namespace DPRMC\RemitSpiderUSBank\Collectors;
 
 
+use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionIpHasBeenBlocked;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
 use DPRMC\RemitSpiderUSBank\RemitSpiderUSBank;
 use HeadlessChromium\Clip;
@@ -66,12 +67,21 @@ class Login {
      * @throws \HeadlessChromium\Exception\OperationTimedOut
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
      * @throws \Exception
+     * @throws ExceptionIpHasBeenBlocked
      */
     public function login(): string {
         $this->Debug->_debug( "Navigating to login screen." );
         $this->Page->navigate( self::URL_LOGIN )->waitForNavigation();
 
         $this->Debug->_screenshot( 'first_page' );
+        $this->Debug->_html( 'first_page' );
+
+        $testAccessDeniedHtml = $this->Page->getHtml();
+        if( str_contains($testAccessDeniedHtml, 'Access Denied')):
+            throw new ExceptionIpHasBeenBlocked("Access denied. HALT PROCESSING");
+        endif;
+
+
         $this->Debug->_debug( "Filling out user and pass." );
         $this->Page->evaluate( "document.querySelector('#uname').value = '" . $this->user . "';" );
         $this->Page->evaluate( "document.querySelector('#pword').value = '" . $this->pass . "';" );
