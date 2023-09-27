@@ -15,6 +15,8 @@ use HeadlessChromium\Page;
  */
 class Login {
 
+    public int $numRequestsAttempted = 0;
+
     const URL_LOGIN  = 'https://usbtrustgateway.usbank.com/portal/login.do';
     const URL_LOGOUT = RemitSpiderUSBank::BASE_URL . '/TIR/logout';
 
@@ -71,6 +73,8 @@ class Login {
      */
     public function login(): string {
         $this->Debug->_debug( "Navigating to login screen." );
+
+        $this->numRequestsAttempted++;
         $this->Page->navigate( self::URL_LOGIN )->waitForNavigation();
 
         $this->Debug->_screenshot( 'first_page' );
@@ -93,6 +97,7 @@ class Login {
 
         // Click the login button, and wait for the page to reload.
         $this->Debug->_debug( "Clicking the login button." );
+        $this->numRequestsAttempted++;
         $this->Page->mouse()
                    ->move( self::LOGIN_BUTTON_X, self::LOGIN_BUTTON_Y )
                    ->click();
@@ -123,6 +128,7 @@ class Login {
         $this->Debug->_screenshot( 'first_mouse_move', new Clip( 0, 0, $applicationsX, $applicationsY ) );
         sleep( 1 );
 
+        $this->numRequestsAttempted++;
         $this->Page->navigate( 'https://trustinvestorreporting.usbank.com/TIR/portal/' )->waitForNavigation( Page::NETWORK_IDLE );
 
 //        $this->Page->evaluate(
@@ -141,7 +147,6 @@ class Login {
         endif;
 
         $this->csrf = $this->getCSRF( $postLoginHTML );
-
 
         $this->Debug->_screenshot( "post_login" );
         $this->Debug->_html( "post_login" );
@@ -163,6 +168,7 @@ class Login {
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
      */
     public function logout(): bool {
+        $this->numRequestsAttempted++;
         $this->Page->navigate( self::URL_LOGOUT )->waitForNavigation();
         $this->Debug->_screenshot( 'loggedout' );
         return TRUE;
