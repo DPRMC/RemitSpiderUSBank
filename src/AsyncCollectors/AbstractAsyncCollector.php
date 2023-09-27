@@ -17,6 +17,8 @@ use HeadlessChromium\Page;
  */
 abstract class AbstractAsyncCollector {
 
+    public int $numRequestsAttempted = 0;
+
     protected Login  $Login;
     protected Page   $Page;
     protected Debug  $Debug;
@@ -48,6 +50,7 @@ abstract class AbstractAsyncCollector {
         $this->Debug->_screenshot( 'start_page_' . $dealId );
         $dealPageLink = self::BASE_DETAIL_URL . $dealLinkSuffix;
         $this->Debug->_debug( "Navigating to deal page: " . $dealPageLink );
+        $this->numRequestsAttempted++;
         $this->Page->navigate( $dealPageLink )->waitForNavigation();
         $this->Debug->_screenshot( 'the_deal_page_' . $dealId );
         $this->Debug->_html( 'the_deal_page_' . $dealId );
@@ -55,7 +58,7 @@ abstract class AbstractAsyncCollector {
         $csrf       = $this->Login->csrf;
         $currentUrl = $this->Page->getCurrentUrl();
 
-        $this->setProductType($this->Page->getHtml());
+        $this->setProductType( $this->Page->getHtml() );
 
 
         $this->Page->getSession()->sendMessageSync( new Message( 'Network.setExtraHTTPHeaders', [
@@ -107,15 +110,14 @@ abstract class AbstractAsyncCollector {
      * @throws \HeadlessChromium\Exception\OperationTimedOut
      * @throws \HeadlessChromium\Exception\ScreenshotFailed
      */
-    protected function _getHtml(string $asyncUrl, string $screenshotTag): string {
+    protected function _getHtml( string $asyncUrl, string $screenshotTag ): string {
         try {
             $this->Debug->_debug( "Async URL: " . $asyncUrl );
-            $this->Page->navigate( $asyncUrl )->waitForNavigation(Page::NETWORK_IDLE);
+            $this->numRequestsAttempted++;
+            $this->Page->navigate( $asyncUrl )->waitForNavigation( Page::NETWORK_IDLE );
             $this->Debug->_screenshot( 'async_' . $screenshotTag );
             $this->Debug->_html( 'async_' . $screenshotTag );
             $html = $this->Page->getHtml();
-
-
 
 
             if ( str_contains( $html, 'You do not have access to this deal' ) ):
@@ -134,7 +136,7 @@ abstract class AbstractAsyncCollector {
             endif;
 
             return $html;
-        } catch (\Exception $exception) {
+        } catch ( \Exception $exception ) {
             return '';
         }
 
@@ -145,7 +147,7 @@ abstract class AbstractAsyncCollector {
      * @param string $html
      * @return void
      */
-    public function setProductType(string $html ): void {
+    public function setProductType( string $html ): void {
         $dom = new \DOMDocument();
         @$dom->loadHTML( $html );
         /**

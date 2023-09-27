@@ -398,6 +398,7 @@ class FileIndex extends BaseData {
             'allow_redirects' => TRUE,
         ];
 
+        $this->numRequestsAttempted++;
         $response = $client->post( '', $options );
 
         return [ self::BODY     => $response->getBody(),
@@ -451,6 +452,7 @@ class FileIndex extends BaseData {
             'allow_redirects' => TRUE,
         ];
 
+        $this->numRequestsAttempted++;
         $response = $client->get( '', $options );
 
         return [ self::BODY     => $response->getBody(),

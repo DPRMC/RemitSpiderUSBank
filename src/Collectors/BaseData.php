@@ -14,6 +14,7 @@ abstract class BaseData {
     protected Page  $Page;
     protected Debug $Debug;
 
+    public int $numRequestsAttempted = 0;
 
     /**
      * @var \Carbon\Carbon|null When the run started.

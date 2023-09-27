@@ -89,6 +89,7 @@ class Deals extends BaseData {
             $this->startTime = Carbon::now( $this->timezone );
 
             // Start on Portfolios page
+            $this->numRequestsAttempted++;
             $this->Page->navigate( Portfolios::URL_BASE_PORTFOLIOS )
 //                       ->waitForNavigation( Page::NETWORK_IDLE,USBankBrowser::NETWORK_IDLE_MS_TO_WAIT );
                        ->waitForNavigation(); // Was timing out, and this code works.
@@ -105,6 +106,7 @@ class Deals extends BaseData {
             $clip = new Clip( 0, 0, $x_all, $y_all );
             $this->Debug->_screenshot( 'clickingOnAll', $clip );
 
+            $this->numRequestsAttempted++;
             $this->Page->mouse()->move( $x_all, $y_all )->click();
 
             sleep( 2 );
@@ -156,7 +158,7 @@ class Deals extends BaseData {
             // This is the one we want!
             if ( 'draggable-report-1' == $id ):
                 $href           = $element->getAttribute( 'href' );
-                $dealLinkSuffix = NULL;
+                $dealLinkSuffix = [];
                 preg_match( $pattern, $href, $dealLinkSuffix );
 
                 if ( 2 != count( $dealLinkSuffix ) ):

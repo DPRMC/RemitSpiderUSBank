@@ -66,6 +66,7 @@ class Portfolios extends BaseData {
             $this->startTime = Carbon::now( $this->timezone );
             // Example:
             // https://trustinvestorreporting.usbank.com/TIR/portfolios?layout=layout&OWASP_CSRFTOKEN=1111-2222-3333-4444-5555-6666-7777-8888
+            $this->numRequestsAttempted++;
             $this->Page->navigate( self::URL_BASE_PORTFOLIOS . $csrf )
 //                       ->waitForNavigation( Page::NETWORK_IDLE, USBankBrowser::NETWORK_IDLE_MS_TO_WAIT );
                        ->waitForNavigation(); // Was timing out and this code works.
