@@ -25,6 +25,8 @@ use HeadlessChromium\Page;
  */
 class CrefcLoanSetupFiles {
 
+    public int $numRequestsAttempted = 0;
+
     protected Login  $Login;
     protected Page   $Page;
     protected Debug  $Debug;
@@ -72,6 +74,7 @@ class CrefcLoanSetupFiles {
         $this->Debug->_screenshot( 'start_page_' . $dealId );
         $dealPageLink = self::BASE_DETAIL_URL . $dealLinkSuffix;
         $this->Debug->_debug( "Navigating to deal page link: " . $dealPageLink );
+        $this->numRequestsAttempted++;
         $this->Page->navigate( $dealPageLink )->waitForNavigation();
         $this->Debug->_screenshot( 'the_deal_page_' . $dealId );
         $this->Debug->_html( 'the_deal_page_' . $dealId );
@@ -104,6 +107,7 @@ class CrefcLoanSetupFiles {
         // PERIODIC REPORTS - SECURED
         $asyncUrl = 'https://trustinvestorreporting.usbank.com/TIR/public/deals/periodicreport/' . $dealId . '/16';
         $this->Debug->_debug( "Async URL: " . $asyncUrl );
+        $this->numRequestsAttempted++;
         $this->Page->navigate( $asyncUrl )->waitForNavigation( Page::NETWORK_IDLE );
         $this->Debug->_screenshot( 'async_16_' . $dealId );
         $this->Debug->_html( 'async_16_' . $dealId );
@@ -113,6 +117,7 @@ class CrefcLoanSetupFiles {
         // PERIODIC_REPORTS
         $asyncUrl = 'https://trustinvestorreporting.usbank.com/TIR/public/deals/periodicreport/' . $dealId . '/2';
         $this->Debug->_debug( "Async URL: " . $asyncUrl );
+        $this->numRequestsAttempted++;
         $this->Page->navigate( $asyncUrl )->waitForNavigation( Page::NETWORK_IDLE );
         $this->Debug->_screenshot( 'async_2_' . $dealId );
         $this->Debug->_html( 'async_2_' . $dealId );
@@ -346,6 +351,7 @@ class CrefcLoanSetupFiles {
         $selector      = new XPathSelector( $querySelector );
         $position      = $this->Page->mouse()->findElement( $selector )->getPosition();
         $this->Debug->_screenshot( 'the_position_of_periodic_reports_secured', new Clip( 0, 0, $position[ 'x' ], $position[ 'y' ] ) );
+        $this->numRequestsAttempted++;
         $this->Page->mouse()->move( $position[ 'x' ], $position[ 'y' ] )->click();
         sleep( 2 );
 
@@ -371,6 +377,7 @@ class CrefcLoanSetupFiles {
         $selector      = new XPathSelector( $querySelector );
         $position      = $this->Page->mouse()->findElement( $selector )->getPosition();
         $this->Debug->_screenshot( 'the_position_of_periodic_reports_unsecured', new Clip( 0, 0, $position[ 'x' ], $position[ 'y' ] ) );
+        $this->numRequestsAttempted++;
         $this->Page->mouse()->move( $position[ 'x' ], $position[ 'y' ] )->click();
         sleep( 2 );
 
