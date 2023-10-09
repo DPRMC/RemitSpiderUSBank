@@ -33,8 +33,8 @@ class RemitSpiderUSBank {
 
 
     protected bool   $debug;
-    protected string $pathToScreenshots;
-    protected string $proxyServerAddress;
+    protected string  $pathToScreenshots;
+    protected ?string $proxyServerAddress = null;
 
     protected string $pathToPortfolioIds;
     protected string $pathToDealLinkSuffixes;
