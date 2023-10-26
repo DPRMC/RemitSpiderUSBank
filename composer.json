@@ -12,10 +12,10 @@
   "minimum-stability": "stable",
   "require": {
     "php": "^7.2 | ^8.0",
-    "guzzlehttp/guzzle": "^7.4",
+    "guzzlehttp/guzzle": "^7",
     "chrome-php/chrome": "^1",
     "ext-dom": "*",
-    "nesbot/carbon": "^2.57",
+    "nesbot/carbon": "^2",
     "illuminate/support": "^8|^9",
     "illuminate/database": "^8|^9",
     "ext-curl": "*"
