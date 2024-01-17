@@ -14,6 +14,7 @@ use HeadlessChromium\Page;
 class PeriodicReportsSecured extends AbstractCollector {
 
     protected string $tabText               = 'Periodic Reports - Secured';
+    protected string $altTabText            = 'Periodic Reports';
     protected string $querySelectorForLinks = '#results-table > tbody > tr';
 
     const MAX_TIMES_TO_CHECK_FOR_DOWNLOAD_BEFORE_GIVING_UP = 10;

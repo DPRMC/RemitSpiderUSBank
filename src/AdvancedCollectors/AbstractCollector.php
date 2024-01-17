@@ -24,6 +24,7 @@ abstract class AbstractCollector {
     protected ?Carbon $stopTime;
 
     protected string $tabText               = '';
+    protected string $altTabText            = '';
     protected string $querySelectorForLinks = '';
 
     const LINK    = 'link';       // The history link.
@@ -116,12 +117,18 @@ abstract class AbstractCollector {
 
             if ( ! isset( $elements[ 0 ] ) ):
                 $this->Debug->_debug( "Unable to find a link with the text '" . $this->tabText . "' in it." );
-                throw new ExceptionUnableToTabByText( "Unable to find a link with the text '" . $this->tabText . "' in it.",
-                                                      0,
-                                                      NULL,
-                                                      $this->tabText,
-                                                      $dealId,
-                                                      $dealLinkSuffix );
+
+                $elements = $this->Page->dom()->search( "//a[contains(text(),'" . $this->altTabText . "')]" );
+                if ( ! isset( $elements[ 0 ] ) ):
+                    $this->Debug->_debug( "Even unable to find a link with the text '" . $this->altTabText . "' in it." );
+                    throw new ExceptionUnableToTabByText( "Even unable to find a link with the text '" . $this->altTabText . "' in it.",
+                                                          0,
+                                                          NULL,
+                                                          $this->tabText,
+                                                          $dealId,
+                                                          $dealLinkSuffix );
+                endif;
+
             endif;
             $element = $elements[ 0 ];
             $element->click();
