@@ -86,6 +86,13 @@ class Login {
         endif;
 
 
+        // 2024-01-19:mdd
+        // They added the Cookie requirement.
+        // Click the Accept All Cookies modal
+        $this->Page->mouse()
+                   ->find( '#accept-all-cookies-btn' )
+                   ->click();
+
         $this->Debug->_debug( "Filling out user and pass." );
         $this->Page->evaluate( "document.querySelector('#uname').value = '" . $this->user . "';" );
         $this->Page->evaluate( "document.querySelector('#pword').value = '" . $this->pass . "';" );

@@ -70,7 +70,8 @@ class RemitSpiderUSBankTest extends TestCase {
         $url    = 'https://fims2.deerparkrd.com/lasudflasdjhflasdhflaskdhlfkashjdf.html';
         $spider = $this->_getSpider();
         $spider->USBankBrowser->page->navigate( $url )->waitForNavigation();
-        $spider->Debug->_screenshot( 'deal_page' );
+        $spider->Debug->_screenshot( 'test_page' );
+        $spider->Debug->_html( 'test_page' );
         $querySelector = "//a[contains(., 'Periodic Reports - Secured')]";
         $querySelector = "//a[contains(., 'Periodic Reports')][2]";
         $selector      = new XPathSelector( $querySelector );
