@@ -5,6 +5,7 @@ namespace DPRMC\RemitSpiderUSBank\AsyncCollectors;
 
 use Carbon\Carbon;
 use DPRMC\RemitSpiderUSBank\Collectors\Login;
+use DPRMC\RemitSpiderUSBank\Exceptions\Exception404Returned;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionDoNotHaveAccessToThisDeal;
 use DPRMC\RemitSpiderUSBank\Exceptions\ExceptionOurAccessToThisPeriodicReportSecuredIsPending;
 use DPRMC\RemitSpiderUSBank\Helpers\Debug;
@@ -130,6 +131,14 @@ abstract class AbstractAsyncCollector {
 
             if ( str_contains( $html, 'request to access this deal or feature is pending' ) ):
                 throw new ExceptionOurAccessToThisPeriodicReportSecuredIsPending( "Access to this deal is pending",
+                                                                                  0,
+                                                                                  NULL,
+                                                                                  $asyncUrl );
+            endif;
+
+
+            if ( str_contains( $html, 'File or directory not found' ) ):
+                throw new Exception404Returned( "The URL is no longer valid?",
                                                                                   0,
                                                                                   NULL,
                                                                                   $asyncUrl );
