@@ -89,9 +89,15 @@ class Login {
         // 2024-01-19:mdd
         // They added the Cookie requirement.
         // Click the Accept All Cookies modal
-        $this->Page->mouse()
-                   ->find( '#accept-all-cookies-btn' )
-                   ->click();
+        try {
+            $this->Page->mouse()
+                       ->find( '#accept-all-cookies-btn' )
+                       ->click();
+            $this->Debug->_debug("I clicked the accept all cookies button.");
+        } catch (\Exception $exception) {
+            $this->Debug->_debug("They did not present the accept all cookies button.");
+        }
+
 
         $this->Debug->_debug( "Filling out user and pass." );
         $this->Page->evaluate( "document.querySelector('#uname').value = '" . $this->user . "';" );
