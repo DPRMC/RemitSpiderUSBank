@@ -76,6 +76,7 @@ class Login {
 
         $this->numRequestsAttempted++;
         $this->Page->navigate( self::URL_LOGIN )->waitForNavigation();
+        $this->_clickAcceptAllCookiesButton();
 
         $this->Debug->_screenshot( 'first_page' );
         $this->Debug->_html( 'first_page' );
@@ -89,14 +90,16 @@ class Login {
         // 2024-01-19:mdd
         // They added the Cookie requirement.
         // Click the Accept All Cookies modal
-        try {
-            $this->Page->mouse()
-                       ->find( '#accept-all-cookies-btn' )
-                       ->click();
-            $this->Debug->_debug("I clicked the accept all cookies button.");
-        } catch (\Exception $exception) {
-            $this->Debug->_debug("They did not present the accept all cookies button.");
-        }
+//        try {
+//            $this->Page->mouse()
+//                       ->find( '#accept-all-cookies-btn' )
+//                       ->click();
+//            $this->Debug->_debug("I clicked the accept all cookies button.");
+//        } catch (\Exception $exception) {
+//            $this->Debug->_debug("They did not present the accept all cookies button.");
+//        }
+
+        $this->_clickAcceptAllCookiesButton();
 
 
         $this->Debug->_debug( "Filling out user and pass." );
@@ -143,7 +146,7 @@ class Login {
 
         $this->numRequestsAttempted++;
         $this->Page->navigate( 'https://trustinvestorreporting.usbank.com/TIR/portal/' )->waitForNavigation( Page::NETWORK_IDLE );
-
+        $this->_clickAcceptAllCookiesButton();
 //        $this->Page->evaluate(
 //            "window.location='/portal/public/openApplication.do?appName=TIR-Ext&appUrl=https://trustinvestorreporting.usbank.com/TIR/portal/';"
 //        );
@@ -219,6 +222,24 @@ class Login {
         endif;
 
         throw new \Exception( "Unable to find the CSRF value in the HTML." );
+    }
+
+
+    /**
+     * @return void
+     */
+    protected function _clickAcceptAllCookiesButton(){
+        // 2024-01-19:mdd
+        // They added the Cookie requirement.
+        // Click the Accept All Cookies modal
+        try {
+            $this->Page->mouse()
+                       ->find( '#accept-all-cookies-btn' )
+                       ->click();
+            $this->Debug->_debug("I clicked the accept all cookies button.");
+        } catch (\Exception $exception) {
+            $this->Debug->_debug("They did not present the accept all cookies button.");
+        }
     }
 
 }
