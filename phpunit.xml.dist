@@ -28,5 +28,7 @@
         <env name="HISTORY_LINK" value="12345/2/1?extension=XLS"/>
         <env name="FILE_LINK" value="https://trustinvestorreporting.usbank.com/TIR/public/deals/madDisclaimer/12345678/PDF" />
         <env name="FILE_LINK_404" value="https://trustinvestorreporting.usbank.com/TIR/public/deals/populateReportDocument/87654321/PDF" />
+        <env name="PROXY" value="1.1.1.1" />
+        <env name="PATH_TO_FILE_DOWNLOADS" value="/Users/foo/Desktop/files" />
     </php>
 </phpunit>

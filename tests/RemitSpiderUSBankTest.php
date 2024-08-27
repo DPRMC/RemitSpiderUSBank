@@ -37,7 +37,8 @@ class RemitSpiderUSBankTest extends TestCase {
                                                               '',
                                                               '',
                                                               '',
-                                                              '/Users/michaeldrennen/Desktop/files',
+                                                              '',
+                                                              //$_ENV[ 'PATH_TO_FILE_DOWNLOADS' ],
                                                               self::TIMEZONE,
                                                               $_ENV[ 'PROXY' ] );
     }
@@ -100,6 +101,7 @@ class RemitSpiderUSBankTest extends TestCase {
         $historyLinks   = $asyncHistoryLinks->getHistoryLinks( $dealLinkSuffix );
 
         print_r( $historyLinks );
+        $this->assertNotEmpty($historyLinks);
     }
 
 

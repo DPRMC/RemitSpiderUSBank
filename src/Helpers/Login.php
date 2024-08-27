@@ -38,8 +38,8 @@ class Login {
 
 
     /**
-     * @param Page $Page
-     * @param Debug $Debug
+     * @param Page   $Page
+     * @param Debug  $Debug
      * @param string $user
      * @param string $pass
      * @param string $timezone
@@ -72,14 +72,27 @@ class Login {
      * @throws ExceptionIpHasBeenBlocked
      */
     public function login(): string {
+
+        //
+        $clip = new Clip(0,0,2000,2000, 1);
+
         $this->Debug->_debug( "Navigating to login screen." );
 
         $this->numRequestsAttempted++;
-        $this->Page->navigate( self::URL_LOGIN )->waitForNavigation();
-        $this->_clickAcceptAllCookiesButton();
 
-        $this->Debug->_screenshot( 'first_page' );
-        $this->Debug->_html( 'first_page' );
+        /**
+         * @url https://github.com/chrome-php/chrome?tab=readme-ov-file#page-api
+         * NETWORK_IDLE is the LAST event that can be triggered.
+         */
+        //$this->Page->navigate( self::URL_LOGIN )->waitForNavigation();
+        $this->Page->navigate( self::URL_LOGIN )->waitForNavigation( Page::NETWORK_IDLE, 10000 );
+        $this->Debug->_screenshot( '1_pre_cookie',$clip );
+        $this->Debug->_html( '1_pre_cookie' );
+
+        //$this->_clickAcceptAllCookiesButton();
+
+        $this->Debug->_screenshot( '2_first_page',$clip );
+        $this->Debug->_html( '2_first_page' );
 
         $testAccessDeniedHtml = $this->Page->getHtml();
         if ( str_contains( $testAccessDeniedHtml, 'Access Denied' ) ):
@@ -99,7 +112,7 @@ class Login {
 //            $this->Debug->_debug("They did not present the accept all cookies button.");
 //        }
 
-        $this->_clickAcceptAllCookiesButton();
+        //$this->_clickAcceptAllCookiesButton();
 
 
         $this->Debug->_debug( "Filling out user and pass." );
@@ -107,8 +120,9 @@ class Login {
         $this->Page->evaluate( "document.querySelector('#pword').value = '" . $this->pass . "';" );
 
         // DEBUG
-        $this->Debug->_screenshot( 'filled_in_user_pass' );
-        $this->Debug->_screenshot( 'where_i_clicked_to_login', new Clip( 0, 0, self::LOGIN_BUTTON_X, self::LOGIN_BUTTON_Y ) );
+        $this->Debug->_html( '3_filled_in_user_pass' );
+        $this->Debug->_screenshot( '3_filled_in_user_pass',$clip );
+        $this->Debug->_screenshot( '3_where_i_clicked_to_login', new Clip( 0, 0, self::LOGIN_BUTTON_X, self::LOGIN_BUTTON_Y ) );
 
 
         // Click the login button, and wait for the page to reload.
@@ -119,8 +133,8 @@ class Login {
                    ->click();
         $this->Page->waitForReload();
 
-        $this->Debug->_screenshot( 'am_i_logged_in' );
-        $this->Debug->_html( 'am_i_logged_in' );
+        $this->Debug->_screenshot( '4_am_i_logged_in' );
+        $this->Debug->_html( '4_am_i_logged_in' );
 
         $currentUrl = $this->Page->getCurrentUrl();
         $this->Debug->_debug( "Currently at: " . $currentUrl );
@@ -141,7 +155,7 @@ class Login {
         $trustInvestorReportingX = 90;
         $trustInvestorReportingY = 164;
         $this->Page->mouse()->move( $applicationsX, $applicationsY );
-        $this->Debug->_screenshot( 'first_mouse_move', new Clip( 0, 0, $applicationsX, $applicationsY ) );
+        $this->Debug->_screenshot( '5_first_mouse_move', new Clip( 0, 0, $applicationsX, $applicationsY ) );
         sleep( 1 );
 
         $this->numRequestsAttempted++;
@@ -153,8 +167,8 @@ class Login {
 //        // This loads a page with additional javascript.
 //        sleep(4);
 
-        $this->Debug->_screenshot( 'should_be_the_main_interface' );
-        $this->Debug->_html( 'should_be_the_main_interface' );
+        $this->Debug->_screenshot( '6_should_be_the_main_interface' );
+        $this->Debug->_html( '6_should_be_the_main_interface' );
         $this->cookies = $this->Page->getAllCookies();
         $postLoginHTML = $this->Page->getHtml();
 
@@ -164,8 +178,8 @@ class Login {
 
         $this->csrf = $this->getCSRF( $postLoginHTML );
 
-        $this->Debug->_screenshot( "post_login" );
-        $this->Debug->_html( "post_login" );
+        $this->Debug->_screenshot( "7_post_login" );
+        $this->Debug->_html( "7_post_login" );
         $this->Debug->_debug( "CSRF saved to Login object: " . $this->csrf );
         return $postLoginHTML;
     }
@@ -228,7 +242,7 @@ class Login {
     /**
      * @return void
      */
-    protected function _clickAcceptAllCookiesButton(){
+    protected function _clickAcceptAllCookiesButton() {
         // 2024-01-19:mdd
         // They added the Cookie requirement.
         // Click the Accept All Cookies modal
@@ -236,9 +250,9 @@ class Login {
             $this->Page->mouse()
                        ->find( '#accept-all-cookies-btn' )
                        ->click();
-            $this->Debug->_debug("I clicked the accept all cookies button.");
-        } catch (\Exception $exception) {
-            $this->Debug->_debug("They did not present the accept all cookies button.");
+            $this->Debug->_debug( "I clicked the accept all cookies button." );
+        } catch ( \Exception $exception ) {
+            $this->Debug->_debug( "They did not present the accept all cookies button." );
         }
     }
 
