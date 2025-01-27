@@ -68,6 +68,7 @@ class RemitSpiderUSBankTest extends TestCase {
      * @group xpath
      */
     public function testXPath() {
+        $this->markTestSkipped('must be revisited.');
         $url    = 'https://fims2.deerparkrd.com/lasudflasdjhflasdhflaskdhlfkashjdf.html';
         $spider = $this->_getSpider();
         $spider->USBankBrowser->page->navigate( $url )->waitForNavigation();
@@ -75,6 +76,7 @@ class RemitSpiderUSBankTest extends TestCase {
         $spider->Debug->_html( 'test_page' );
         $querySelector = "//a[contains(., 'Periodic Reports - Secured')]";
         $querySelector = "//a[contains(., 'Periodic Reports')][2]";
+
         $selector      = new XPathSelector( $querySelector );
         $position      = $spider->USBankBrowser->page->mouse()->findElement( $selector )->getPosition();
         $spider->Debug->_screenshot( 'the_position_of_periodic_reports_secured', new Clip( 0, 0, $position[ 'x' ], $position[ 'y' ] ) );

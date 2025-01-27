@@ -89,7 +89,7 @@ class Login {
         $this->Debug->_screenshot( '1_pre_cookie',$clip );
         $this->Debug->_html( '1_pre_cookie' );
 
-        //$this->_clickAcceptAllCookiesButton();
+
 
         $this->Debug->_screenshot( '2_first_page',$clip );
         $this->Debug->_html( '2_first_page' );
@@ -100,21 +100,10 @@ class Login {
         endif;
 
 
-        // 2024-01-19:mdd
-        // They added the Cookie requirement.
-        // Click the Accept All Cookies modal
-//        try {
-//            $this->Page->mouse()
-//                       ->find( '#accept-all-cookies-btn' )
-//                       ->click();
-//            $this->Debug->_debug("I clicked the accept all cookies button.");
-//        } catch (\Exception $exception) {
-//            $this->Debug->_debug("They did not present the accept all cookies button.");
-//        }
 
         // 2025-01-27:mdd They brought back the button.
         $this->_clickAcceptAllCookiesButton();
-
+        $this->Debug->_screenshot( '2_after_click_accept_all_cookies',$clip );
 
 
 
@@ -132,10 +121,19 @@ class Login {
         // Click the login button, and wait for the page to reload.
         $this->Debug->_debug( "Clicking the login button." );
         $this->numRequestsAttempted++;
+        //$this->Page->mouse()
+        //           ->move( self::LOGIN_BUTTON_X, self::LOGIN_BUTTON_Y )
+        //           ->click();
+        //$this->Page->waitForReload();
+
+        // 2025-01-27:mdd
+        $selector = "input[type='submit']";
         $this->Page->mouse()
-                   ->move( self::LOGIN_BUTTON_X, self::LOGIN_BUTTON_Y )
+                   ->find( $selector )
                    ->click();
         $this->Page->waitForReload();
+
+
 
         $this->Debug->_screenshot( '4_am_i_logged_in' );
         $this->Debug->_html( '4_am_i_logged_in' );
@@ -244,6 +242,7 @@ class Login {
 
 
     /**
+     *
      * @return void
      */
     protected function _clickAcceptAllCookiesButton() {
