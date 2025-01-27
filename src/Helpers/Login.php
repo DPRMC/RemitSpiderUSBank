@@ -112,7 +112,11 @@ class Login {
 //            $this->Debug->_debug("They did not present the accept all cookies button.");
 //        }
 
-        //$this->_clickAcceptAllCookiesButton();
+        // 2025-01-27:mdd They brought back the button.
+        $this->_clickAcceptAllCookiesButton();
+
+
+
 
 
         $this->Debug->_debug( "Filling out user and pass." );
